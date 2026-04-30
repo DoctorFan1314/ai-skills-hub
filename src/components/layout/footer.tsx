@@ -12,9 +12,8 @@ const footerLinks = {
     { label: "反馈建议", href: "/submit" },
   ],
   关于: [
-    { label: "关于我们", href: "#" },
-    { label: "使用条款", href: "#" },
-    { label: "隐私政策", href: "#" },
+    { label: "免责声明", href: "/disclaimer" },
+    { label: "隐私政策", href: "/privacy" },
   ],
 };
 
@@ -60,6 +59,9 @@ export function Footer() {
             <span>Qwen</span>
           </div>
         </div>
+        <p className="mt-4 text-[10px] text-[#8b949e]/40 text-center leading-relaxed">
+          ChatGPT、Claude、Grok、DeepSeek、Qwen 等为各自公司的注册商标，本平台与其无隶属关系。
+        </p>
       </div>
     </footer>
   );
