@@ -12,8 +12,8 @@ const footerLinks = {
     { label: "反馈建议", href: "/submit" },
   ],
   关于: [
-    { label: "免责声明", href: "/disclaimer" },
-    { label: "隐私政策", href: "/privacy" },
+    { label: "使用条款", href: "#" },
+    { label: "隐私政策", href: "#" },
   ],
 };
 
