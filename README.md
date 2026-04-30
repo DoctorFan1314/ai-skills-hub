@@ -1,0 +1,235 @@
+# AI Skills Hub — 高质量LLM技能模板库
+
+> 高质量LLM技能模板 · 复制即用，去AI味 · 把强大AI真正变成你的生产力武器
+
+完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama 等主流平台。
+
+---
+
+## 项目截图
+
+- 深蓝至黑色渐变背景 + 粒子动画
+- 毛玻璃卡片 + 氰色霓虹边框
+- 响应式设计，移动端优先
+
+---
+
+## 快速开始
+
+### 1. 环境要求
+
+| 依赖 | 最低版本 |
+|------|---------|
+| Node.js | >= 18.0 |
+| npm | >= 9.0 |
+
+### 2. 安装与运行
+
+```bash
+# 进入项目目录
+cd ai-skills-hub
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+打开浏览器访问 http://localhost:3000 即可查看。
+
+### 3. 构建生产版本
+
+```bash
+# 构建
+npm run build
+
+# 启动生产服务器
+npm start
+```
+
+---
+
+## 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 框架 | Next.js 16 (App Router) |
+| 语言 | TypeScript |
+| 样式 | Tailwind CSS v4 |
+| 组件库 | shadcn/ui (基于 Base UI) |
+| 图标 | Lucide React |
+| 数据 | 本地 Mock 数据（可迁移至 Supabase） |
+| 部署 | Vercel（推荐） |
+
+---
+
+## 项目结构
+
+```
+ai-skills-hub/
+├── src/
+│   ├── app/                          # Next.js App Router 页面
+│   │   ├── layout.tsx                # 根布局（字体、Navbar、Footer、粒子背景）
+│   │   ├── page.tsx                  # 首页
+│   │   ├── globals.css               # 全局样式 + CSS 变量 + 工具类
+│   │   ├── skills/
+│   │   │   ├── page.tsx              # 技能市场（搜索、筛选、排序）
+│   │   │   └── [id]/page.tsx         # 技能详情页
+│   │   ├── categories/
+│   │   │   ├── page.tsx              # 分类浏览
+│   │   │   └── [slug]/page.tsx       # 分类详情
+│   │   ├── guide/page.tsx            # 新手指南
+│   │   ├── submit/page.tsx           # 提交模板
+│   │   ├── login/page.tsx            # 登录
+│   │   └── register/page.tsx         # 注册
+│   ├── components/
+│   │   ├── ui/                       # shadcn/ui 组件
+│   │   ├── layout/
+│   │   │   ├── navbar.tsx            # 顶部导航栏
+│   │   │   └── footer.tsx            # 页脚
+│   │   ├── home/
+│   │   │   ├── hero.tsx              # Hero 区域
+│   │   │   ├── trust-bar.tsx         # 信任条
+│   │   │   ├── category-cards.tsx    # 三大入口卡片
+│   │   │   ├── skill-section.tsx     # 技能列表区块
+│   │   │   └── testimonials.tsx      # 用户评价
+│   │   ├── skill/
+│   │   │   └── skill-card.tsx        # 技能卡片
+│   │   └── shared/
+│   │       └── particle-bg.tsx       # 粒子背景动画
+│   └── lib/
+│       ├── types.ts                  # TypeScript 类型定义
+│       ├── mock-data.ts              # Mock 数据（10个技能模板 + 6条评价）
+│       ├── categories.ts             # 分类定义
+│       └── utils.ts                  # 工具函数
+├── public/                           # 静态资源
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+└── components.json                   # shadcn/ui 配置
+```
+
+---
+
+## 页面说明
+
+### 首页 `/`
+- Hero 区域：标题 + 副标题 + CTA 按钮
+- 信任条：统计数据展示
+- 三大入口卡片：语言与内容 / 编程与技术 / 思考与工作流
+- 热门技能 / 最新模板 / 新手推荐：横向滚动卡片列表
+- 用户评价轮播
+
+### 技能市场 `/skills`
+- 全局搜索（标题、描述、标签）
+- 分类筛选、难度筛选、排序（最热/评分/最新）
+- 响应式网格布局
+
+### 技能详情 `/skills/[id]`
+- 标题 + 元信息（分类、难度、评分、使用次数）
+- **一键复制使用**：在线版 / 本地版 Tab 切换
+- **变量填充表单**：填写变量后 Prompt 自动更新
+- **Before/After 对比**：多模型输出 Tab 切换
+- 使用步骤（在线 / 本地分别说明）
+- 推荐模型表格
+- 进阶玩法
+- 互动按钮（点赞、收藏、分享）
+
+### 其他页面
+- `/categories` — 分类浏览
+- `/categories/[slug]` — 分类详情
+- `/guide` — 新手指南
+- `/submit` — 提交模板
+- `/login` — 登录
+- `/register` — 注册
+
+---
+
+## 设计系统
+
+### 配色
+
+| 用途 | 颜色值 |
+|------|--------|
+| 主色（Cyan） | `#00d4ff` |
+| 背景 | `#0a0e1a` → `#000000` 渐变 |
+| 卡片背景 | `rgba(255,255,255,0.03)` 毛玻璃 |
+| 卡片边框 | `rgba(0,212,255,0.12)` |
+| 正文 | `#e6edf3` |
+| 辅助文字 | `#8b949e` |
+
+### CSS 工具类
+
+```css
+.glass-card          /* 毛玻璃卡片 */
+.glass-card-hover    /* 悬浮上浮效果 */
+.glow-text           /* 文字发光 */
+.glow-border         /* 边框发光 */
+.gradient-text       /* 渐变文字 */
+.scrollbar-hide      /* 隐藏滚动条 */
+```
+
+---
+
+## 数据结构
+
+### Skill（技能模板）
+
+```typescript
+interface Skill {
+  id: string;              // 唯一标识
+  title: string;           // 标题
+  subtitle: string;        // 一句话描述
+  category: string;        // 分类名称
+  categorySlug: string;    // 分类 slug
+  difficulty: "新手友好" | "进阶" | "高级";
+  rating: number;          // 评分 (0-5)
+  usageCount: number;      // 使用次数
+  promptOnline: string;    // 在线版 Prompt
+  promptLocal: string;     // 本地版 Prompt
+  variables: SkillVariable[];           // 变量列表
+  beforeAfter: BeforeAfterExample;      // 效果对比
+  recommendedModels: RecommendedModel[];// 推荐模型
+  // ... 更多字段见 src/lib/types.ts
+}
+```
+
+### 添加新技能
+
+编辑 `src/lib/mock-data.ts`，在 `skills` 数组中添加新的 Skill 对象即可。
+
+---
+
+## 下一步（TODO）
+
+- [ ] 接入 Supabase（Auth + PostgreSQL + pgvector 向量搜索）
+- [ ] 实现真实用户系统（登录/注册/收藏）
+- [ ] Prompt 版本管理
+- [ ] 模板使用反馈评分系统
+- [ ] 支付系统（Freemium + Pro 订阅）
+- [ ] 用户提交模板审核流程
+- [ ] SEO 优化
+- [ ] 移动端细节打磨
+
+---
+
+## 部署
+
+### Vercel（推荐）
+
+```bash
+# 安装 Vercel CLI
+npm i -g vercel
+
+# 部署
+vercel
+```
+
+或直接将 GitHub 仓库连接到 [Vercel](https://vercel.com) 自动部署。
+
+---
+
+## License
+
+MIT
