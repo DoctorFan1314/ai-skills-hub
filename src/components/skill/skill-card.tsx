@@ -2,14 +2,10 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Star, Users, ArrowRight } from "lucide-react";
 import type { Skill } from "@/lib/types";
+import { COLORS } from "@/lib/theme";
 
 export function SkillCard({ skill }: { skill: Skill }) {
-  const categoryColors: Record<string, string> = {
-    content: "#00d4ff",
-    coding: "#7c3aed",
-    thinking: "#10b981",
-  };
-  const color = categoryColors[skill.categorySlug] || "#00d4ff";
+  const color = COLORS.category[skill.categorySlug] || COLORS.primary;
 
   return (
     <Link href={`/skills/${skill.id}`}>

@@ -12,8 +12,11 @@ export function ParticleBackground() {
     if (!ctx) return;
 
     let animationId: number;
+    let paused = false;
     const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = [];
-    const count = 50;
+    const count = 30;
+    const connectionDist = 150;
+    const connectionDistSq = connectionDist * connectionDist;
 
     function resize() {
       if (!canvas) return;
@@ -37,6 +40,7 @@ export function ParticleBackground() {
     }
 
     function animate() {
+      if (paused) return;
       if (!canvas || !ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const p of particles) {
@@ -53,12 +57,13 @@ export function ParticleBackground() {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < connectionDistSq) {
+            const dist = Math.sqrt(distSq);
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(0, 212, 255, ${0.03 * (1 - dist / 150)})`;
+            ctx.strokeStyle = `rgba(0, 212, 255, ${0.03 * (1 - dist / connectionDist)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -67,12 +72,27 @@ export function ParticleBackground() {
       animationId = requestAnimationFrame(animate);
     }
 
+    function onVisibilityChange() {
+      if (document.hidden) {
+        paused = true;
+        cancelAnimationFrame(animationId);
+      } else {
+        paused = false;
+        animate();
+      }
+    }
+
     resize();
     init();
     animate();
     const onResize = () => { resize(); init(); };
     window.addEventListener("resize", onResize);
-    return () => { cancelAnimationFrame(animationId); window.removeEventListener("resize", onResize); };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" style={{ opacity: 0.6 }} />;

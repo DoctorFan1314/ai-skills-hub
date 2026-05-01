@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Copy, Zap, Globe, Laptop, ArrowRight, Sparkles } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "新手指南 — AI Skills Hub",
+  description: "即使你从未写过 Prompt，也能在 3 分钟内上手使用我们的高质量技能模板",
+};
 
 export default function GuidePage() {
   return (

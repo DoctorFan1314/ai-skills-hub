@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,18 @@ const navLinks = [
 
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  function handleSearch(e?: React.KeyboardEvent<HTMLInputElement>) {
+    if (e && e.key !== "Enter") return;
+    const q = searchQuery.trim();
+    if (q) {
+      router.push(`/skills?q=${encodeURIComponent(q)}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-black/60 backdrop-blur-xl">
@@ -47,13 +60,16 @@ export function Navbar() {
                 placeholder="搜索技能模板..."
                 className="h-8 w-40 md:w-56 bg-white/5 border-white/10 text-white placeholder:text-[#8b949e] text-sm"
                 autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
               />
-              <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(false)} className="text-[#8b949e] hover:text-white">
+              <Button variant="ghost" size="icon-sm" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="text-[#8b949e] hover:text-white" aria-label="关闭搜索">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(true)} className="text-[#8b949e] hover:text-white">
+            <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(true)} className="text-[#8b949e] hover:text-white" aria-label="搜索">
               <Search className="h-4 w-4" />
             </Button>
           )}
@@ -70,7 +86,7 @@ export function Navbar() {
           <Sheet>
             <SheetTrigger
               render={
-                <Button variant="ghost" size="icon-sm" className="lg:hidden text-[#8b949e] hover:text-white">
+                <Button variant="ghost" size="icon-sm" className="lg:hidden text-[#8b949e] hover:text-white" aria-label="打开导航菜单">
                   <Menu className="h-5 w-5" />
                 </Button>
               }

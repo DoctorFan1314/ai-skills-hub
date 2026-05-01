@@ -696,12 +696,3 @@ export function getBeginnerSkills(): Skill[] {
 export function getFeaturedSkills(): Skill[] {
   return skills.filter((s) => s.featured);
 }
-export function searchSkills(query: string): Skill[] {
-  const q = query.toLowerCase();
-  return skills.filter(
-    (s) =>
-      s.title.toLowerCase().includes(q) ||
-      s.description.toLowerCase().includes(q) ||
-      s.tags.some((t) => t.toLowerCase().includes(q))
-  );
-}

@@ -87,13 +87,11 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
   }
   body {
+    @apply bg-background text-foreground;
     background: linear-gradient(180deg, #0a0e1a 0%, #000000 100%);
     min-height: 100vh;
   }
