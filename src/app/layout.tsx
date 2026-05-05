@@ -4,6 +4,9 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ParticleBackground } from "@/components/shared/particle-bg";
+import { ToastProvider } from "@/contexts/toast-context";
+import { AuthProvider } from "@/contexts/auth-context";
+import { Toaster } from "@/components/ui/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +35,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ParticleBackground />
-        <Navbar />
-        <main className="flex-1 relative z-10">{children}</main>
-        <Footer />
+        <ToastProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1 relative z-10">{children}</main>
+            <Footer />
+            <Toaster />
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -7,6 +7,8 @@ import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/contexts/toast-context";
 
 const navLinks = [
   { href: "/", label: "首页" },
@@ -19,7 +21,10 @@ const navLinks = [
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
   const router = useRouter();
+  const { user, loaded, logout } = useAuth();
+  const { toast } = useToast();
 
   function handleSearch(e?: React.KeyboardEvent<HTMLInputElement>) {
     if (e && e.key !== "Enter") return;
@@ -29,6 +34,12 @@ export function Navbar() {
       setSearchOpen(false);
       setSearchQuery("");
     }
+  }
+
+  function handleLogout() {
+    logout();
+    toast("已退出登录");
+    setSheetOpen(false);
   }
 
   return (
@@ -75,15 +86,24 @@ export function Navbar() {
           )}
 
           <div className="hidden md:flex items-center gap-2">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-[#8b949e] hover:text-white">登录</Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm" className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-medium">免费开始</Button>
-            </Link>
+            {!loaded ? null : user ? (
+              <>
+                <span className="text-sm text-[#8b949e]">你好, {user.username}</span>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-[#8b949e] hover:text-white">退出</Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-[#8b949e] hover:text-white">登录</Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm" className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-medium">免费开始</Button>
+                </Link>
+              </>
+            )}
           </div>
 
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger
               render={
                 <Button variant="ghost" size="icon-sm" className="lg:hidden text-[#8b949e] hover:text-white" aria-label="打开导航菜单">
@@ -95,15 +115,24 @@ export function Navbar() {
               <SheetTitle className="text-white sr-only">导航菜单</SheetTitle>
               <nav className="flex flex-col gap-1 mt-8">
                 {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href} className="px-4 py-3 text-[#8b949e] hover:text-white transition-colors rounded-md hover:bg-white/5">
+                  <Link key={link.href} href={link.href} onClick={() => setSheetOpen(false)} className="px-4 py-3 text-[#8b949e] hover:text-white transition-colors rounded-md hover:bg-white/5">
                     {link.label}
                   </Link>
                 ))}
                 <div className="border-t border-white/10 my-4" />
-                <Link href="/login" className="px-4 py-3 text-[#8b949e] hover:text-white">登录</Link>
-                <Link href="/register" className="px-4 py-3">
-                  <Button className="w-full bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-medium">免费开始</Button>
-                </Link>
+                {!loaded ? null : user ? (
+                  <>
+                    <span className="px-4 py-3 text-[#8b949e]">你好, {user.username}</span>
+                    <button onClick={handleLogout} className="px-4 py-3 text-left text-[#8b949e] hover:text-white">退出</button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-[#8b949e] hover:text-white">登录</Link>
+                    <Link href="/register" onClick={() => setSheetOpen(false)} className="px-4 py-3">
+                      <Button className="w-full bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-medium">免费开始</Button>
+                    </Link>
+                  </>
+                )}
               </nav>
             </SheetContent>
           </Sheet>

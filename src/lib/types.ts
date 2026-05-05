@@ -52,7 +52,7 @@ export interface Category {
   name: string;
   icon: string;
   description: string;
-  skillCount: number;
+  skillCount?: number;
   color: string;
 }
 

@@ -1,6 +1,12 @@
 import Link from "next/link";
 
-const footerLinks = {
+interface FooterLink {
+  label: string;
+  href: string;
+  disabled?: boolean;
+}
+
+const footerLinks: Record<string, FooterLink[]> = {
   产品: [
     { label: "技能市场", href: "/skills" },
     { label: "分类浏览", href: "/categories" },
@@ -12,8 +18,8 @@ const footerLinks = {
     { label: "反馈建议", href: "/submit" },
   ],
   关于: [
-    { label: "使用条款", href: "#" },
-    { label: "隐私政策", href: "#" },
+    { label: "使用条款", href: "#", disabled: true },
+    { label: "隐私政策", href: "#", disabled: true },
   ],
 };
 
@@ -39,9 +45,13 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <Link href={link.href} className="text-sm text-[#8b949e] hover:text-white transition-colors">
-                      {link.label}
-                    </Link>
+                    {link.disabled ? (
+                      <span className="text-sm text-[#8b949e]/40 cursor-default">{link.label}</span>
+                    ) : (
+                      <Link href={link.href} className="text-sm text-[#8b949e] hover:text-white transition-colors">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

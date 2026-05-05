@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sparkles, BookOpen } from "lucide-react";
+import { skills } from "@/lib/mock-data";
 
 export function Hero() {
   return (
@@ -13,7 +14,7 @@ export function Hero() {
         <div className="text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff] text-sm mb-8">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>1284+ 精选实测模板 · 每日更新</span>
+            <span>{skills.length}+ 精选实测模板 · 每日更新</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-6">
             <span className="glow-text">AI Skills Hub</span>

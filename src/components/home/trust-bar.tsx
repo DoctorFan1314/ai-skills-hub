@@ -1,6 +1,8 @@
+import { skills } from "@/lib/mock-data";
+
 export function TrustBar() {
   const stats = [
-    { value: "1284+", label: "精选实测模板" },
+    { value: `${skills.length}+`, label: "精选实测模板" },
     { value: "每日", label: "更新" },
     { value: "真实", label: "Before/After 对比" },
     { value: "双适配", label: "在线/本地" },

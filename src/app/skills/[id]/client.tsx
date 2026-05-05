@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft } from "lucide-react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);

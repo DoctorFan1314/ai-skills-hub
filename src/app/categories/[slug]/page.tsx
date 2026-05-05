@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { categories } from "@/lib/categories";
 import CategoryDetailClient from "./client";
 
@@ -15,5 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CategoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const category = categories.find((c) => c.slug === slug);
+  if (!category) notFound();
   return <CategoryDetailClient slug={slug} />;
 }
