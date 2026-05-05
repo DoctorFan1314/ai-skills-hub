@@ -16,6 +16,9 @@ export function Footer() {
   const footerLinks: Record<string, FooterLink[]> = {
     [t.common.skills]: [
       { label: t.common.skills, href: "/skills" },
+      { label: t.publish.title, href: "/publish" },
+    ],
+    [t.common.prompts]: [
       { label: t.common.prompts, href: "/prompts" },
       { label: t.common.categories, href: "/categories" },
       { label: t.common.trending, href: "/trending" },
@@ -37,7 +40,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-background/60 mt-auto">
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">

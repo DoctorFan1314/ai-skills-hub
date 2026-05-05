@@ -102,6 +102,26 @@ export interface Dictionary {
     twitter: string; newsletter: string; newsletterPlaceholder: string; subscribe: string;
     copyright: string; platforms: string;
   };
+  publish: {
+    title: string; subtitle: string;
+    basicInfo: string; skillName: string; skillNamePlaceholder: string;
+    displayName: string; displayNamePlaceholder: string;
+    description: string; descriptionPlaceholder: string;
+    category: string; developer: string; developerPlaceholder: string;
+    installCommand: string; installCommandPlaceholder: string;
+    version: string; license: string;
+    content: string; readme: string; readmePlaceholder: string;
+    files: string; addFile: string; fileName: string; fileContent: string; removeFile: string;
+    examples: string; demoInput: string; demoInputPlaceholder: string;
+    demoOutput: string; demoOutputPlaceholder: string;
+    tags: string; tagsPlaceholder: string;
+    submitBtn: string; successTitle: string; successDesc: string;
+    continueSubmit: string; mySkills: string;
+    nameRequired: string; titleRequired: string; descRequired: string;
+    developerRequired: string; installRequired: string; versionRequired: string;
+    readmeRequired: string; filesRequired: string;
+    viewSkill: string; publishAnother: string;
+  };
   admin: {
     title: string; pendingSubmissions: string; userManage: string; skillAnalytics: string;
     commentManage: string; approve: string; reject: string; reviewNote: string;

@@ -1,18 +1,10 @@
-# AI Skills Hub — 高质量LLM技能模板库
+# AI Skills Hub — Agent 技能市场 + Prompt 模板平台
 
 > **[English](README.md)**
 
-> 覆盖六大领域的LLM技能模板 · 复制即用，去AI味 · 把强大AI真正变成你的生产力武器
+> 发现可执行的 Agent 技能和高质量 Prompt 模板 · 一键安装 · 赋予 AI 真正的行动力
 
 完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama 等主流平台。
-
----
-
-## 项目截图
-
-- 深蓝至黑色渐变背景 + 粒子动画
-- 毛玻璃卡片 + 氰色霓虹边框
-- 响应式设计，移动端优先
 
 ---
 
@@ -61,6 +53,8 @@ npm start
 | 样式 | Tailwind CSS v4 |
 | 组件库 | shadcn/ui (基于 Base UI) |
 | 图标 | Lucide React |
+| 代码高亮 | react-syntax-highlighter |
+| 文件下载 | JSZip + file-saver |
 | 数据 | 本地 Mock 数据（可迁移至 Supabase） |
 | 部署 | Vercel（推荐） |
 
@@ -73,16 +67,22 @@ ai-skills-hub/
 ├── src/
 │   ├── app/                          # Next.js App Router 页面
 │   │   ├── layout.tsx                # 根布局（字体、Navbar、Footer、粒子背景）
-│   │   ├── page.tsx                  # 首页
+│   │   ├── page.tsx                  # 首页（技能优先）
 │   │   ├── globals.css               # 全局样式 + CSS 变量 + 工具类
-│   │   ├── skills/
-│   │   │   ├── page.tsx              # 技能市场（搜索、筛选、排序、分页）
-│   │   │   └── [id]/page.tsx         # 技能详情页
+│   │   ├── skills/                   # Agent 技能市场
+│   │   │   ├── page.tsx              # 技能列表（搜索、筛选、排序）
+│   │   │   └── [id]/page.tsx         # 技能详情（介绍/文件/反馈三栏）
+│   │   ├── prompts/                  # Prompt 模板
+│   │   │   ├── page.tsx              # 模板列表
+│   │   │   └── [id]/page.tsx         # 模板详情
+│   │   ├── publish/page.tsx          # 发布自己的 Agent 技能
 │   │   ├── categories/
-│   │   │   ├── page.tsx              # 分类浏览
+│   │   │   ├── page.tsx              # 分类浏览（Prompt）
 │   │   │   └── [slug]/page.tsx       # 分类详情
-│   │   ├── guide/page.tsx            # 新手指南 + Prompt 工程技巧
-│   │   ├── submit/page.tsx           # 提交模板
+│   │   ├── trending/page.tsx         # 排行榜（Prompt）
+│   │   ├── tags/                     # 标签云（Prompt）
+│   │   ├── guide/page.tsx            # 新手指南
+│   │   ├── submit/page.tsx           # 提交 Prompt 模板
 │   │   ├── login/page.tsx            # 登录
 │   │   └── register/page.tsx         # 注册
 │   ├── components/
@@ -94,27 +94,34 @@ ai-skills-hub/
 │   │   │   ├── hero.tsx              # Hero 区域
 │   │   │   ├── trust-bar.tsx         # 信任条
 │   │   │   ├── category-cards.tsx    # 六大入口卡片
-│   │   │   ├── skill-section.tsx     # 技能列表区块
+│   │   │   ├── skill-section.tsx     # Prompt 技能区块
+│   │   │   ├── agent-skill-section.tsx # Agent 技能区块
 │   │   │   └── testimonials.tsx      # 用户评价
-│   │   ├── skill/
-│   │   │   └── skill-card.tsx        # 技能卡片
+│   │   ├── agent-skill/
+│   │   │   └── agent-skill-card.tsx  # Agent 技能卡片
 │   │   └── shared/
 │   │       └── particle-bg.tsx       # 粒子背景动画
 │   ├── contexts/
 │   │   ├── toast-context.tsx         # Toast 通知系统
-│   │   └── auth-context.tsx          # 认证上下文（基于 localStorage）
+│   │   ├── auth-context.tsx          # 认证上下文（基于 localStorage）
+│   │   ├── theme-context.tsx         # 主题上下文（暗色/亮色）
+│   │   └── i18n-context.tsx          # 国际化上下文（中/英）
 │   ├── hooks/
-│   │   └── use-local-storage.ts      # localStorage Hook
+│   │   └── use-keyboard-shortcuts.ts # 命令面板快捷键
 │   └── lib/
 │       ├── types.ts                  # TypeScript 类型定义
-│       ├── mock-data.ts              # Mock 数据（28个技能模板 + 10条评价）
+│       ├── mock-data.ts              # Prompt 模板数据（28个模板 + 10条评价）
+│       ├── mock-agent-skills.ts      # Agent 技能数据（8个技能）
 │       ├── categories.ts             # 分类定义（6个分类）
+│       ├── i18n/
+│       │   ├── types.ts              # Dictionary 类型
+│       │   ├── zh.ts                 # 中文翻译
+│       │   └── en.ts                 # 英文翻译
 │       ├── theme.ts                  # 颜色/主题常量
 │       └── utils.ts                  # 工具函数
 ├── public/                           # 静态资源
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
 └── components.json                   # shadcn/ui 配置
 ```
 
@@ -123,49 +130,50 @@ ai-skills-hub/
 ## 页面说明
 
 ### 首页 `/`
-- Hero 区域：标题 + 副标题 + CTA 按钮
-- 信任条：统计数据展示
-- 六大入口卡片：语言与内容 / 编程与技术 / 思考与工作流 / 数据分析 / 效率工具 / 创意写作
-- 热门技能 / 最新模板 / 新手推荐：卡片列表
+- Hero 区域：技能优先的标题 + CTA 按钮
+- 信任条：平台兼容性统计
+- 热门 Agent 技能：市场卡片（下载量、星标、安装命令）
+- 六大入口卡片
+- 最新 / 新手友好 Prompt 模板
 - 用户评价
 
-### 技能市场 `/skills`
-- 全局搜索（标题、描述、标签）
-- 分类筛选、难度筛选、排序（最热/评分/最新）
-- 筛选状态同步到 URL（可分享、支持浏览器前进/后退）
-- 加载更多分页
-- 响应式网格布局
+### Agent 技能市场 `/skills`
+- 全文搜索（名称、标题、描述、触发词、标签）
+- 按下载量 / 星标 / 最新排序
+- 按合集和分类筛选
+- 市场级卡片：头像、作者、描述、标签、统计、安装命令
 
-### 技能详情 `/skills/[id]`
-- 标题 + 元信息（分类、难度、评分、使用次数）
-- **一键复制使用**：在线版 / 本地版 Tab 切换
-- **变量填充表单**：填写变量后 Prompt 自动更新
-- **Before/After 对比**：多模型输出 Tab 切换
-- 使用步骤（在线 / 本地分别说明）
-- 推荐模型表格
-- 进阶玩法
-- 互动按钮（点赞、收藏、分享）— localStorage 持久化
+### Agent 技能详情 `/skills/[id]`
+- **Tab 1 — 技能介绍**：元数据表（名称、描述、分类、开发者、版本、许可证、安装命令）+ README 渲染
+- **Tab 2 — 技能文件**：左侧文件树（含文件大小）、右侧语法高亮代码查看器、单文件下载、全部打包下载
+- **Tab 3 — 交流反馈**：评论输入 + 社区评价（星评、点赞）
+
+### 发布技能 `/publish`
+- 完整的 Agent 技能发布表单
+- 字段：名称、标题、描述、分类、开发者、安装命令、版本、许可证
+- README 编辑器（Markdown）
+- 动态文件列表（添加/删除文件及内容）
+- 演示输入/输出、标签
+- 保存到 localStorage，可在技能详情页查看
+
+### Prompt 模板 `/prompts`
+- 搜索、筛选、排序 Prompt 模板
+- 分类、难度、排序选项
+
+### Prompt 详情 `/prompts/[id]`
+- 在线版/本地版 Prompt
+- 变量填充表单
+- Before/After 对比
+- 使用说明
 
 ### 其他页面
-- `/categories` — 分类浏览
+- `/categories` — 分类浏览（Prompt）
 - `/categories/[slug]` — 分类详情
-- `/guide` — 新手指南 + Prompt 工程技巧（Chain-of-Thought、Few-Shot、角色扮演等）
-- `/submit` — 提交模板（含表单验证 + localStorage 持久化）
-- `/login` — 登录（基于 localStorage 的认证）
-- `/register` — 注册（基于 localStorage 的认证）
-
----
-
-## 技能分类（6大分类，28个模板）
-
-| 分类 | 图标 | 数量 | 示例 |
-|------|------|------|------|
-| 语言与内容生产 | 💬 | 5 | 小红书笔记、翻译、标题生成、SEO博客、社交媒体策略 |
-| 编程与技术任务 | 🛠️ | 5 | 代码审查、API生成、Bug修复、React组件生成、事故响应 |
-| 思考与工作流 | ⚙️ | 5 | 周报、结构化思考、深度研究、邮件撰写、SWOT分析 |
-| 数据分析 | 📊 | 4 | SQL优化、数据清洗、图表推荐、数据洞察 |
-| 效率工具 | ⚡ | 5 | 会议纪要、任务分解、邮件批量生成、工作流自动化、日程规划 |
-| 创意写作 | ✍️ | 4 | 故事大纲、角色塑造、世界观搭建、对白优化 |
+- `/trending` — 排行榜
+- `/tags` — 标签云
+- `/guide` — 新手指南 + Prompt 工程技巧
+- `/submit` — 提交 Prompt 模板
+- `/login` / `/register` — 认证（基于 localStorage）
 
 ---
 
@@ -173,54 +181,57 @@ ai-skills-hub/
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| 技能市场 | ✅ | 搜索、筛选、排序、分页、响应式网格 |
+| Agent 技能市场 | ✅ | 搜索、筛选、排序、市场卡片 |
+| 技能详情页 | ✅ | 三栏布局：介绍、文件、反馈 |
+| 文件下载 | ✅ | 单文件 + zip 打包下载（JSZip） |
+| 代码高亮 | ✅ | react-syntax-highlighter 暗色主题 |
+| 发布技能 | ✅ | 完整表单，localStorage 持久化 |
+| Prompt 模板 | ✅ | 28个模板，搜索、筛选、排序 |
 | 一键复制 Prompt | ✅ | 在线/本地版本，剪贴板 API |
 | 变量填充 | ✅ | 实时 Prompt 模板更新 |
-| Before/After 对比 | ✅ | 多模型输出 Tab |
 | 用户认证 | ✅ | 基于 localStorage 的登录/注册/登出 |
 | 点赞/收藏 | ✅ | localStorage 持久化 |
-| 提交模板 | ✅ | 表单验证 + localStorage 持久化 |
-| URL 同步筛选 | ✅ | 可分享的筛选 URL |
-| Toast 通知 | ✅ | 自动消失、去重 |
-| SEO | ✅ | 页面级 metadata、JSON-LD、sitemap、robots.txt |
-| 404 页面 | ✅ | 自定义 404 页 |
-| 错误边界 | ✅ | 全局错误页面 |
-| 加载骨架屏 | ✅ | 技能详情页骨架屏 |
-| 可访问性 | ✅ | ARIA 角色、sr-only 标签、语义化 HTML |
+| 国际化 | ✅ | 中文/英文，基于 Context |
+| 暗色/亮色主题 | ✅ | 系统默认 + 手动切换 |
+| SEO | ✅ | 页面级 metadata、sitemap、robots.txt |
 | 响应式设计 | ✅ | 移动端优先、Sheet 抽屉导航 |
-| Prompt 工程指南 | ✅ | CoT、Few-Shot、角色扮演等技巧 |
-
----
-
-## 设计系统
-
-### 配色
-
-| 用途 | 颜色值 |
-|------|--------|
-| 主色（Cyan） | `#00d4ff` |
-| 背景 | `#0a0e1a` → `#000000` 渐变 |
-| 卡片背景 | `rgba(255,255,255,0.03)` 毛玻璃 |
-| 卡片边框 | `rgba(0,212,255,0.12)` |
-| 正文 | `#e6edf3` |
-| 辅助文字 | `#8b949e` |
-
-### CSS 工具类
-
-```css
-.glass-card          /* 毛玻璃卡片 */
-.glass-card-hover    /* 悬浮上浮效果 */
-.glow-text           /* 文字发光 */
-.glow-border         /* 边框发光 */
-.gradient-text       /* 渐变文字 */
-.scrollbar-hide      /* 隐藏滚动条 */
-```
+| 命令面板 | ✅ | 键盘快捷键 |
 
 ---
 
 ## 数据结构
 
-### Skill（技能模板）
+### AgentSkill
+
+```typescript
+interface AgentSkill {
+  id: string;              // 唯一标识
+  name: string;            // 技能名称（如 "web-scraper"）
+  title: string;           // 显示标题
+  description: string;     // 一句话描述
+  avatar: string;          // 头像 emoji/图标
+  author: string;          // 作者名
+  developer: string;       // 开发者名
+  downloads: number;       // 下载量
+  stars: number;           // 星标数
+  lastUpdated: string;     // 最后更新日期
+  collection: string;      // 合集名
+  category: string;        // 分类名
+  installCommand: string;  // CLI 安装命令
+  readme: string;          // Markdown README
+  license: string;         // 许可证（MIT、Apache-2.0 等）
+  version: string;         // 版本号
+  files: Record<string, string>;  // 文件名 → 内容
+  demoInput: string;       // 演示输入
+  demoOutput: string;      // 演示输出
+  triggers: string[];      // 触发示例
+  tags: string[];          // 标签
+  featured: boolean;       // 精选标记
+  trending: boolean;       // 热门标记
+}
+```
+
+### Skill（Prompt 模板）
 
 ```typescript
 interface Skill {
@@ -228,39 +239,14 @@ interface Skill {
   title: string;           // 标题
   subtitle: string;        // 一句话描述
   category: string;        // 分类名称
-  categorySlug: string;    // 分类 slug
   difficulty: "新手友好" | "进阶" | "高级";
   rating: number;          // 评分 (0-5)
   usageCount: number;      // 使用次数
   promptOnline: string;    // 在线版 Prompt
   promptLocal: string;     // 本地版 Prompt
-  variables: SkillVariable[];           // 变量列表
-  beforeAfter: BeforeAfterExample;      // 效果对比
-  recommendedModels: RecommendedModel[];// 推荐模型
   // ... 更多字段见 src/lib/types.ts
 }
 ```
-
-### 添加新技能
-
-编辑 `src/lib/mock-data.ts`，在 `skills` 数组中添加新的 Skill 对象即可。
-
----
-
-## 贡献指南
-
-见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
----
-
-## 下一步（TODO）
-
-- [ ] 接入 Supabase（Auth + PostgreSQL + pgvector 向量搜索）
-- [ ] Prompt 版本管理
-- [ ] 模板使用反馈评分系统
-- [ ] 支付系统（Freemium + Pro 订阅）
-- [ ] 用户提交模板审核流程
-- [ ] 移动端细节打磨
 
 ---
 
@@ -296,9 +282,9 @@ AI Skills Hub 是一个前端学习项目，旨在演示如何使用 Next.js、T
 
 ### AI 输出免责
 
-- 本项目提供的 Prompt 模板仅为示例参考，不保证 AI 模型输出的准确性、安全性或适用性
+- 本项目提供的 Prompt 模板和 Agent 技能仅为示例参考，不保证 AI 模型输出的准确性、安全性或适用性
 - AI 生成的内容可能包含错误、偏见或不当信息，使用者应自行判断和甄别
-- 使用任何 Prompt 模板所产生的后果，由使用者自行承担，本项目不承担任何责任
+- 使用任何 Prompt 模板或 Agent 技能所产生的后果，由使用者自行承担，本项目不承担任何责任
 
 ### 商标声明
 
@@ -316,7 +302,7 @@ ChatGPT（OpenAI）、Claude（Anthropic）、Grok（xAI）、DeepSeek、Qwen / 
 
 ---
 
-> 如果本项目对你有帮助，欢迎 Star ⭐ 支持。仅此而已，不构成任何明示或暗示的担保。
+> 如果本项目对你有帮助，欢迎 Star 支持。仅此而已，不构成任何明示或暗示的担保。
 
 ### 致谢
 

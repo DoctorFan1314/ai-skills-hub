@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Zap, SlidersHorizontal } from "lucide-react";
-import { agentSkills } from "@/lib/mock-agent-skills";
+import { agentSkills, getPublishedSkills } from "@/lib/mock-agent-skills";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { useI18n } from "@/contexts/i18n-context";
 
@@ -19,8 +19,10 @@ export default function SkillsClient() {
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [showFilters, setShowFilters] = useState(false);
 
+  const allSkills = useMemo(() => [...agentSkills, ...getPublishedSkills()], []);
+
   let filtered = query.trim()
-    ? agentSkills.filter(
+    ? allSkills.filter(
         (s) =>
           s.name.toLowerCase().includes(query.toLowerCase()) ||
           s.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -28,7 +30,7 @@ export default function SkillsClient() {
           s.triggers.some((tr) => tr.toLowerCase().includes(query.toLowerCase())) ||
           s.tags.some((tag) => tag.toLowerCase().includes(query.toLowerCase()))
       )
-    : [...agentSkills];
+    : [...allSkills];
 
   if (selectedCollection !== "全部") {
     filtered = filtered.filter((s) => s.collection === selectedCollection);

@@ -852,7 +852,35 @@ Chart generated: monthly_trend.png`,
 ];
 
 export function getAgentSkillById(id: string): AgentSkill | undefined {
-  return agentSkills.find((s) => s.id === id);
+  const found = agentSkills.find((s) => s.id === id);
+  if (found) return found;
+  // Check localStorage for user-published skills (client-side only)
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("ai-skills-hub-published-skills");
+      if (stored) {
+        const published: AgentSkill[] = JSON.parse(stored);
+        return published.find((s) => s.id === id);
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return undefined;
+}
+
+export function getPublishedSkills(): AgentSkill[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem("ai-skills-hub-published-skills");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getAllAgentSkills(): AgentSkill[] {
+  return [...agentSkills, ...getPublishedSkills()];
 }
 
 export function getTrendingAgentSkills(): AgentSkill[] {

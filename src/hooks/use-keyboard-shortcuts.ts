@@ -41,6 +41,7 @@ export function getCommandItems(router: { push: (url: string) => void }): Comman
     { label: "首页", action: () => router.push("/"), category: "导航" },
     { label: "Prompt 模板", action: () => router.push("/prompts"), category: "导航" },
     { label: "Agent 技能", action: () => router.push("/skills"), category: "导航" },
+    { label: "发布技能", action: () => router.push("/publish"), category: "导航" },
     { label: "分类浏览", action: () => router.push("/categories"), category: "导航" },
     { label: "排行榜", action: () => router.push("/trending"), category: "导航" },
     { label: "标签云", action: () => router.push("/tags"), category: "导航" },

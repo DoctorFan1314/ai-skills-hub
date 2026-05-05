@@ -1,18 +1,10 @@
-# AI Skills Hub — High-Quality LLM Skill Template Library
+# AI Skills Hub — Agent Skills Marketplace + Prompt Template Platform
 
 > **[中文文档](README_CN.md)**
 
-> Production-ready LLM skill templates across 6 categories · Copy & use · Remove AI-sounding text · Turn AI into your real productivity weapon
+> Discover executable Agent Skills and high-quality Prompt Templates · One-click install · Give AI real action power
 
-Perfectly compatible with ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama and other mainstream platforms.
-
----
-
-## Screenshots
-
-- Deep blue-to-black gradient background + particle animation
-- Frosted glass cards + cyan neon borders
-- Responsive design, mobile-first
+Compatible with ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama and other mainstream platforms.
 
 ---
 
@@ -61,6 +53,8 @@ npm start
 | Styling | Tailwind CSS v4 |
 | UI Library | shadcn/ui (Base UI) |
 | Icons | Lucide React |
+| Code Highlight | react-syntax-highlighter |
+| File Download | JSZip + file-saver |
 | Data | Local Mock Data (migratable to Supabase) |
 | Deployment | Vercel (recommended) |
 
@@ -73,16 +67,22 @@ ai-skills-hub/
 ├── src/
 │   ├── app/                          # Next.js App Router pages
 │   │   ├── layout.tsx                # Root layout (fonts, Navbar, Footer, particle bg)
-│   │   ├── page.tsx                  # Homepage
+│   │   ├── page.tsx                  # Homepage (Skills-first)
 │   │   ├── globals.css               # Global styles + CSS variables + utilities
-│   │   ├── skills/
-│   │   │   ├── page.tsx              # Skill marketplace (search, filter, sort, pagination)
-│   │   │   └── [id]/page.tsx         # Skill detail page
+│   │   ├── skills/                   # Agent Skills marketplace
+│   │   │   ├── page.tsx              # Skill list (search, filter, sort)
+│   │   │   └── [id]/page.tsx         # Skill detail (intro/files/feedback tabs)
+│   │   ├── prompts/                  # Prompt Templates
+│   │   │   ├── page.tsx              # Prompt list
+│   │   │   └── [id]/page.tsx         # Prompt detail
+│   │   ├── publish/page.tsx          # Publish your own Agent Skill
 │   │   ├── categories/
-│   │   │   ├── page.tsx              # Category browse
+│   │   │   ├── page.tsx              # Category browse (Prompt)
 │   │   │   └── [slug]/page.tsx       # Category detail
-│   │   ├── guide/page.tsx            # Beginner guide + prompt engineering tips
-│   │   ├── submit/page.tsx           # Submit template
+│   │   ├── trending/page.tsx         # Trending (Prompt)
+│   │   ├── tags/                     # Tag cloud (Prompt)
+│   │   ├── guide/page.tsx            # Beginner guide
+│   │   ├── submit/page.tsx           # Submit prompt template
 │   │   ├── login/page.tsx            # Login
 │   │   └── register/page.tsx         # Register
 │   ├── components/
@@ -94,27 +94,34 @@ ai-skills-hub/
 │   │   │   ├── hero.tsx              # Hero section
 │   │   │   ├── trust-bar.tsx         # Trust bar
 │   │   │   ├── category-cards.tsx    # Six category entry cards
-│   │   │   ├── skill-section.tsx     # Skill list section
+│   │   │   ├── skill-section.tsx     # Prompt skill section
+│   │   │   ├── agent-skill-section.tsx # Agent skill section
 │   │   │   └── testimonials.tsx      # User testimonials
-│   │   ├── skill/
-│   │   │   └── skill-card.tsx        # Skill card
+│   │   ├── agent-skill/
+│   │   │   └── agent-skill-card.tsx  # Agent skill marketplace card
 │   │   └── shared/
 │   │       └── particle-bg.tsx       # Particle background animation
 │   ├── contexts/
 │   │   ├── toast-context.tsx         # Toast notification system
-│   │   └── auth-context.tsx          # Auth context (localStorage-based)
+│   │   ├── auth-context.tsx          # Auth context (localStorage-based)
+│   │   ├── theme-context.tsx         # Theme context (dark/light)
+│   │   └── i18n-context.tsx          # i18n context (zh/en)
 │   ├── hooks/
-│   │   └── use-local-storage.ts      # localStorage hook
+│   │   └── use-keyboard-shortcuts.ts # Command palette shortcuts
 │   └── lib/
 │       ├── types.ts                  # TypeScript type definitions
-│       ├── mock-data.ts              # Mock data (28 skill templates + 10 reviews)
+│       ├── mock-data.ts              # Prompt mock data (28 templates + 10 reviews)
+│       ├── mock-agent-skills.ts      # Agent Skills mock data (8 skills)
 │       ├── categories.ts             # Category definitions (6 categories)
+│       ├── i18n/
+│       │   ├── types.ts              # Dictionary type
+│       │   ├── zh.ts                 # Chinese translations
+│       │   └── en.ts                 # English translations
 │       ├── theme.ts                  # Color/theme constants
 │       └── utils.ts                  # Utility functions
 ├── public/                           # Static assets
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
 └── components.json                   # shadcn/ui config
 ```
 
@@ -123,49 +130,50 @@ ai-skills-hub/
 ## Pages
 
 ### Homepage `/`
-- Hero section: title + subtitle + CTA buttons
-- Trust bar: stats display
-- Six category entry cards: Language & Content / Coding & Tech / Thinking & Workflow / Data Analysis / Productivity / Creative Writing
-- Trending skills / Newest templates / Beginner picks: card lists
+- Hero section: Skills-focused title + CTA buttons
+- Trust bar: platform compatibility stats
+- Trending Agent Skills: marketplace cards with downloads, stars, install commands
+- Six category entry cards
+- Newest / Beginner-friendly Prompt Templates
 - User testimonials
 
-### Skill Marketplace `/skills`
-- Full-text search (title, description, tags)
-- Category filter, difficulty filter, sort (trending / rating / newest)
-- URL-synced filters (shareable, browser back/forward supported)
-- Load-more pagination
-- Responsive grid layout
+### Agent Skills Marketplace `/skills`
+- Full-text search (name, title, description, triggers, tags)
+- Sort by downloads / stars / newest
+- Filter by collection and category
+- Marketplace-grade cards: avatar, author, description, tags, stats, install command
 
-### Skill Detail `/skills/[id]`
-- Title + meta info (category, difficulty, rating, usage count)
-- **One-click copy**: Online / Local tab switch
-- **Variable fill form**: fill variables, prompt auto-updates
-- **Before/After comparison**: multi-model output tab switch
-- Usage steps (online / local separately)
-- Recommended models table
-- Advanced tips
-- Interactive buttons (like, bookmark, share) — persisted via localStorage
+### Agent Skill Detail `/skills/[id]`
+- **Tab 1 — Skill Intro**: Metadata table (name, description, category, developer, version, license, install command) + README markdown rendering
+- **Tab 2 — Skill Files**: File tree sidebar with file sizes, syntax-highlighted code viewer, per-file download, zip download all
+- **Tab 3 — Feedback**: Comment input + community reviews with star ratings and likes
+
+### Publish Skill `/publish`
+- Full form for publishing your own Agent Skill
+- Fields: name, title, description, category, developer, install command, version, license
+- README editor (Markdown)
+- Dynamic file list (add/remove files with content)
+- Demo input/output, tags
+- Saves to localStorage, viewable in skill detail page
+
+### Prompt Templates `/prompts`
+- Search, filter, sort prompt templates
+- Category, difficulty, sort options
+
+### Prompt Detail `/prompts/[id]`
+- Online/Local prompt versions
+- Variable fill form
+- Before/After comparison
+- Usage instructions
 
 ### Other Pages
-- `/categories` — Category browse
+- `/categories` — Category browse (Prompt)
 - `/categories/[slug]` — Category detail
-- `/guide` — Beginner guide + prompt engineering techniques
-- `/submit` — Submit template (with validation + localStorage persistence)
-- `/login` — Login (localStorage-based auth)
-- `/register` — Register (localStorage-based auth)
-
----
-
-## Skill Categories (6 Categories, 28 Templates)
-
-| Category | Icon | Skills | Examples |
-|----------|------|--------|----------|
-| Language & Content | 💬 | 5 | Xiaohongshu notes, translation, title generator, SEO blog, social media strategy |
-| Coding & Tech | 🛠️ | 5 | Code review, API generator, bug fixer, React component gen, incident responder |
-| Thinking & Workflow | ⚙️ | 5 | Weekly report, structured thinking, research assistant, email writer, SWOT analyzer |
-| Data Analysis | 📊 | 4 | SQL optimizer, data cleaner, chart advisor, data insights |
-| Productivity | ⚡ | 5 | Meeting summary, task planner, email batch generator, workflow automation, daily planner |
-| Creative Writing | ✍️ | 4 | Story outliner, character builder, worldbuilder, dialogue polisher |
+- `/trending` — Trending prompts
+- `/tags` — Tag cloud
+- `/guide` — Beginner guide + prompt engineering tips
+- `/submit` — Submit prompt template
+- `/login` / `/register` — Auth (localStorage-based)
 
 ---
 
@@ -173,54 +181,57 @@ ai-skills-hub/
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Skill marketplace | ✅ | Search, filter, sort, pagination, responsive grid |
+| Agent Skills marketplace | ✅ | Search, filter, sort, marketplace cards |
+| Skill detail page | ✅ | 3-tab layout: intro, files, feedback |
+| File download | ✅ | Single file + zip bundle download (JSZip) |
+| Code highlighting | ✅ | react-syntax-highlighter with dark theme |
+| Publish skills | ✅ | Full form, localStorage persistence |
+| Prompt templates | ✅ | 28 templates, search, filter, sort |
 | One-click prompt copy | ✅ | Online/Local versions, clipboard API |
 | Variable fill | ✅ | Real-time prompt template update |
-| Before/After comparison | ✅ | Multi-model output tabs |
 | User auth | ✅ | localStorage-based login/register/logout |
 | Like/Bookmark | ✅ | Persisted via localStorage |
-| Submit template | ✅ | Validation + localStorage persistence |
-| URL-synced filters | ✅ | Shareable filter URLs |
-| Toast notifications | ✅ | Auto-dismiss, deduplication |
-| SEO | ✅ | Per-page metadata, JSON-LD, sitemap, robots.txt |
-| 404 page | ✅ | Custom not-found page |
-| Error boundary | ✅ | Global error page |
-| Loading skeleton | ✅ | Skill detail page skeleton |
-| Accessibility | ✅ | ARIA roles, sr-only labels, semantic HTML |
+| i18n | ✅ | Chinese/English, context-based |
+| Dark/Light theme | ✅ | System default + manual toggle |
+| SEO | ✅ | Per-page metadata, sitemap, robots.txt |
 | Responsive design | ✅ | Mobile-first, Sheet drawer nav |
-| Prompt engineering guide | ✅ | CoT, Few-Shot, Role Prompting, etc. |
-
----
-
-## Design System
-
-### Colors
-
-| Purpose | Value |
-|---------|-------|
-| Primary (Cyan) | `#00d4ff` |
-| Background | `#0a0e1a` → `#000000` gradient |
-| Card background | `rgba(255,255,255,0.03)` frosted glass |
-| Card border | `rgba(0,212,255,0.12)` |
-| Body text | `#e6edf3` |
-| Muted text | `#8b949e` |
-
-### CSS Utilities
-
-```css
-.glass-card          /* Frosted glass card */
-.glass-card-hover    /* Hover float effect */
-.glow-text           /* Text glow */
-.glow-border         /* Border glow */
-.gradient-text       /* Gradient text */
-.scrollbar-hide      /* Hide scrollbar */
-```
+| Command palette | ✅ | Keyboard shortcuts |
 
 ---
 
 ## Data Structure
 
-### Skill (Skill Template)
+### AgentSkill
+
+```typescript
+interface AgentSkill {
+  id: string;              // Unique identifier
+  name: string;            // Skill name (e.g., "web-scraper")
+  title: string;           // Display title
+  description: string;     // One-line description
+  avatar: string;          // Avatar emoji/icon
+  author: string;          // Author name
+  developer: string;       // Developer name
+  downloads: number;       // Download count
+  stars: number;           // Star count
+  lastUpdated: string;     // Last update date
+  collection: string;      // Collection name
+  category: string;        // Category name
+  installCommand: string;  // CLI install command
+  readme: string;          // Markdown README
+  license: string;         // License (MIT, Apache-2.0, etc.)
+  version: string;         // Version string
+  files: Record<string, string>;  // filename → content
+  demoInput: string;       // Demo input
+  demoOutput: string;      // Demo output
+  triggers: string[];      // Trigger examples
+  tags: string[];          // Tags
+  featured: boolean;       // Featured flag
+  trending: boolean;       // Trending flag
+}
+```
+
+### Skill (Prompt Template)
 
 ```typescript
 interface Skill {
@@ -228,39 +239,14 @@ interface Skill {
   title: string;           // Title
   subtitle: string;        // One-line description
   category: string;        // Category name
-  categorySlug: string;    // Category slug
-  difficulty: "新手友好" | "进阶" | "高级";
+  difficulty: "beginner" | "intermediate" | "advanced";
   rating: number;          // Rating (0-5)
   usageCount: number;      // Usage count
   promptOnline: string;    // Online prompt
   promptLocal: string;     // Local prompt
-  variables: SkillVariable[];           // Variable list
-  beforeAfter: BeforeAfterExample;      // Effect comparison
-  recommendedModels: RecommendedModel[];// Recommended models
   // ... see src/lib/types.ts for all fields
 }
 ```
-
-### Adding New Skills
-
-Edit `src/lib/mock-data.ts` and add a new Skill object to the `skills` array.
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
-
-## TODO
-
-- [ ] Integrate Supabase (Auth + PostgreSQL + pgvector search)
-- [ ] Prompt version management
-- [ ] Template feedback/rating system
-- [ ] Payment system (Freemium + Pro subscription)
-- [ ] User template submission review workflow
-- [ ] Further mobile polish
 
 ---
 
@@ -296,9 +282,9 @@ AI Skills Hub is a frontend learning project demonstrating how to build full-sta
 
 ### AI Output Disclaimer
 
-- The prompt templates provided are examples only and do not guarantee accuracy, safety, or suitability of AI model outputs
+- The prompt templates and agent skills provided are examples only and do not guarantee accuracy, safety, or suitability of AI model outputs
 - AI-generated content may contain errors, bias, or inappropriate information — users should judge independently
-- Users bear full responsibility for any consequences from using prompt templates
+- Users bear full responsibility for any consequences from using prompt templates or agent skills
 
 ### Trademark Notice
 
@@ -316,7 +302,7 @@ This project may involve third-party API or service calls. Users should comply w
 
 ---
 
-> If this project helps you, a Star ⭐ is appreciated. Nothing more, nothing less — no warranties expressed or implied.
+> If this project helps you, a Star is appreciated. Nothing more, nothing less — no warranties expressed or implied.
 
 ### Acknowledgments
 
