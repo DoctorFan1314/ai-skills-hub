@@ -6,6 +6,44 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.4.0] — 2026-05-05
+
+### Added
+- **Publish Skill Page** (`/publish`) — full form for publishing Agent Skills with: name, title, description, category, developer, install command, version, license, README editor (Markdown), dynamic file list (add/remove/toggle), demo input/output, tags
+- Published skills saved to localStorage, viewable on skill detail page and skills list
+- `getPublishedSkills()` and `getAllAgentSkills()` helper functions in `mock-agent-skills.ts`
+- `publishedSkills` storage key in `storage-keys.ts`
+- **Footer Reorganized** — 4 sections: Agent Skills (with /publish link), Prompt Templates (with categories/trending/tags), Resources, Community
+- **Navbar** — "发布技能" added as 4th navigation link
+- `/publish` route in sitemap and keyboard command palette
+- i18n `publish` section with full Chinese/English translations
+
+### Changed
+- **README.md & README_CN.md** — rewritten to reflect dual-content architecture (Agent Skills marketplace + Prompt Template platform)
+- Footer grid updated from 4 to 5 columns
+- `getAgentSkillById` now checks both mock data and localStorage for user-published skills
+- Skills list page includes user-published skills via `getPublishedSkills()`
+
+### Files Modified
+- `README.md` — full rewrite for dual-content architecture
+- `README_CN.md` — full rewrite for dual-content architecture
+- `src/components/layout/navbar.tsx` — added "发布技能" nav link
+- `src/components/layout/footer.tsx` — reorganized link groups, 5-column grid
+- `src/lib/i18n/types.ts` — added `publish` section to Dictionary
+- `src/lib/i18n/zh.ts` — added `publish` Chinese translations
+- `src/lib/i18n/en.ts` — added `publish` English translations
+- `src/lib/mock-agent-skills.ts` — added `getPublishedSkills()`, `getAllAgentSkills()`, updated `getAgentSkillById`
+- `src/lib/storage-keys.ts` — added `publishedSkills` key
+- `src/app/skills/client.tsx` — includes published skills in list
+- `src/app/sitemap.ts` — added `/publish` route
+- `src/hooks/use-keyboard-shortcuts.ts` — added "发布技能" command
+
+### New Files
+- `src/app/publish/page.tsx` — server component with metadata
+- `src/app/publish/client.tsx` — publish skill form component
+
+---
+
 ## [v1.3.0] — 2026-05-05
 
 ### Added

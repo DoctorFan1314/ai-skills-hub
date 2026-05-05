@@ -6,6 +6,44 @@
 
 ---
 
+## [v1.4.0] — 2026-05-05
+
+### 新增
+- **发布技能页面** (`/publish`) — 完整的 Agent 技能发布表单，包含：名称、标题、描述、分类、开发者、安装命令、版本、许可证、README 编辑器（Markdown）、动态文件列表（添加/删除/折叠）、演示输入/输出、标签
+- 已发布技能保存到 localStorage，可在技能详情页和技能列表页查看
+- `mock-agent-skills.ts` 新增 `getPublishedSkills()` 和 `getAllAgentSkills()` 辅助函数
+- `storage-keys.ts` 新增 `publishedSkills` 存储键
+- **Footer 重新分组** — 4 个区块：Agent 技能（含 /publish 链接）、Prompt 模板（含分类/排行榜/标签云）、资源、社区
+- **导航栏** — 新增「发布技能」作为第 4 个导航链接
+- sitemap 和键盘命令面板新增 `/publish` 路由
+- i18n 新增 `publish` section，支持中英文完整翻译
+
+### 变更
+- **README.md 和 README_CN.md** — 重写，反映双内容架构（Agent 技能市场 + Prompt 模板平台）
+- Footer 网格从 4 列调整为 5 列
+- `getAgentSkillById` 现在同时搜索 mock 数据和 localStorage 中用户发布的技能
+- 技能列表页通过 `getPublishedSkills()` 包含用户发布的技能
+
+### 修改文件
+- `README.md` — 双内容架构全面重写
+- `README_CN.md` — 双内容架构全面重写
+- `src/components/layout/navbar.tsx` — 新增「发布技能」导航链接
+- `src/components/layout/footer.tsx` — 重新分组链接，5 列网格
+- `src/lib/i18n/types.ts` — Dictionary 新增 `publish` section
+- `src/lib/i18n/zh.ts` — 新增 `publish` 中文翻译
+- `src/lib/i18n/en.ts` — 新增 `publish` 英文翻译
+- `src/lib/mock-agent-skills.ts` — 新增 `getPublishedSkills()`、`getAllAgentSkills()`，更新 `getAgentSkillById`
+- `src/lib/storage-keys.ts` — 新增 `publishedSkills` 键
+- `src/app/skills/client.tsx` — 列表包含已发布技能
+- `src/app/sitemap.ts` — 新增 `/publish` 路由
+- `src/hooks/use-keyboard-shortcuts.ts` — 新增「发布技能」命令
+
+### 新文件
+- `src/app/publish/page.tsx` — 服务端组件，含 metadata
+- `src/app/publish/client.tsx` — 发布技能表单组件
+
+---
+
 ## [v1.3.0] — 2026-05-05
 
 ### 新增
