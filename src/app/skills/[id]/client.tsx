@@ -6,14 +6,16 @@ import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft, Zap, Download, Star, Copy, Check, ChevronDown, ChevronUp,
-  Terminal, FileCode, Play, BookOpen, Clock, Scale, Tag
+  ArrowLeft, Download, Star, Copy, Check,
+  Terminal, FileCode, Clock, MessageSquare, ThumbsUp
 } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import ts from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
 import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
 import md from "react-syntax-highlighter/dist/esm/languages/hljs/markdown";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 SyntaxHighlighter.registerLanguage("typescript", ts);
 SyntaxHighlighter.registerLanguage("json", json);
@@ -31,24 +33,20 @@ const codeTheme: Record<string, React.CSSProperties> = {
   "hljs-params": { color: "#e6edf3" },
 };
 
-function CopyButton({ text, label, copiedLabel }: { text: string; label?: string; copiedLabel?: string }) {
+function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <Button
       size="sm"
       variant="ghost"
-      className="text-muted-foreground hover:text-foreground"
+      className="text-muted-foreground hover:text-foreground h-7 px-2"
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
     >
-      {copied ? (
-        <><Check className="h-3 w-3 mr-1" />{copiedLabel || "Copied"}</>
-      ) : (
-        <><Copy className="h-3 w-3 mr-1" />{label || "Copy"}</>
-      )}
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
     </Button>
   );
 }
@@ -63,6 +61,27 @@ function getLang(filename: string): string {
   if (filename.endsWith(".json")) return "json";
   if (filename.endsWith(".md")) return "markdown";
   return "text";
+}
+
+function downloadFile(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadAll(skill: NonNullable<ReturnType<typeof getAgentSkillById>>) {
+  const zip = new JSZip();
+  const folder = zip.folder(skill.name)!;
+  for (const [name, content] of Object.entries(skill.files)) {
+    folder.file(name, content);
+  }
+  zip.generateAsync({ type: "blob" }).then((blob) => {
+    saveAs(blob, `${skill.name}.zip`);
+  });
 }
 
 function MarkdownRenderer({ content }: { content: string }) {
@@ -105,101 +124,63 @@ function MarkdownRenderer({ content }: { content: string }) {
     if (line.startsWith("# ")) {
       elements.push(<h1 key={i} className="text-2xl font-bold text-foreground mt-6 mb-3">{line.slice(2)}</h1>);
     } else if (line.startsWith("## ")) {
-      elements.push(<h2 key={i} className="text-lg font-semibold text-foreground mt-6 mb-3 flex items-center gap-2"><Terminal className="h-4 w-4 text-primary" />{line.slice(3)}</h2>);
-    } else if (line.startsWith("- **")) {
-      const match = line.match(/^- \*\*(.+?)\*\*\s*[—–-]\s*(.+)$/);
-      if (match) {
+      elements.push(<h2 key={i} className="text-lg font-semibold text-foreground mt-6 mb-3">{line.slice(3)}</h2>);
+    } else if (line.startsWith("### ")) {
+      elements.push(<h3 key={i} className="text-base font-semibold text-foreground mt-4 mb-2">{line.slice(4)}</h3>);
+    } else if (line.startsWith("| ")) {
+      // Simple table rendering
+      const cells = line.split("|").filter(c => c.trim()).map(c => c.trim());
+      if (cells.length > 0) {
         elements.push(
-          <div key={i} className="flex gap-2 py-1 text-sm">
-            <span className="text-primary shrink-0">•</span>
-            <span><strong className="text-foreground">{match[1]}</strong> <span className="text-muted-foreground">— {match[2]}</span></span>
+          <div key={i} className="grid gap-2 py-1.5 text-sm" style={{ gridTemplateColumns: `repeat(${cells.length}, 1fr)` }}>
+            {cells.map((cell, ci) => (
+              <span key={ci} className="text-muted-foreground">{cell}</span>
+            ))}
           </div>
         );
-      } else {
-        const boldMatch = line.match(/^- \*\*(.+?)\*\*(.*)$/);
-        if (boldMatch) {
-          elements.push(
-            <div key={i} className="flex gap-2 py-1 text-sm">
-              <span className="text-primary shrink-0">•</span>
-              <span><strong className="text-foreground">{boldMatch[1]}</strong><span className="text-muted-foreground">{boldMatch[2]}</span></span>
-            </div>
-          );
-        } else {
-          elements.push(<div key={i} className="flex gap-2 py-1 text-sm text-muted-foreground"><span className="text-primary shrink-0">•</span>{line.slice(2)}</div>);
-        }
       }
     } else if (line.startsWith("- ")) {
       elements.push(<div key={i} className="flex gap-2 py-1 text-sm text-muted-foreground"><span className="text-primary shrink-0">•</span>{line.slice(2)}</div>);
     } else if (line.match(/^\d+\.\s/)) {
       elements.push(<div key={i} className="py-1 text-sm text-muted-foreground">{line}</div>);
+    } else if (line.startsWith("`") && line.endsWith("`")) {
+      elements.push(<code key={i} className="block my-1 px-3 py-1.5 bg-secondary rounded text-sm font-mono text-foreground">{line.slice(1, -1)}</code>);
     } else if (line.trim() === "") {
       elements.push(<div key={i} className="h-2" />);
     } else {
-      elements.push(<p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>);
+      // Inline bold
+      const parts = line.split(/(\*\*.*?\*\*)/g);
+      elements.push(
+        <p key={i} className="text-sm text-muted-foreground leading-relaxed">
+          {parts.map((part, pi) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return <strong key={pi} className="text-foreground">{part.slice(2, -2)}</strong>;
+            }
+            return part;
+          })}
+        </p>
+      );
     }
   }
 
   return <div>{elements}</div>;
 }
 
-function PreviewTab({ skill }: { skill: NonNullable<ReturnType<typeof getAgentSkillById>> }) {
-  const [input, setInput] = useState(skill.demoInput);
-  const [output, setOutput] = useState("");
-  const [running, setRunning] = useState(false);
-
-  function runPreview() {
-    setRunning(true);
-    setOutput("");
-    const text = skill.demoOutput;
-    let idx = 0;
-    const interval = setInterval(() => {
-      idx += Math.floor(Math.random() * 3) + 1;
-      if (idx >= text.length) {
-        setOutput(text);
-        setRunning(false);
-        clearInterval(interval);
-      } else {
-        setOutput(text.slice(0, idx));
-      }
-    }, 20);
-  }
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="text-sm text-muted-foreground mb-2 block">Input</label>
-        <div className="flex gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-            placeholder="Type a command..."
-          />
-          <Button onClick={runPreview} disabled={running} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
-            <Play className="h-4 w-4 mr-1.5" />
-            {running ? "Running..." : "Run"}
-          </Button>
-        </div>
-      </div>
-      {output && (
-        <div>
-          <label className="text-sm text-muted-foreground mb-2 block">Output</label>
-          <SyntaxHighlighter language="text" style={codeTheme} customStyle={{ margin: 0, fontSize: "0.875rem", borderRadius: "0.5rem" }}>
-            {output}
-          </SyntaxHighlighter>
-        </div>
-      )}
-    </div>
-  );
-}
+// Mock comments
+const mockComments = [
+  { id: "1", user: "Alice", avatar: "A", content: "非常好用的技能！帮我解决了搜索多个平台的需求，安装也很简单。", rating: 5, date: "2026-04-28", likes: 12 },
+  { id: "2", user: "Bob", avatar: "B", content: "帮我解决了大问题，搜索功能很强，推荐给所有需要多平台数据的开发者。", rating: 4, date: "2026-04-25", likes: 8 },
+  { id: "3", user: "Charlie", avatar: "C", content: "安装简单，文档清晰，社区维护活跃。期待更多平台的支持。", rating: 5, date: "2026-04-20", likes: 5 },
+];
 
 export default function AgentSkillDetailClient({ id }: { id: string }) {
   const skill = getAgentSkillById(id);
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<"overview" | "readme" | "files" | "preview">("overview");
+  const [activeTab, setActiveTab] = useState<"intro" | "files" | "feedback">("intro");
   const [activeFile, setActiveFile] = useState<string>("");
-  const [showAllTriggers, setShowAllTriggers] = useState(false);
   const [copiedInstall, setCopiedInstall] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
 
   if (!skill) {
     return (
@@ -212,197 +193,269 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
 
   const fileNames = Object.keys(skill.files);
   const currentFile = activeFile || fileNames[0] || "";
-  const displayTriggers = showAllTriggers ? skill.triggers : skill.triggers.slice(0, 10);
 
   const tabs = [
-    { key: "overview" as const, label: t.agentSkills.overview, icon: BookOpen },
-    { key: "readme" as const, label: t.agentSkills.readme, icon: FileCode },
-    { key: "files" as const, label: t.agentSkills.files, icon: Terminal },
-    { key: "preview" as const, label: t.agentSkills.preview, icon: Play },
+    { key: "intro" as const, label: t.agentSkills.skillIntro },
+    { key: "files" as const, label: t.agentSkills.skillFiles },
+    { key: "feedback" as const, label: t.agentSkills.feedback },
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
       <Link href="/skills" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
         <ArrowLeft className="h-4 w-4" />{t.agentSkills.backToList}
       </Link>
 
-      {/* Hero */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <Badge variant="secondary" className="text-xs bg-purple-400/10 text-purple-400 border-purple-400/20 border">
-            Agent 技能
-          </Badge>
-          {skill.authorBadge && (
-            <Badge variant="secondary" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/20 border">
-              {skill.authorBadge}
-            </Badge>
-          )}
-          <span className="text-xs text-muted-foreground">v{skill.version}</span>
-        </div>
+      {/* Header section */}
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">{skill.name}</h1>
 
-        <div className="flex items-start gap-4 mb-4">
-          <div className="h-14 w-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-2xl">
-            {skill.avatar || skill.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{skill.title}</h1>
-            <p className="text-muted-foreground">{skill.author} · {skill.collection}</p>
-          </div>
-        </div>
-
-        {/* Stats bar */}
+        {/* Stats row */}
         <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground mb-4">
-          <span className="flex items-center gap-1.5"><Download className="h-4 w-4" />{formatNumber(skill.downloads)} {t.agentSkills.downloads}</span>
-          <span className="flex items-center gap-1.5"><Star className="h-4 w-4" />{formatNumber(skill.stars)} {t.agentSkills.stars}</span>
+          <span className="flex items-center gap-1.5"><Download className="h-4 w-4" />{formatNumber(skill.downloads)}</span>
+          <span className="flex items-center gap-1.5"><Star className="h-4 w-4" />{formatNumber(skill.stars)}</span>
           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{skill.lastUpdated}</span>
-          <span className="flex items-center gap-1.5"><Scale className="h-4 w-4" />{skill.license}</span>
-          <span className="flex items-center gap-1.5"><Tag className="h-4 w-4" />{skill.category}</span>
         </div>
 
-        {/* Install command */}
-        <div
-          className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#0d1117] border border-border cursor-pointer hover:border-primary/30 transition-colors group"
-          onClick={() => {
-            navigator.clipboard.writeText(skill.installCommand);
-            setCopiedInstall(true);
-            setTimeout(() => setCopiedInstall(false), 2000);
-          }}
-        >
-          <Terminal className="h-4 w-4 text-muted-foreground shrink-0" />
-          <code className="text-sm text-foreground font-mono flex-1">{skill.installCommand}</code>
-          {copiedInstall ? (
-            <span className="text-xs text-green-400 flex items-center gap-1"><Check className="h-3.5 w-3.5" />{t.agentSkills.installCopied}</span>
-          ) : (
-            <span className="text-xs text-muted-foreground flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><Copy className="h-3.5 w-3.5" />{t.common.copy}</span>
-          )}
+        {/* Collection */}
+        <div className="text-sm text-muted-foreground mb-4">
+          {t.agentSkills.collection}: <span className="text-foreground">{skill.author}/{skill.name}</span>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+          {skill.description}
+        </p>
+
+        {/* Category + Developer */}
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <Badge variant="secondary" className="bg-secondary text-muted-foreground border-border">
+            {skill.category}
+          </Badge>
+          <span className="text-muted-foreground">
+            {t.agentSkills.developer}：<span className="text-foreground">{skill.developer}</span>
+          </span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-border mb-6">
-        {tabs.map(({ key, label, icon: Icon }) => (
+      <div className="flex items-center gap-0 border-b border-border mb-6">
+        {tabs.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-3 text-sm border-b-2 transition-colors ${
+            className={`px-5 py-3 text-sm border-b-2 transition-colors ${
               activeTab === key
                 ? "border-primary text-foreground font-medium"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Icon className="h-4 w-4" />
             {label}
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-3">{t.agentSkills.description}</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">{skill.description}</p>
-          </div>
+      {/* Tab: Skill Intro */}
+      {activeTab === "intro" && (
+        <div className="grid lg:grid-cols-[280px_1fr] gap-6">
+          {/* Metadata table */}
+          <div className="glass-card p-5 h-fit">
+            <h3 className="text-sm font-semibold text-foreground mb-4">{t.agentSkills.metadata}</h3>
+            <table className="w-full text-sm">
+              <tbody>
+                {[
+                  ["name", skill.name],
+                  ["description", skill.description.slice(0, 60) + "..."],
+                  ["category", skill.category],
+                  [t.agentSkills.developer, skill.developer],
+                  [t.agentSkills.version, skill.version],
+                  [t.agentSkills.license, skill.license],
+                ].map(([key, val]) => (
+                  <tr key={key} className="border-b border-border last:border-0">
+                    <td className="py-2.5 pr-3 text-muted-foreground align-top whitespace-nowrap">{key}</td>
+                    <td className="py-2.5 text-foreground break-all">{val}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">{t.agentSkills.triggerExamples}</h2>
-            <div className="flex flex-wrap gap-2">
-              {displayTriggers.map((trigger) => (
-                <span key={trigger} className="px-3 py-1.5 text-sm rounded-lg bg-secondary border border-border text-muted-foreground">
-                  {trigger}
-                </span>
-              ))}
-            </div>
-            {skill.triggers.length > 10 && (
-              <button
-                onClick={() => setShowAllTriggers(!showAllTriggers)}
-                className="flex items-center gap-1 mt-3 text-sm text-primary hover:underline"
+            {/* Install command */}
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground mb-2">install</p>
+              <div
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border cursor-pointer hover:border-primary/30 transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(skill.installCommand);
+                  setCopiedInstall(true);
+                  setTimeout(() => setCopiedInstall(false), 2000);
+                }}
               >
-                {showAllTriggers ? <><ChevronUp className="h-3 w-3" />收起</> : <><ChevronDown className="h-3 w-3" />查看全部 {skill.triggers.length} 个触发词</>}
-              </button>
-            )}
-          </div>
-
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Tags</h2>
-            <div className="flex flex-wrap gap-2">
-              {skill.tags.map((tag) => (
-                <span key={tag} className="px-3 py-1 text-xs rounded-full bg-primary/10 text-primary border border-primary/20">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "readme" && (
-        <div className="glass-card p-6">
-          <MarkdownRenderer content={skill.readme} />
-        </div>
-      )}
-
-      {activeTab === "files" && (
-        <div className="glass-card overflow-hidden">
-          <div className="flex border-b border-border">
-            <div className="w-56 shrink-0 border-r border-border bg-secondary/50 p-2 hidden sm:block">
-              <p className="text-xs text-muted-foreground font-medium px-2 py-1.5 mb-1">{t.agentSkills.fileTree}</p>
-              {fileNames.map((name) => (
-                <button
-                  key={name}
-                  onClick={() => setActiveFile(name)}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded-md flex items-center gap-2 transition-colors ${
-                    currentFile === name
-                      ? "bg-primary/10 text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <FileCode className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{name}</span>
-                </button>
-              ))}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-border">
-                <span className="text-xs text-muted-foreground font-mono">
-                  {fileNames.map((name) => (
-                    <button
-                      key={name}
-                      onClick={() => setActiveFile(name)}
-                      className={`mr-3 sm:hidden ${currentFile === name ? "text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                  <span className="hidden sm:inline">{currentFile}</span>
-                </span>
-                <CopyButton text={skill.files[currentFile] || ""} />
+                <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <code className="text-xs text-foreground font-mono flex-1 truncate">{skill.installCommand}</code>
+                {copiedInstall ? (
+                  <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                )}
               </div>
-              {currentFile && skill.files[currentFile] && (
-                <SyntaxHighlighter
-                  language={getLang(currentFile)}
-                  style={codeTheme}
-                  customStyle={{ margin: 0, fontSize: "0.875rem", borderRadius: 0, maxHeight: "500px" }}
-                >
-                  {skill.files[currentFile]}
-                </SyntaxHighlighter>
-              )}
             </div>
+          </div>
+
+          {/* README content */}
+          <div className="glass-card p-6">
+            <MarkdownRenderer content={skill.readme} />
           </div>
         </div>
       )}
 
-      {activeTab === "preview" && (
-        <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Play className="h-5 w-5 text-primary" />
-            {t.agentSkills.tryItOut}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            {t.agentSkills.tryPlaceholder}
-          </p>
-          <PreviewTab skill={skill} />
+      {/* Tab: Skill Files */}
+      {activeTab === "files" && (
+        <div>
+          <div className="glass-card overflow-hidden">
+            {/* File header with developer info */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/30">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary font-medium">
+                  {skill.developer.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm text-foreground font-medium">{skill.name}</span>
+                <span className="text-xs text-muted-foreground">{t.agentSkills.developer}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">{skill.lastUpdated}</span>
+            </div>
+
+            <div className="flex">
+              {/* File tree sidebar */}
+              <div className="w-56 shrink-0 border-r border-border bg-secondary/30 p-2 hidden sm:block">
+                {fileNames.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => setActiveFile(name)}
+                    className={`w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-2 transition-colors ${
+                      currentFile === name
+                        ? "bg-primary/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <FileCode className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{name}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground/60">
+                      {skill.files[name] ? (skill.files[name].length / 1024).toFixed(1) + "KB" : ""}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* File content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-border">
+                  <div className="flex items-center gap-2">
+                    {/* Mobile file tabs */}
+                    {fileNames.map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => setActiveFile(name)}
+                        className={`sm:hidden text-xs ${currentFile === name ? "text-foreground" : "text-muted-foreground"}`}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                    <span className="hidden sm:inline text-xs text-muted-foreground font-mono">{currentFile}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CopyButton text={skill.files[currentFile] || ""} />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-muted-foreground hover:text-foreground h-7 px-2"
+                      onClick={() => downloadFile(currentFile, skill.files[currentFile] || "")}
+                    >
+                      <Download className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                {currentFile && skill.files[currentFile] && (
+                  <SyntaxHighlighter
+                    language={getLang(currentFile)}
+                    style={codeTheme}
+                    customStyle={{ margin: 0, fontSize: "0.875rem", borderRadius: 0, maxHeight: "500px" }}
+                  >
+                    {skill.files[currentFile]}
+                  </SyntaxHighlighter>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Download all button */}
+          <div className="mt-4 flex justify-end">
+            <Button
+              onClick={() => downloadAll(skill)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {t.agentSkills.downloadAll}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Feedback */}
+      {activeTab === "feedback" && (
+        <div className="space-y-6">
+          {/* Comment input */}
+          <div className="glass-card p-5">
+            <div className="flex gap-3">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm text-primary font-medium shrink-0">
+                U
+              </div>
+              <div className="flex-1">
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={t.agentSkills.writeComment}
+                  className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none min-h-[80px]"
+                />
+                <div className="flex justify-end mt-2">
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={!commentText.trim()}>
+                    {t.comments.submitComment}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Comments list */}
+          <div className="space-y-4">
+            {mockComments.map((comment) => (
+              <div key={comment.id} className="glass-card p-5">
+                <div className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-medium shrink-0">
+                    {comment.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-foreground">{comment.user}</span>
+                      <span className="text-xs text-muted-foreground">{comment.date}</span>
+                      <div className="flex items-center gap-0.5 ml-auto">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={`h-3 w-3 ${i < comment.rating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-2">{comment.content}</p>
+                    <button
+                      onClick={() => setCommentLikes(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ThumbsUp className={`h-3 w-3 ${commentLikes[comment.id] ? "text-primary fill-primary" : ""}`} />
+                      {comment.likes + (commentLikes[comment.id] ? 1 : 0)}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

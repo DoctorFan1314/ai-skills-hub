@@ -138,6 +138,7 @@ export interface AgentSkill {
   avatar: string;
   author: string;
   authorBadge?: string;
+  developer: string;
   downloads: number;
   stars: number;
   lastUpdated: string;

@@ -26,11 +26,6 @@ export function Navbar() {
     { href: "/", label: t.common.home },
     { href: "/skills", label: t.common.skills, highlight: true },
     { href: "/prompts", label: t.common.prompts },
-    { href: "/categories", label: t.common.categories },
-    { href: "/trending", label: t.common.trending },
-    { href: "/tags", label: t.common.tags },
-    { href: "/guide", label: t.common.guide },
-    { href: "/submit", label: t.common.submit },
   ];
 
   function handleSearch(e?: React.KeyboardEvent<HTMLInputElement>) {

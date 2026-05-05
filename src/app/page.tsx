@@ -21,9 +21,9 @@ export default function HomePage() {
       <div className="border-t border-white/[0.04]" />
       <CategoryCards />
       <div className="border-t border-white/[0.04]" />
-      <SkillSection title={t.home.sectionNew} subtitle={t.home.sectionNewSub} skills={getTrendingSkills().slice(0, 6)} viewAllHref="/prompts" />
+      <SkillSection title={t.home.sectionNew} subtitle={t.home.sectionNewSub} skills={getTrendingSkills().slice(0, 4)} viewAllHref="/prompts" />
       <div className="border-t border-white/[0.04]" />
-      <SkillSection title={t.home.sectionBeginner} subtitle={t.home.sectionBeginnerSub} skills={getBeginnerSkills().slice(0, 6)} viewAllHref="/prompts" />
+      <SkillSection title={t.home.sectionBeginner} subtitle={t.home.sectionBeginnerSub} skills={getBeginnerSkills().slice(0, 4)} viewAllHref="/prompts" />
       <Testimonials />
     </>
   );

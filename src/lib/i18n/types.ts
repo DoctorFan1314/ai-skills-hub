@@ -47,6 +47,9 @@ export interface Dictionary {
     fileTree: string; collections: string; categories: string;
     heroTitle: string; heroSubtitle: string; heroCta: string;
     sectionHot: string; sectionHotSub: string;
+    developer: string; downloadAll: string; downloadFile: string;
+    feedback: string; writeComment: string; metadata: string;
+    skillIntro: string; skillFiles: string;
   };
   categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string; };
   trending: {

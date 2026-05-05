@@ -14,16 +14,16 @@ export function Footer() {
   const { t } = useI18n();
 
   const footerLinks: Record<string, FooterLink[]> = {
-    [t.common.prompts]: [
-      { label: t.common.prompts, href: "/prompts" },
+    [t.common.skills]: [
       { label: t.common.skills, href: "/skills" },
+      { label: t.common.prompts, href: "/prompts" },
       { label: t.common.categories, href: "/categories" },
       { label: t.common.trending, href: "/trending" },
       { label: t.common.tags, href: "/tags" },
-      { label: t.common.submit, href: "/submit" },
     ],
     [t.footer.resources]: [
       { label: t.common.guide, href: "/guide" },
+      { label: t.common.submit, href: "/submit" },
       { label: t.footer.changelog, href: "#", disabled: true },
       { label: t.footer.api, href: "#", disabled: true },
     ],
