@@ -73,7 +73,7 @@ export default function GuidePage() {
         <h2 className="text-xl font-bold text-white mb-6">3 分钟快速上手</h2>
         <div className="space-y-6">
           {[
-            { step: 1, title: "选择技能模板", desc: "浏览技能市场，找到你需要的模板。" },
+            { step: 1, title: "选择技能模板", desc: "浏览 Prompt 市场，找到你需要的模板。" },
             { step: 2, title: "复制 Prompt", desc: "点击「复制完整 Prompt」按钮，填写变量后复制。" },
             { step: 3, title: "粘贴到 AI 平台", desc: "打开 ChatGPT、Claude 等平台，粘贴 Prompt。" },
             { step: 4, title: "获取高质量输出", desc: "AI 会根据模板生成专业、自然的内容。" },
@@ -168,7 +168,7 @@ export default function GuidePage() {
 
       <div className="text-center">
         <p className="text-[#8b949e] mb-4">准备好了吗？开始探索吧！</p>
-        <Link href="/skills">
+        <Link href="/prompts">
           <Button className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-medium px-8 h-12 text-base">
             浏览技能市场 <ArrowRight className="h-4 w-4 ml-2" />
           </Button>

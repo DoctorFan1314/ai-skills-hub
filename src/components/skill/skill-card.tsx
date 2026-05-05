@@ -12,7 +12,7 @@ export function SkillCard({ skill }: { skill: Skill }) {
   const router = useRouter();
 
   return (
-    <Link href={`/skills/${skill.id}`}>
+    <Link href={`/prompts/${skill.id}`}>
       <div className="glass-card glass-card-hover p-5 h-full cursor-pointer group flex flex-col">
         <div className="flex items-start justify-between mb-3">
           <Badge

@@ -72,7 +72,7 @@ export default function TrendingClient() {
           return (
             <Link
               key={skill.id}
-              href={`/skills/${skill.id}`}
+              href={`/prompts/${skill.id}`}
               className={`block glass-card p-5 transition-all hover:scale-[1.01] ${rank <= 3 ? `bg-gradient-to-r ${getRankColor(rank)} border` : ""}`}
             >
               <div className="flex items-center gap-4">

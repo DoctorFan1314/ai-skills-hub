@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { skills } from "@/lib/mock-data";
+import { agentSkills } from "@/lib/mock-agent-skills";
 import { categories } from "@/lib/categories";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -7,15 +8,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticPages = [
     { url: base, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 1 },
+    { url: `${base}/prompts`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
     { url: `${base}/skills`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
     { url: `${base}/categories`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.8 },
+    { url: `${base}/trending`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${base}/tags`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 },
     { url: `${base}/guide`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.6 },
     { url: `${base}/submit`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
   ];
 
-  const skillPages = skills.map((s) => ({
-    url: `${base}/skills/${s.id}`,
+  const promptPages = skills.map((s) => ({
+    url: `${base}/prompts/${s.id}`,
     lastModified: new Date(s.lastUpdated.replace(/\./g, "-") + "-01"),
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }));
+
+  const agentSkillPages = agentSkills.map((s) => ({
+    url: `${base}/skills/${s.id}`,
+    lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.8,
   }));
@@ -27,5 +38,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...skillPages, ...categoryPages];
+  return [...staticPages, ...promptPages, ...agentSkillPages, ...categoryPages];
 }

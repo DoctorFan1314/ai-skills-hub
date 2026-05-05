@@ -1,4 +1,4 @@
-export default function SkillDetailLoading() {
+export default function PromptDetailLoading() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8 animate-pulse">
       <div className="h-4 w-24 bg-white/5 rounded mb-6" />

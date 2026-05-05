@@ -50,7 +50,7 @@ export function MyCommentsTab() {
         return (
           <div key={c.id} className="glass-card p-4">
             <div className="flex items-center justify-between mb-2">
-              <Link href={`/skills/${c.skillId}`} className="text-sm text-primary hover:underline truncate">
+              <Link href={`/prompts/${c.skillId}`} className="text-sm text-primary hover:underline truncate">
                 {skill?.title || c.skillId}
               </Link>
               <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c.id)} className="text-muted-foreground hover:text-destructive shrink-0">

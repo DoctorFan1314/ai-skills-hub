@@ -1,21 +1,30 @@
+"use client";
+
 import { Hero } from "@/components/home/hero";
 import { TrustBar } from "@/components/home/trust-bar";
 import { CategoryCards } from "@/components/home/category-cards";
 import { SkillSection } from "@/components/home/skill-section";
+import { AgentSkillSection } from "@/components/home/agent-skill-section";
 import { Testimonials } from "@/components/home/testimonials";
 import { getTrendingSkills, getBeginnerSkills, getNewestSkills } from "@/lib/mock-data";
+import { agentSkills } from "@/lib/mock-agent-skills";
+import { useI18n } from "@/contexts/i18n-context";
 
 export default function HomePage() {
+  const { t } = useI18n();
+
   return (
     <>
       <Hero />
       <TrustBar />
       <CategoryCards />
-      <SkillSection title="🔥 正在爆火的技能" subtitle="社区用户最爱用的高人气模板" skills={getTrendingSkills()} />
+      <SkillSection title={t.home.sectionHot} subtitle={t.home.sectionHotSub} skills={getTrendingSkills()} viewAllHref="/prompts" />
       <div className="border-t border-white/[0.04]" />
-      <SkillSection title="🆕 最新上线模板" subtitle="刚刚发布的全新技能模板" skills={getNewestSkills()} />
+      <AgentSkillSection title="Agent 技能" subtitle="可执行动作的 AI Agent 能力" skills={agentSkills} />
       <div className="border-t border-white/[0.04]" />
-      <SkillSection title="🌱 适合AI新手的起步技能" subtitle="零基础也能轻松上手的入门模板" skills={getBeginnerSkills()} />
+      <SkillSection title={t.home.sectionNew} subtitle={t.home.sectionNewSub} skills={getNewestSkills()} viewAllHref="/prompts" />
+      <div className="border-t border-white/[0.04]" />
+      <SkillSection title={t.home.sectionBeginner} subtitle={t.home.sectionBeginnerSub} skills={getBeginnerSkills()} viewAllHref="/prompts" />
       <Testimonials />
     </>
   );

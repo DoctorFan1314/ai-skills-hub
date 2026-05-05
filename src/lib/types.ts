@@ -129,3 +129,10 @@ export interface PromptVersion {
   updatedAt: string;
   updatedBy: string;
 }
+
+export interface AgentSkill {
+  id: string;
+  name: string;
+  description: string;
+  triggers: string[];
+}

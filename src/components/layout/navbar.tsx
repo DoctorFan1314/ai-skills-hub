@@ -12,16 +12,6 @@ import { useToast } from "@/contexts/toast-context";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
 
-const navLinks = [
-  { href: "/", label: "首页" },
-  { href: "/skills", label: "技能市场" },
-  { href: "/categories", label: "分类浏览" },
-  { href: "/trending", label: "排行榜" },
-  { href: "/tags", label: "标签云" },
-  { href: "/guide", label: "新手指南" },
-  { href: "/submit", label: "提交模板" },
-];
-
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,13 +20,24 @@ export function Navbar() {
   const { user, loaded, logout } = useAuth();
   const { toast } = useToast();
   const { resolvedTheme, setTheme } = useTheme();
-  const { lang, setLang } = useI18n();
+  const { lang, setLang, t } = useI18n();
+
+  const navLinks = [
+    { href: "/", label: t.common.home },
+    { href: "/prompts", label: t.common.prompts },
+    { href: "/skills", label: t.common.skills },
+    { href: "/categories", label: t.common.categories },
+    { href: "/trending", label: t.common.trending },
+    { href: "/tags", label: t.common.tags },
+    { href: "/guide", label: t.common.guide },
+    { href: "/submit", label: t.common.submit },
+  ];
 
   function handleSearch(e?: React.KeyboardEvent<HTMLInputElement>) {
     if (e && e.key !== "Enter") return;
     const q = searchQuery.trim();
     if (q) {
-      router.push(`/skills?q=${encodeURIComponent(q)}`);
+      router.push(`/prompts?q=${encodeURIComponent(q)}`);
       setSearchOpen(false);
       setSearchQuery("");
     }
@@ -44,7 +45,7 @@ export function Navbar() {
 
   function handleLogout() {
     logout();
-    toast("已退出登录");
+    toast(t.common.logout);
     setSheetOpen(false);
   }
 
@@ -74,7 +75,7 @@ export function Navbar() {
           {searchOpen ? (
             <div className="flex items-center gap-1">
               <Input
-                placeholder="搜索技能模板..."
+                placeholder={t.common.search}
                 className="h-8 w-40 md:w-56 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-sm"
                 autoFocus
                 value={searchQuery}
@@ -121,10 +122,10 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">登录</Button>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">{t.common.login}</Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">免费开始</Button>
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">{t.common.register}</Button>
                 </Link>
               </>
             )}
@@ -150,15 +151,15 @@ export function Navbar() {
                 {!loaded ? null : user ? (
                   <>
                     <Link href="/profile" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">
-                      个人中心
+                      {t.common.profile}
                     </Link>
-                    <button onClick={handleLogout} className="px-4 py-3 text-left text-muted-foreground hover:text-foreground">退出</button>
+                    <button onClick={handleLogout} className="px-4 py-3 text-left text-muted-foreground hover:text-foreground">{t.common.logout}</button>
                   </>
                 ) : (
                   <>
-                    <Link href="/login" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">登录</Link>
+                    <Link href="/login" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">{t.common.login}</Link>
                     <Link href="/register" onClick={() => setSheetOpen(false)} className="px-4 py-3">
-                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium">免费开始</Button>
+                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium">{t.common.register}</Button>
                     </Link>
                   </>
                 )}

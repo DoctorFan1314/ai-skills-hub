@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { NewsletterForm } from "@/components/shared/newsletter-form";
+import { useI18n } from "@/contexts/i18n-context";
 
 interface FooterLink {
   label: string;
@@ -7,26 +10,30 @@ interface FooterLink {
   disabled?: boolean;
 }
 
-const footerLinks: Record<string, FooterLink[]> = {
-  产品: [
-    { label: "技能市场", href: "/skills" },
-    { label: "分类浏览", href: "/categories" },
-    { label: "排行榜", href: "/trending" },
-    { label: "标签云", href: "/tags" },
-    { label: "提交模板", href: "/submit" },
-  ],
-  支持: [
-    { label: "新手指南", href: "/guide" },
-    { label: "帮助中心", href: "/guide" },
-    { label: "反馈建议", href: "/submit" },
-  ],
-  关于: [
-    { label: "使用条款", href: "#", disabled: true },
-    { label: "隐私政策", href: "#", disabled: true },
-  ],
-};
-
 export function Footer() {
+  const { t } = useI18n();
+
+  const footerLinks: Record<string, FooterLink[]> = {
+    [t.common.prompts]: [
+      { label: t.common.prompts, href: "/prompts" },
+      { label: t.common.skills, href: "/skills" },
+      { label: t.common.categories, href: "/categories" },
+      { label: t.common.trending, href: "/trending" },
+      { label: t.common.tags, href: "/tags" },
+      { label: t.common.submit, href: "/submit" },
+    ],
+    [t.footer.resources]: [
+      { label: t.common.guide, href: "/guide" },
+      { label: t.footer.changelog, href: "#", disabled: true },
+      { label: t.footer.api, href: "#", disabled: true },
+    ],
+    [t.footer.community]: [
+      { label: t.footer.github, href: "#", disabled: true },
+      { label: t.footer.discord, href: "#", disabled: true },
+      { label: t.footer.twitter, href: "#", disabled: true },
+    ],
+  };
+
   return (
     <footer className="border-t border-border bg-background/60 mt-auto">
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
@@ -39,10 +46,10 @@ export function Footer() {
               <span className="text-lg font-semibold text-foreground">AI Skills Hub</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              高质量LLM技能模板，复制即用，去AI味。把强大AI真正变成你的生产力武器。
+              {t.footer.description}
             </p>
             <div>
-              <h3 className="text-sm font-medium text-foreground mb-3">订阅更新</h3>
+              <h3 className="text-sm font-medium text-foreground mb-3">{t.footer.newsletter}</h3>
               <NewsletterForm />
             </div>
           </div>
@@ -66,9 +73,9 @@ export function Footer() {
           ))}
         </div>
         <div className="mt-10 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-muted-foreground">© 2026 AI Skills Hub. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">{t.footer.copyright}</p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>适配平台：</span>
+            <span>{t.footer.platforms}：</span>
             <span>ChatGPT</span><span>·</span>
             <span>Claude</span><span>·</span>
             <span>Grok</span><span>·</span>

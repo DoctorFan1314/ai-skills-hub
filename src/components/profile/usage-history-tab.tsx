@@ -45,7 +45,7 @@ export function UsageHistoryTab() {
                 {a.skillId && (
                   <>
                     {" — "}
-                    <Link href={`/skills/${a.skillId}`} className="text-primary hover:underline">{a.targetTitle || a.skillId}</Link>
+                    <Link href={`/prompts/${a.skillId}`} className="text-primary hover:underline">{a.targetTitle || a.skillId}</Link>
                   </>
                 )}
               </p>
