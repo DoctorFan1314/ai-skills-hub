@@ -8,28 +8,21 @@ import { Send, CheckCircle } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
+import type { Submission } from "@/lib/types";
+import { categories } from "@/lib/categories";
 
-const categoryOptions = ["语言与内容生产", "编程与技术任务", "思考与工作流"];
-
-interface Submission {
-  id: string;
-  name: string;
-  shortDesc: string;
-  category: string;
-  promptOnline: string;
-  promptLocal: string;
-  usage: string;
-  submittedAt: string;
-  author: string;
-}
+const categoryOptions = categories.map((c) => ({ name: c.name, slug: c.slug }));
 
 export default function SubmitClient() {
   const [submitted, setSubmitted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submissions, setSubmissions] = useLocalStorage<Submission[]>("ai-skills-hub-submissions", []);
-  const { toast } = useToast();
   const { user } = useAuth();
+  const key = user ? STORAGE_KEYS.submissions(user.email) : "ai-skills-hub-submissions-guest";
+  const [submissions, setSubmissions] = useLocalStorage<Submission[]>(key, []);
+  const { toast } = useToast();
 
   function validate(fd: FormData): Record<string, string> {
     const errs: Record<string, string> = {};
@@ -60,11 +53,15 @@ export default function SubmitClient() {
       name: (fd.get("name") as string).trim(),
       shortDesc: (fd.get("short-desc") as string).trim(),
       category: selectedCategory!,
+      categorySlug: selectedSlug || "content",
       promptOnline: (fd.get("prompt-online") as string).trim(),
       promptLocal: (fd.get("prompt-local") as string)?.trim() || "",
       usage: (fd.get("usage") as string).trim(),
       submittedAt: new Date().toISOString(),
-      author: user?.username || "匿名用户",
+      authorEmail: user?.email || "",
+      authorName: user?.username || "匿名用户",
+      status: "pending",
+      version: "v1.0",
     };
 
     setSubmissions((prev) => [...prev, submission]);
@@ -75,19 +72,19 @@ export default function SubmitClient() {
   if (submitted) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <CheckCircle className="h-16 w-16 text-[#00d4ff] mx-auto mb-6" />
-        <h1 className="text-2xl font-bold text-white mb-3">提交成功！</h1>
-        <p className="text-[#8b949e] mb-6">感谢你的贡献！我们的团队将在 3-5 个工作日内审核你的模板。</p>
-        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-white/10 text-white hover:bg-white/5">继续提交</Button>
+        <CheckCircle className="h-16 w-16 text-primary mx-auto mb-6" />
+        <h1 className="text-2xl font-bold text-foreground mb-3">提交成功！</h1>
+        <p className="text-muted-foreground mb-6">感谢你的贡献！我们的团队将在 3-5 个工作日内审核你的模板。</p>
+        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-border text-foreground hover:bg-secondary">继续提交</Button>
 
         {submissions.length > 0 && (
           <div className="mt-10 text-left">
-            <h2 className="text-lg font-semibold text-white mb-4">我的提交 ({submissions.length})</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">我的提交 ({submissions.length})</h2>
             <div className="space-y-3">
               {submissions.map((s) => (
                 <div key={s.id} className="glass-card p-4 text-left">
-                  <p className="text-white font-medium">{s.name}</p>
-                  <p className="text-sm text-[#8b949e]">{s.category} · {new Date(s.submittedAt).toLocaleDateString("zh-CN")}</p>
+                  <p className="text-foreground font-medium">{s.name}</p>
+                  <p className="text-sm text-muted-foreground">{s.category} · {new Date(s.submittedAt).toLocaleDateString("zh-CN")}</p>
                 </div>
               ))}
             </div>
@@ -100,37 +97,37 @@ export default function SubmitClient() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white mb-2">提交模板</h1>
-        <p className="text-[#8b949e]">分享你的优质 Prompt 模板，帮助更多人高效使用 AI</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">提交模板</h1>
+        <p className="text-muted-foreground">分享你的优质 Prompt 模板，帮助更多人高效使用 AI</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="glass-card p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-white">基本信息</h2>
+          <h2 className="text-lg font-semibold text-foreground">基本信息</h2>
           <div>
-            <label htmlFor="name" className="text-sm text-white mb-1.5 block">模板名称 <span className="text-red-400">*</span></label>
-            <Input id="name" name="name" required placeholder="例如：小红书爆款笔记生成器 v2.0" className="bg-white/5 border-white/10 text-white placeholder:text-[#8b949e]/50" />
+            <label htmlFor="name" className="text-sm text-foreground mb-1.5 block">模板名称 <span className="text-red-400">*</span></label>
+            <Input id="name" name="name" required placeholder="例如：小红书爆款笔记生成器 v2.0" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name}</p>}
           </div>
           <div>
-            <label htmlFor="short-desc" className="text-sm text-white mb-1.5 block">一句话描述 <span className="text-red-400">*</span></label>
-            <Input id="short-desc" name="short-desc" required placeholder="简要说明这个模板能做什么" className="bg-white/5 border-white/10 text-white placeholder:text-[#8b949e]/50" />
+            <label htmlFor="short-desc" className="text-sm text-foreground mb-1.5 block">一句话描述 <span className="text-red-400">*</span></label>
+            <Input id="short-desc" name="short-desc" required placeholder="简要说明这个模板能做什么" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             {errors.shortDesc && <p className="text-xs text-red-400 mt-1">{errors.shortDesc}</p>}
           </div>
           <div>
-            <span className="text-sm text-white mb-2 block">分类 <span className="text-red-400">*</span></span>
+            <span className="text-sm text-foreground mb-2 block">分类 <span className="text-red-400">*</span></span>
             <div className="flex flex-wrap gap-2">
               {categoryOptions.map((cat) => (
                 <button
-                  key={cat}
+                  key={cat.slug}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => { setSelectedCategory(cat.name); setSelectedSlug(cat.slug); }}
                   className={`px-4 py-1.5 text-sm rounded-md border transition-colors cursor-pointer ${
-                    selectedCategory === cat
-                      ? "bg-[#00d4ff]/10 text-[#00d4ff] border-[#00d4ff]/30"
-                      : "bg-white/5 text-[#8b949e] border-white/10 hover:border-[#00d4ff]/30 hover:text-[#00d4ff] hover:bg-[#00d4ff]/10"
+                    selectedCategory === cat.name
+                      ? "bg-primary/10 text-primary border-primary/30"
+                      : "bg-secondary text-muted-foreground border-border hover:border-primary/30 hover:text-primary hover:bg-primary/10"
                   }`}
                 >
-                  {cat}
+                  {cat.name}
                 </button>
               ))}
             </div>
@@ -138,23 +135,23 @@ export default function SubmitClient() {
           </div>
         </div>
         <div className="glass-card p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-white">Prompt 内容</h2>
+          <h2 className="text-lg font-semibold text-foreground">Prompt 内容</h2>
           <div>
-            <label htmlFor="prompt-online" className="text-sm text-white mb-1.5 block">在线版 Prompt <span className="text-red-400">*</span></label>
-            <Textarea id="prompt-online" name="prompt-online" required rows={8} placeholder="粘贴你的在线版 Prompt..." className="bg-white/5 border-white/10 text-white placeholder:text-[#8b949e]/50 font-mono text-sm" />
+            <label htmlFor="prompt-online" className="text-sm text-foreground mb-1.5 block">在线版 Prompt <span className="text-red-400">*</span></label>
+            <Textarea id="prompt-online" name="prompt-online" required rows={8} placeholder="粘贴你的在线版 Prompt..." className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50 font-mono text-sm" />
             {errors.promptOnline && <p className="text-xs text-red-400 mt-1">{errors.promptOnline}</p>}
           </div>
           <div>
-            <label htmlFor="prompt-local" className="text-sm text-white mb-1.5 block">本地版 Prompt</label>
-            <Textarea id="prompt-local" name="prompt-local" rows={6} placeholder="粘贴本地版 Prompt（可选）..." className="bg-white/5 border-white/10 text-white placeholder:text-[#8b949e]/50 font-mono text-sm" />
+            <label htmlFor="prompt-local" className="text-sm text-foreground mb-1.5 block">本地版 Prompt</label>
+            <Textarea id="prompt-local" name="prompt-local" rows={6} placeholder="粘贴本地版 Prompt（可选）..." className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50 font-mono text-sm" />
           </div>
           <div>
-            <label htmlFor="usage" className="text-sm text-white mb-1.5 block">使用说明 <span className="text-red-400">*</span></label>
-            <Textarea id="usage" name="usage" required rows={4} placeholder="详细说明如何使用这个模板..." className="bg-white/5 border-white/10 text-white placeholder:text-[#8b949e]/50 text-sm" />
+            <label htmlFor="usage" className="text-sm text-foreground mb-1.5 block">使用说明 <span className="text-red-400">*</span></label>
+            <Textarea id="usage" name="usage" required rows={4} placeholder="详细说明如何使用这个模板..." className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50 text-sm" />
             {errors.usage && <p className="text-xs text-red-400 mt-1">{errors.usage}</p>}
           </div>
         </div>
-        <Button type="submit" className="w-full bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-medium h-12 text-base">
+        <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-12 text-base">
           <Send className="h-4 w-4 mr-2" />提交模板
         </Button>
       </form>

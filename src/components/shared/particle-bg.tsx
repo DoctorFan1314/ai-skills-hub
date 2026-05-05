@@ -18,6 +18,16 @@ export function ParticleBackground() {
     const connectionDist = 150;
     const connectionDistSq = connectionDist * connectionDist;
 
+    function getPrimaryRGB(): [number, number, number] {
+      const style = getComputedStyle(document.documentElement);
+      const hex = style.getPropertyValue("--primary").trim();
+      if (!hex || !hex.startsWith("#")) return [0, 212, 255];
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return [r, g, b];
+    }
+
     function resize() {
       if (!canvas) return;
       canvas.width = window.innerWidth;
@@ -42,6 +52,7 @@ export function ParticleBackground() {
     function animate() {
       if (paused) return;
       if (!canvas || !ctx) return;
+      const [r, g, b] = getPrimaryRGB();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const p of particles) {
         p.x += p.vx;
@@ -50,7 +61,7 @@ export function ParticleBackground() {
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 212, 255, ${p.opacity})`;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.opacity})`;
         ctx.fill();
       }
       for (let i = 0; i < particles.length; i++) {
@@ -63,7 +74,7 @@ export function ParticleBackground() {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(0, 212, 255, ${0.03 * (1 - dist / connectionDist)})`;
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.03 * (1 - dist / connectionDist)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

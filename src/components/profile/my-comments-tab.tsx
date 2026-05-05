@@ -1,0 +1,67 @@
+"use client";
+
+import { useAuth } from "@/contexts/auth-context";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
+import { getSkillById } from "@/lib/mock-data";
+import type { Comment } from "@/lib/types";
+import { MessageSquare, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import Link from "next/link";
+
+export function MyCommentsTab() {
+  const { user } = useAuth();
+  const [, setTick] = useState(0);
+
+  if (!user) return null;
+
+  let comments: Comment[] = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.comments(user.email));
+    comments = raw ? JSON.parse(raw) : [];
+  } catch { /* ignore */ }
+
+  const handleDelete = (id: string) => {
+    const updated = comments.filter((c) => c.id !== id);
+    localStorage.setItem(STORAGE_KEYS.comments(user.email), JSON.stringify(updated));
+    // Also remove from global
+    try {
+      const allRaw = localStorage.getItem(STORAGE_KEYS.allComments);
+      const all: Comment[] = allRaw ? JSON.parse(allRaw) : [];
+      localStorage.setItem(STORAGE_KEYS.allComments, JSON.stringify(all.filter((c) => c.id !== id)));
+    } catch { /* ignore */ }
+    setTick((t) => t + 1);
+  };
+
+  if (comments.length === 0) {
+    return (
+      <div className="glass-card p-12 text-center">
+        <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+        <p className="text-foreground font-medium mb-1">暂无评论</p>
+        <p className="text-sm text-muted-foreground">浏览技能详情页，发表你的评论</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {comments.map((c) => {
+        const skill = getSkillById(c.skillId);
+        return (
+          <div key={c.id} className="glass-card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Link href={`/skills/${c.skillId}`} className="text-sm text-primary hover:underline truncate">
+                {skill?.title || c.skillId}
+              </Link>
+              <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c.id)} className="text-muted-foreground hover:text-destructive shrink-0">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-foreground mb-1">{c.content}</p>
+            <time className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString("zh-CN")}</time>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

@@ -45,6 +45,8 @@ export interface Skill {
   usageStepsLocal: string[];
   advancedTips?: string[];
   likes: number;
+  isPremium?: boolean;
+  previewLimit?: number;
 }
 
 export interface Category {
@@ -63,4 +65,67 @@ export interface Testimonial {
   avatar: string;
   content: string;
   rating: number;
+}
+
+// --- User system types ---
+
+export interface UserProfile {
+  email: string;
+  username: string;
+  avatar?: string;
+  bio?: string;
+  joinDate: string;
+  preferences: {
+    theme: "dark" | "light" | "system";
+    language: "zh" | "en";
+  };
+}
+
+export interface UserActivity {
+  id: string;
+  type: "like" | "bookmark" | "comment" | "submit" | "view" | "copy";
+  skillId?: string;
+  targetTitle?: string;
+  timestamp: string;
+}
+
+export interface Comment {
+  id: string;
+  skillId: string;
+  userEmail: string;
+  username: string;
+  content: string;
+  rating?: number;
+  createdAt: string;
+  parentId?: string;
+  likes: number;
+  likedBy: string[];
+}
+
+export interface Submission {
+  id: string;
+  name: string;
+  shortDesc: string;
+  category: string;
+  categorySlug: string;
+  promptOnline: string;
+  promptLocal: string;
+  usage: string;
+  submittedAt: string;
+  authorEmail: string;
+  authorName: string;
+  status: "pending" | "approved" | "rejected";
+  reviewNote?: string;
+  version: string;
+}
+
+export interface PromptVersion {
+  id: string;
+  skillId: string;
+  version: string;
+  promptOnline: string;
+  promptLocal: string;
+  changelog: string;
+  updatedAt: string;
+  updatedBy: string;
 }

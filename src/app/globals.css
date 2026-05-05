@@ -48,7 +48,44 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Light theme (default) */
 :root {
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --card: #f8fafc;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --primary: #0891b2;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1a1a2e;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #e2e8f0;
+  --accent-foreground: #1a1a2e;
+  --destructive: #ef4444;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #0891b2;
+  --chart-1: #0891b2;
+  --chart-2: #7c3aed;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #ef4444;
+  --radius: 0.75rem;
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-primary: #0891b2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-accent-foreground: #1a1a2e;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: #0891b2;
+}
+
+/* Dark theme */
+.dark {
   --background: #000000;
   --foreground: #e6edf3;
   --card: #0d1117;
@@ -92,25 +129,39 @@
   }
   body {
     @apply bg-background text-foreground;
-    background: linear-gradient(180deg, #0a0e1a 0%, #000000 100%);
     min-height: 100vh;
+  }
+  .dark body {
+    background: linear-gradient(180deg, #0a0e1a 0%, #000000 100%);
   }
 }
 
 @layer utilities {
   .glass-card {
-    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 212, 255, 0.12);
     border-radius: 1rem;
+  }
+  :root .glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 212, 255, 0.12);
   }
   .glass-card-hover {
     transition: all 0.3s ease;
   }
   .glass-card-hover:hover {
     transform: translateY(-4px);
+  }
+  .dark .glass-card-hover:hover {
     border-color: rgba(0, 212, 255, 0.3);
     box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+  }
+  :root .glass-card-hover:hover {
+    border-color: rgba(8, 145, 178, 0.3);
+    box-shadow: 0 8px 32px rgba(8, 145, 178, 0.1);
   }
   .glow-text {
     text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
@@ -119,7 +170,7 @@
     box-shadow: 0 0 15px rgba(0, 212, 255, 0.15), inset 0 0 15px rgba(0, 212, 255, 0.05);
   }
   .gradient-text {
-    background: linear-gradient(135deg, #00d4ff, #7c3aed);
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

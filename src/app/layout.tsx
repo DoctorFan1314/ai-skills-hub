@@ -6,7 +6,10 @@ import { Footer } from "@/components/layout/footer";
 import { ParticleBackground } from "@/components/shared/particle-bg";
 import { ToastProvider } from "@/contexts/toast-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ThemeProvider } from "@/contexts/theme-context";
+import { I18nProvider } from "@/contexts/i18n-context";
 import { Toaster } from "@/components/ui/toast";
+import { CommandPalette } from "@/components/shared/command-palette";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,17 +34,30 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ai-skills-hub-theme')||'dark';var d=t==='system'?matchMedia('(prefers-color-scheme:dark)').matches:t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <ParticleBackground />
         <ToastProvider>
-          <AuthProvider>
-            <Navbar />
-            <main className="flex-1 relative z-10">{children}</main>
-            <Footer />
-            <Toaster />
-          </AuthProvider>
+          <ThemeProvider>
+            <I18nProvider>
+              <AuthProvider>
+                <Navbar />
+                <main className="flex-1 relative z-10">{children}</main>
+                <Footer />
+                <Toaster />
+                <CommandPalette />
+              </AuthProvider>
+            </I18nProvider>
+          </ThemeProvider>
         </ToastProvider>
       </body>
     </html>

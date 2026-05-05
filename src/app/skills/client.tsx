@@ -77,45 +77,45 @@ export default function SkillsClient() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white mb-2">技能市场</h1>
-        <p className="text-[#8b949e]">探索 {skills.length}+ 个精选实测LLM技能模板</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">技能市场</h1>
+        <p className="text-muted-foreground">探索 {skills.length}+ 个精选实测LLM技能模板</p>
       </div>
 
       <div className="space-y-4 mb-8">
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8b949e]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="搜索技能模板..."
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-[#8b949e]"
+            className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
         <div className="space-y-3 md:space-y-0 md:flex md:flex-wrap md:gap-4 md:items-center">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-[#8b949e]" id="category-label">分类：</span>
-            <button onClick={() => { setCategory("全部"); updateURL({ cat: "全部" }); }} role="radio" aria-checked={category === "全部"} aria-labelledby="category-label" className={`px-3 py-1 text-sm rounded-md transition-colors ${category === "全部" ? "bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/30" : "text-[#8b949e] hover:text-white hover:bg-white/5"}`}>
+            <span className="text-sm text-muted-foreground" id="category-label">分类：</span>
+            <button onClick={() => { setCategory("全部"); updateURL({ cat: "全部" }); }} role="radio" aria-checked={category === "全部"} aria-labelledby="category-label" className={`px-3 py-1 text-sm rounded-md transition-colors ${category === "全部" ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
               全部
             </button>
             {categories.map((c) => (
-              <button key={c.slug} onClick={() => { setCategory(c.slug); updateURL({ cat: c.slug }); }} role="radio" aria-checked={category === c.slug} className={`px-3 py-1 text-sm rounded-md transition-colors ${category === c.slug ? "bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/30" : "text-[#8b949e] hover:text-white hover:bg-white/5"}`}>
+              <button key={c.slug} onClick={() => { setCategory(c.slug); updateURL({ cat: c.slug }); }} role="radio" aria-checked={category === c.slug} className={`px-3 py-1 text-sm rounded-md transition-colors ${category === c.slug ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
                 {c.icon} {c.name}
               </button>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-[#8b949e]" id="difficulty-label">难度：</span>
+            <span className="text-sm text-muted-foreground" id="difficulty-label">难度：</span>
             {difficulties.map((d) => (
-              <button key={d} onClick={() => { setDifficulty(d); updateURL({ diff: d }); }} role="radio" aria-checked={difficulty === d} aria-labelledby="difficulty-label" className={`px-3 py-1 text-sm rounded-md transition-colors ${difficulty === d ? "bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/30" : "text-[#8b949e] hover:text-white hover:bg-white/5"}`}>
+              <button key={d} onClick={() => { setDifficulty(d); updateURL({ diff: d }); }} role="radio" aria-checked={difficulty === d} aria-labelledby="difficulty-label" className={`px-3 py-1 text-sm rounded-md transition-colors ${difficulty === d ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
                 {d}
               </button>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2 md:ml-auto">
-            <span className="text-sm text-[#8b949e]" id="sort-label">排序：</span>
+            <span className="text-sm text-muted-foreground" id="sort-label">排序：</span>
             {([{ key: "trending" as const, label: "最热" }, { key: "rating" as const, label: "评分" }, { key: "newest" as const, label: "最新" }]).map((s) => (
-              <button key={s.key} onClick={() => { setSortBy(s.key); updateURL({ sort: s.key }); }} role="radio" aria-checked={sortBy === s.key} aria-labelledby="sort-label" className={`px-3 py-1 text-sm rounded-md transition-colors ${sortBy === s.key ? "bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/30" : "text-[#8b949e] hover:text-white hover:bg-white/5"}`}>
+              <button key={s.key} onClick={() => { setSortBy(s.key); updateURL({ sort: s.key }); }} role="radio" aria-checked={sortBy === s.key} aria-labelledby="sort-label" className={`px-3 py-1 text-sm rounded-md transition-colors ${sortBy === s.key ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
                 {s.label}
               </button>
             ))}
@@ -125,8 +125,8 @@ export default function SkillsClient() {
 
       {filtered.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-[#8b949e] text-lg mb-2">未找到匹配的技能模板</p>
-          <p className="text-[#8b949e]/60 text-sm">尝试调整搜索词或筛选条件</p>
+          <p className="text-muted-foreground text-lg mb-2">未找到匹配的技能模板</p>
+          <p className="text-muted-foreground/60 text-sm">尝试调整搜索词或筛选条件</p>
         </div>
       ) : (
         <>
@@ -139,7 +139,7 @@ export default function SkillsClient() {
             <div className="text-center mt-10">
               <button
                 onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                className="px-6 py-2.5 text-sm rounded-lg border border-white/10 text-[#8b949e] hover:text-white hover:bg-white/5 hover:border-[#00d4ff]/30 transition-colors"
+                className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
               >
                 加载更多（还剩 {filtered.length - visibleCount} 个）
               </button>

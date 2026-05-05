@@ -1,0 +1,96 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { ArrowLeft, Send, Clock, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
+import { useToast } from "@/contexts/toast-context";
+import type { Submission } from "@/lib/types";
+
+const STATUS_MAP: Record<Submission["status"], { label: string; icon: React.ReactNode; color: string }> = {
+  pending: { label: "待审核", icon: <Clock className="h-4 w-4" />, color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+  approved: { label: "已通过", icon: <CheckCircle className="h-4 w-4" />, color: "text-green-400 bg-green-400/10 border-green-400/20" },
+  rejected: { label: "已拒绝", icon: <XCircle className="h-4 w-4" />, color: "text-red-400 bg-red-400/10 border-red-400/20" },
+};
+
+export default function SubmitStatusClient() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const key = user ? STORAGE_KEYS.submissions(user.email) : "ai-skills-hub-submissions-guest";
+  const [submissions, setSubmissions] = useLocalStorage<Submission[]>(key, []);
+
+  function handleDelete(id: string) {
+    setSubmissions((prev) => prev.filter((s) => s.id !== id));
+    toast("已删除提交记录");
+  }
+
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <p className="text-muted-foreground text-lg mb-4">请先登录查看提交状态</p>
+        <Link href="/login">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">登录</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-8 lg:px-8">
+      <Link href="/submit" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <ArrowLeft className="h-4 w-4" />返回提交模板
+      </Link>
+
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold text-foreground mb-2">提交历史</h1>
+        <p className="text-muted-foreground">查看你提交的模板及审核状态</p>
+      </div>
+
+      {submissions.length === 0 ? (
+        <div className="glass-card p-12 text-center">
+          <Send className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg mb-4">还没有提交记录</p>
+          <Link href="/submit">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">去提交模板</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {submissions.map((s) => {
+            const status = STATUS_MAP[s.status];
+            return (
+              <div key={s.id} className="glass-card p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-foreground font-semibold">{s.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{s.shortDesc}</p>
+                  </div>
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${status.color}`}>
+                    {status.icon}{status.label}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{s.category} · {s.version} · {new Date(s.submittedAt).toLocaleDateString("zh-CN")}</span>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    className="flex items-center gap-1 text-muted-foreground hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />删除
+                  </button>
+                </div>
+                {s.reviewNote && (
+                  <div className="mt-3 p-3 rounded-lg bg-secondary border border-border text-sm text-muted-foreground">
+                    <span className="text-foreground font-medium">审核备注：</span>{s.reviewNote}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
