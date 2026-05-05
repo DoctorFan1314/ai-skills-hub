@@ -39,6 +39,14 @@ export interface Dictionary {
     emptySearch: string;
     capabilities: string; tools: string; platforms: string;
     setupGuide: string; triggerExamples: string; description: string;
+    install: string; installCopied: string;
+    overview: string; readme: string; files: string; preview: string;
+    downloads: string; stars: string; author: string; license: string;
+    lastUpdated: string; collection: string; category: string;
+    tryItOut: string; tryPlaceholder: string; runPreview: string;
+    fileTree: string; collections: string; categories: string;
+    heroTitle: string; heroSubtitle: string; heroCta: string;
+    sectionHot: string; sectionHotSub: string;
   };
   categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string; };
   trending: {

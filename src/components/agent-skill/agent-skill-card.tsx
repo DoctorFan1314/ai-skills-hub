@@ -2,47 +2,91 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Zap, ArrowRight } from "lucide-react";
+import { ArrowRight, Download, Star, Copy, Check, Terminal } from "lucide-react";
+import { useState } from "react";
 import type { AgentSkill } from "@/lib/types";
 
+function formatNumber(n: number): string {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return n.toString();
+}
+
 export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
+  const [copied, setCopied] = useState(false);
+
   return (
-    <Link href={`/skills/${skill.id}`}>
-      <div className="glass-card glass-card-hover p-5 h-full cursor-pointer group flex flex-col">
-        <div className="flex items-start justify-between mb-3">
-          <Badge variant="secondary" className="text-xs bg-purple-400/10 text-purple-400 border-purple-400/20 border">
-            Agent 技能
-          </Badge>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Zap className="h-3 w-3 text-purple-400" />
-            <span>{skill.triggers.length} 触发词</span>
+    <div className="glass-card glass-card-hover p-5 h-full cursor-pointer group flex flex-col relative overflow-hidden">
+      {skill.trending && (
+        <div className="absolute top-3 right-3">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            Popular
+          </span>
+        </div>
+      )}
+
+      <div className="flex items-start gap-3 mb-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-lg">
+          {skill.avatar || skill.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+              {skill.name}
+            </h3>
+            {skill.authorBadge && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/20 border shrink-0">
+                {skill.authorBadge}
+              </Badge>
+            )}
           </div>
-        </div>
-        <h3 className="text-base font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-          {skill.name}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
-          {skill.description.split("\n").find(l => l && !l.startsWith("#") && !l.startsWith("-") && !l.startsWith("```"))?.slice(0, 80) || ""}
-        </p>
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {skill.triggers.slice(0, 4).map((trigger) => (
-            <span
-              key={trigger}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border"
-            >
-              {trigger}
-            </span>
-          ))}
-          {skill.triggers.length > 4 && (
-            <span className="text-[10px] px-2 py-0.5 text-muted-foreground/60">
-              +{skill.triggers.length - 4}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center justify-end">
-          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+          <p className="text-xs text-muted-foreground">{skill.author}</p>
         </div>
       </div>
-    </Link>
+
+      <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
+        {skill.description}
+      </p>
+
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {skill.tags.slice(0, 3).map((tag) => (
+          <span
+            key={tag}
+            className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+        <span className="flex items-center gap-1">
+          <Download className="h-3 w-3" />
+          {formatNumber(skill.downloads)}
+        </span>
+        <span className="flex items-center gap-1">
+          <Star className="h-3 w-3" />
+          {formatNumber(skill.stars)}
+        </span>
+        <span className="text-muted-foreground/60">{skill.lastUpdated}</span>
+      </div>
+
+      <div
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/80 border border-border group/install cursor-pointer hover:border-primary/30 transition-colors"
+        onClick={(e) => {
+          e.preventDefault();
+          navigator.clipboard.writeText(skill.installCommand);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+      >
+        <Terminal className="h-3 w-3 text-muted-foreground shrink-0" />
+        <code className="text-xs text-muted-foreground truncate flex-1 font-mono">{skill.installCommand}</code>
+        {copied ? <Check className="h-3 w-3 text-green-400 shrink-0" /> : <Copy className="h-3 w-3 text-muted-foreground/60 group-hover/install:text-muted-foreground shrink-0" />}
+      </div>
+
+      <Link href={`/skills/${skill.id}`} className="absolute inset-0" aria-label={skill.title}>
+        <span className="sr-only">View {skill.title}</span>
+      </Link>
+    </div>
   );
 }

@@ -7,7 +7,7 @@ import type { AgentSkill } from "@/lib/types";
 
 export function AgentSkillSection({ title, subtitle, skills }: { title: string; subtitle?: string; skills: AgentSkill[] }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
       <div className="flex items-end justify-between mb-8">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">{title}</h2>

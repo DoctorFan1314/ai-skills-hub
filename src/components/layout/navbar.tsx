@@ -24,8 +24,8 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: t.common.home },
+    { href: "/skills", label: t.common.skills, highlight: true },
     { href: "/prompts", label: t.common.prompts },
-    { href: "/skills", label: t.common.skills },
     { href: "/categories", label: t.common.categories },
     { href: "/trending", label: t.common.trending },
     { href: "/tags", label: t.common.tags },
@@ -64,7 +64,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary"
+              className={`px-3 py-2 text-sm transition-colors rounded-md hover:bg-secondary ${link.highlight ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
             >
               {link.label}
             </Link>

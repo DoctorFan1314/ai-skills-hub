@@ -6,7 +6,7 @@ import { CategoryCards } from "@/components/home/category-cards";
 import { SkillSection } from "@/components/home/skill-section";
 import { AgentSkillSection } from "@/components/home/agent-skill-section";
 import { Testimonials } from "@/components/home/testimonials";
-import { getTrendingSkills, getBeginnerSkills, getNewestSkills } from "@/lib/mock-data";
+import { getTrendingSkills, getBeginnerSkills } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
 import { useI18n } from "@/contexts/i18n-context";
 
@@ -17,14 +17,13 @@ export default function HomePage() {
     <>
       <Hero />
       <TrustBar />
+      <AgentSkillSection title={t.agentSkills.sectionHot} subtitle={t.agentSkills.sectionHotSub} skills={agentSkills.filter((s) => s.trending)} />
+      <div className="border-t border-white/[0.04]" />
       <CategoryCards />
-      <SkillSection title={t.home.sectionHot} subtitle={t.home.sectionHotSub} skills={getTrendingSkills()} viewAllHref="/prompts" />
       <div className="border-t border-white/[0.04]" />
-      <AgentSkillSection title="Agent 技能" subtitle="可执行动作的 AI Agent 能力" skills={agentSkills} />
+      <SkillSection title={t.home.sectionNew} subtitle={t.home.sectionNewSub} skills={getTrendingSkills().slice(0, 6)} viewAllHref="/prompts" />
       <div className="border-t border-white/[0.04]" />
-      <SkillSection title={t.home.sectionNew} subtitle={t.home.sectionNewSub} skills={getNewestSkills()} viewAllHref="/prompts" />
-      <div className="border-t border-white/[0.04]" />
-      <SkillSection title={t.home.sectionBeginner} subtitle={t.home.sectionBeginnerSub} skills={getBeginnerSkills()} viewAllHref="/prompts" />
+      <SkillSection title={t.home.sectionBeginner} subtitle={t.home.sectionBeginnerSub} skills={getBeginnerSkills().slice(0, 6)} viewAllHref="/prompts" />
       <Testimonials />
     </>
   );

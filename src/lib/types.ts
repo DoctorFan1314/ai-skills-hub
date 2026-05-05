@@ -133,6 +133,26 @@ export interface PromptVersion {
 export interface AgentSkill {
   id: string;
   name: string;
+  title: string;
   description: string;
+  avatar: string;
+  author: string;
+  authorBadge?: string;
+  downloads: number;
+  stars: number;
+  lastUpdated: string;
+  collection: string;
+  category: string;
+  categorySlug: string;
+  installCommand: string;
+  readme: string;
+  license: string;
+  version: string;
+  files: Record<string, string>;
+  demoInput: string;
+  demoOutput: string;
   triggers: string[];
+  tags: string[];
+  featured: boolean;
+  trending: boolean;
 }
