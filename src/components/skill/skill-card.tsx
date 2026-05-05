@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Star, Users, ArrowRight } from "lucide-react";
 import type { Skill } from "@/lib/types";
@@ -6,6 +9,7 @@ import { COLORS } from "@/lib/theme";
 
 export function SkillCard({ skill }: { skill: Skill }) {
   const color = COLORS.category[skill.categorySlug] || COLORS.primary;
+  const router = useRouter();
 
   return (
     <Link href={`/skills/${skill.id}`}>
@@ -30,13 +34,16 @@ export function SkillCard({ skill }: { skill: Skill }) {
         {skill.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
             {skill.tags.slice(0, 3).map((tag) => (
-              <Link
+              <span
                 key={tag}
-                href={`/tags/${encodeURIComponent(tag)}`}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border hover:text-primary hover:border-primary/30 transition-colors"
+                role="link"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); router.push(`/tags/${encodeURIComponent(tag)}`); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); router.push(`/tags/${encodeURIComponent(tag)}`); } }}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border hover:text-primary hover:border-primary/30 transition-colors cursor-pointer"
               >
                 {tag}
-              </Link>
+              </span>
             ))}
           </div>
         )}
