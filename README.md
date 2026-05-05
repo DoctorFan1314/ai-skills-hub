@@ -1,3 +1,318 @@
+<p align="center">
+  <a href="#english">English</a> | <a href="#中文">中文</a>
+</p>
+
+---
+
+<a id="english"></a>
+
+# AI Skills Hub — High-Quality LLM Skill Template Library
+
+> Production-ready LLM skill templates · Copy & use · Remove AI-sounding text · Turn AI into your real productivity weapon
+
+Perfectly compatible with ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama and other mainstream platforms.
+
+---
+
+## Screenshots
+
+- Deep blue-to-black gradient background + particle animation
+- Frosted glass cards + cyan neon borders
+- Responsive design, mobile-first
+
+---
+
+## Quick Start
+
+### 1. Requirements
+
+| Dependency | Minimum Version |
+|------------|-----------------|
+| Node.js | >= 18.0 |
+| npm | >= 9.0 |
+
+### 2. Install & Run
+
+```bash
+# Enter project directory
+cd ai-skills-hub
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Open http://localhost:3000 in your browser.
+
+### 3. Production Build
+
+```bash
+# Build
+npm run build
+
+# Start production server
+npm start
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| UI Library | shadcn/ui (Base UI) |
+| Icons | Lucide React |
+| Data | Local Mock Data (migratable to Supabase) |
+| Deployment | Vercel (recommended) |
+
+---
+
+## Project Structure
+
+```
+ai-skills-hub/
+├── src/
+│   ├── app/                          # Next.js App Router pages
+│   │   ├── layout.tsx                # Root layout (fonts, Navbar, Footer, particle bg)
+│   │   ├── page.tsx                  # Homepage
+│   │   ├── globals.css               # Global styles + CSS variables + utilities
+│   │   ├── skills/
+│   │   │   ├── page.tsx              # Skill marketplace (search, filter, sort)
+│   │   │   └── [id]/page.tsx         # Skill detail page
+│   │   ├── categories/
+│   │   │   ├── page.tsx              # Category browse
+│   │   │   └── [slug]/page.tsx       # Category detail
+│   │   ├── guide/page.tsx            # Beginner guide
+│   │   ├── submit/page.tsx           # Submit template
+│   │   ├── login/page.tsx            # Login
+│   │   └── register/page.tsx         # Register
+│   ├── components/
+│   │   ├── ui/                       # shadcn/ui components
+│   │   ├── layout/
+│   │   │   ├── navbar.tsx            # Top navigation bar
+│   │   │   └── footer.tsx            # Footer
+│   │   ├── home/
+│   │   │   ├── hero.tsx              # Hero section
+│   │   │   ├── trust-bar.tsx         # Trust bar
+│   │   │   ├── category-cards.tsx    # Three entry cards
+│   │   │   ├── skill-section.tsx     # Skill list section
+│   │   │   └── testimonials.tsx      # User testimonials
+│   │   ├── skill/
+│   │   │   └── skill-card.tsx        # Skill card
+│   │   └── shared/
+│   │       └── particle-bg.tsx       # Particle background animation
+│   ├── contexts/
+│   │   ├── toast-context.tsx         # Toast notification system
+│   │   └── auth-context.tsx          # Auth context (localStorage-based)
+│   ├── hooks/
+│   │   └── use-local-storage.ts      # localStorage hook
+│   └── lib/
+│       ├── types.ts                  # TypeScript type definitions
+│       ├── mock-data.ts              # Mock data (10 skill templates + 6 reviews)
+│       ├── categories.ts             # Category definitions
+│       ├── theme.ts                  # Color/theme constants
+│       └── utils.ts                  # Utility functions
+├── public/                           # Static assets
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+└── components.json                   # shadcn/ui config
+```
+
+---
+
+## Pages
+
+### Homepage `/`
+- Hero section: title + subtitle + CTA buttons
+- Trust bar: stats display
+- Three entry cards: Language & Content / Coding & Tech / Thinking & Workflow
+- Trending skills / Newest templates / Beginner picks: card lists
+- User testimonials
+
+### Skill Marketplace `/skills`
+- Full-text search (title, description, tags)
+- Category filter, difficulty filter, sort (trending / rating / newest)
+- URL-synced filters (shareable, browser back/forward supported)
+- Responsive grid layout
+
+### Skill Detail `/skills/[id]`
+- Title + meta info (category, difficulty, rating, usage count)
+- **One-click copy**: Online / Local tab switch
+- **Variable fill form**: fill variables, prompt auto-updates
+- **Before/After comparison**: multi-model output tab switch
+- Usage steps (online / local separately)
+- Recommended models table
+- Advanced tips
+- Interactive buttons (like, bookmark, share) — persisted via localStorage
+
+### Other Pages
+- `/categories` — Category browse
+- `/categories/[slug]` — Category detail
+- `/guide` — Beginner guide
+- `/submit` — Submit template (with validation + localStorage persistence)
+- `/login` — Login (localStorage-based auth)
+- `/register` — Register (localStorage-based auth)
+
+---
+
+## Features
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Skill marketplace | ✅ | Search, filter, sort, responsive grid |
+| One-click prompt copy | ✅ | Online/Local versions, clipboard API |
+| Variable fill | ✅ | Real-time prompt template update |
+| Before/After comparison | ✅ | Multi-model output tabs |
+| User auth | ✅ | localStorage-based login/register/logout |
+| Like/Bookmark | ✅ | Persisted via localStorage |
+| Submit template | ✅ | Validation + localStorage persistence |
+| URL-synced filters | ✅ | Shareable filter URLs |
+| Toast notifications | ✅ | Auto-dismiss, deduplication |
+| SEO | ✅ | Per-page metadata, JSON-LD, sitemap, robots.txt |
+| 404 page | ✅ | Custom not-found page |
+| Error boundary | ✅ | Global error page |
+| Loading skeleton | ✅ | Skill detail page skeleton |
+| Accessibility | ✅ | ARIA roles, sr-only labels, semantic HTML |
+| Responsive design | ✅ | Mobile-first, Sheet drawer nav |
+
+---
+
+## Design System
+
+### Colors
+
+| Purpose | Value |
+|---------|-------|
+| Primary (Cyan) | `#00d4ff` |
+| Background | `#0a0e1a` → `#000000` gradient |
+| Card background | `rgba(255,255,255,0.03)` frosted glass |
+| Card border | `rgba(0,212,255,0.12)` |
+| Body text | `#e6edf3` |
+| Muted text | `#8b949e` |
+
+### CSS Utilities
+
+```css
+.glass-card          /* Frosted glass card */
+.glass-card-hover    /* Hover float effect */
+.glow-text           /* Text glow */
+.glow-border         /* Border glow */
+.gradient-text       /* Gradient text */
+.scrollbar-hide      /* Hide scrollbar */
+```
+
+---
+
+## Data Structure
+
+### Skill (Skill Template)
+
+```typescript
+interface Skill {
+  id: string;              // Unique identifier
+  title: string;           // Title
+  subtitle: string;        // One-line description
+  category: string;        // Category name
+  categorySlug: string;    // Category slug
+  difficulty: "新手友好" | "进阶" | "高级";
+  rating: number;          // Rating (0-5)
+  usageCount: number;      // Usage count
+  promptOnline: string;    // Online prompt
+  promptLocal: string;     // Local prompt
+  variables: SkillVariable[];           // Variable list
+  beforeAfter: BeforeAfterExample;      // Effect comparison
+  recommendedModels: RecommendedModel[];// Recommended models
+  // ... see src/lib/types.ts for all fields
+}
+```
+
+### Adding New Skills
+
+Edit `src/lib/mock-data.ts` and add a new Skill object to the `skills` array.
+
+---
+
+## TODO
+
+- [ ] Integrate Supabase (Auth + PostgreSQL + pgvector search)
+- [ ] Prompt version management
+- [ ] Template feedback/rating system
+- [ ] Payment system (Freemium + Pro subscription)
+- [ ] User template submission review workflow
+- [ ] Further mobile polish
+
+---
+
+## Deployment
+
+### Vercel (Recommended)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+Or connect the GitHub repo to [Vercel](https://vercel.com) for automatic deployment.
+
+---
+
+## License
+
+MIT
+
+---
+
+## Disclaimer
+
+**This project is for learning, teaching, and personal research only. It does not constitute any form of commercial service or professional advice.**
+
+### Project Nature
+
+AI Skills Hub is a frontend learning project demonstrating how to build full-stack applications with Next.js, Tailwind CSS, shadcn/ui and other modern web technologies. All data in the project is mock data and does not represent real users, real reviews, or real business.
+
+### AI Output Disclaimer
+
+- The prompt templates provided are examples only and do not guarantee accuracy, safety, or suitability of AI model outputs
+- AI-generated content may contain errors, bias, or inappropriate information — users should judge independently
+- Users bear full responsibility for any consequences from using prompt templates
+
+### Trademark Notice
+
+ChatGPT (OpenAI), Claude (Anthropic), Grok (xAI), DeepSeek, Qwen (Alibaba), Llama (Meta) are registered trademarks of their respective companies. This project has no affiliation, authorization, sponsorship, or partnership with any of them.
+
+### Third-Party Services
+
+This project may involve third-party API or service calls. Users should comply with the relevant terms of service. This project is not responsible for the behavior or availability of any third-party services.
+
+### Content Compliance
+
+- All text content (including prompt templates, example outputs, user reviews) is fictional
+- This project does not encourage using AI-generated content directly in legal, medical, financial, or other professional scenarios
+- Users should ensure their use of this project complies with local laws and regulations
+
+---
+
+> If this project helps you, a Star ⭐ is appreciated. Nothing more, nothing less — no warranties expressed or implied.
+
+### Acknowledgments
+
+This project was built with the assistance of **MiMo V2.5-pro** model via **Claude Code**.
+
+Special thanks to the **Xiaomi MiMo Orbit — Million Token Creator Incentive Program** for supporting this project. MiMo's strong reasoning capabilities and code generation efficiency provided the core momentum for rapid development.
+
+---
+
+<a id="中文"></a>
+
 # AI Skills Hub — 高质量LLM技能模板库
 
 > 高质量LLM技能模板 · 复制即用，去AI味 · 把强大AI真正变成你的生产力武器
@@ -98,10 +413,16 @@ ai-skills-hub/
 │   │   │   └── skill-card.tsx        # 技能卡片
 │   │   └── shared/
 │   │       └── particle-bg.tsx       # 粒子背景动画
+│   ├── contexts/
+│   │   ├── toast-context.tsx         # Toast 通知系统
+│   │   └── auth-context.tsx          # 认证上下文（基于 localStorage）
+│   ├── hooks/
+│   │   └── use-local-storage.ts      # localStorage Hook
 │   └── lib/
 │       ├── types.ts                  # TypeScript 类型定义
 │       ├── mock-data.ts              # Mock 数据（10个技能模板 + 6条评价）
 │       ├── categories.ts             # 分类定义
+│       ├── theme.ts                  # 颜色/主题常量
 │       └── utils.ts                  # 工具函数
 ├── public/                           # 静态资源
 ├── package.json
@@ -118,12 +439,13 @@ ai-skills-hub/
 - Hero 区域：标题 + 副标题 + CTA 按钮
 - 信任条：统计数据展示
 - 三大入口卡片：语言与内容 / 编程与技术 / 思考与工作流
-- 热门技能 / 最新模板 / 新手推荐：横向滚动卡片列表
-- 用户评价轮播
+- 热门技能 / 最新模板 / 新手推荐：卡片列表
+- 用户评价
 
 ### 技能市场 `/skills`
 - 全局搜索（标题、描述、标签）
 - 分类筛选、难度筛选、排序（最热/评分/最新）
+- 筛选状态同步到 URL（可分享、支持浏览器前进/后退）
 - 响应式网格布局
 
 ### 技能详情 `/skills/[id]`
@@ -134,15 +456,37 @@ ai-skills-hub/
 - 使用步骤（在线 / 本地分别说明）
 - 推荐模型表格
 - 进阶玩法
-- 互动按钮（点赞、收藏、分享）
+- 互动按钮（点赞、收藏、分享）— localStorage 持久化
 
 ### 其他页面
 - `/categories` — 分类浏览
 - `/categories/[slug]` — 分类详情
 - `/guide` — 新手指南
-- `/submit` — 提交模板
-- `/login` — 登录
-- `/register` — 注册
+- `/submit` — 提交模板（含表单验证 + localStorage 持久化）
+- `/login` — 登录（基于 localStorage 的认证）
+- `/register` — 注册（基于 localStorage 的认证）
+
+---
+
+## 功能清单
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 技能市场 | ✅ | 搜索、筛选、排序、响应式网格 |
+| 一键复制 Prompt | ✅ | 在线/本地版本，剪贴板 API |
+| 变量填充 | ✅ | 实时 Prompt 模板更新 |
+| Before/After 对比 | ✅ | 多模型输出 Tab |
+| 用户认证 | ✅ | 基于 localStorage 的登录/注册/登出 |
+| 点赞/收藏 | ✅ | localStorage 持久化 |
+| 提交模板 | ✅ | 表单验证 + localStorage 持久化 |
+| URL 同步筛选 | ✅ | 可分享的筛选 URL |
+| Toast 通知 | ✅ | 自动消失、去重 |
+| SEO | ✅ | 页面级 metadata、JSON-LD、sitemap、robots.txt |
+| 404 页面 | ✅ | 自定义 404 页 |
+| 错误边界 | ✅ | 全局错误页面 |
+| 加载骨架屏 | ✅ | 技能详情页骨架屏 |
+| 可访问性 | ✅ | ARIA 角色、sr-only 标签、语义化 HTML |
+| 响应式设计 | ✅ | 移动端优先、Sheet 抽屉导航 |
 
 ---
 
@@ -204,12 +548,10 @@ interface Skill {
 ## 下一步（TODO）
 
 - [ ] 接入 Supabase（Auth + PostgreSQL + pgvector 向量搜索）
-- [ ] 实现真实用户系统（登录/注册/收藏）
 - [ ] Prompt 版本管理
 - [ ] 模板使用反馈评分系统
 - [ ] 支付系统（Freemium + Pro 订阅）
 - [ ] 用户提交模板审核流程
-- [ ] SEO 优化
 - [ ] 移动端细节打磨
 
 ---
@@ -268,7 +610,7 @@ ChatGPT（OpenAI）、Claude（Anthropic）、Grok（xAI）、DeepSeek、Qwen / 
 
 > 如果本项目对你有帮助，欢迎 Star ⭐ 支持。仅此而已，不构成任何明示或暗示的担保。
 
-###  致谢
+### 致谢
 
 本项目由 **MiMo V2.5-pro** 模型通过 **Claude Code** 辅助生成。
 
