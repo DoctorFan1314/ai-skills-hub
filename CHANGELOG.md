@@ -6,6 +6,39 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.3.0] — 2026-05-05
+
+### Added
+- **3 New Categories** — Data Analysis (📊), Productivity (⚡), Creative Writing (✍️), expanding from 3 to 6 total categories
+- **18 New Skill Templates** — 28 total skills covering SQL optimization, data cleaning, chart recommendations, data insights, meeting summaries, task planning, email batch generation, workflow automation, daily planning, story outlining, character building, worldbuilding, dialogue polishing, SEO blog optimization, social media strategy, React component generation, incident response, SWOT analysis
+- **4 New Testimonials** — from data analysts, novelists, project managers, and educators
+- **Pagination** — load-more button (12 per page) on skills marketplace
+- **Prompt Engineering Guide** — new section on guide page covering Chain-of-Thought, Few-Shot, Role Prompting, Structured Output, and Self-Critique techniques
+- **Better Results Tips** — practical before/after examples for improving AI outputs
+
+### Changed
+- **Category Cards** — dynamically rendered from data instead of hardcoded 3 cards; now shows all 6 categories in responsive grid
+- **Hero Tagline** — updated to mention six core domains
+- **Global Metadata** — description updated to cover all six categories
+- **Skill Detail Like/Bookmark** — now properly persisted via localStorage (was reset on refresh)
+- **CONTRIBUTING.md** — translated to English
+
+### Files Modified
+- `src/lib/theme.ts` — added 3 new category colors (amber, red, pink)
+- `src/lib/categories.ts` — added 3 new category definitions
+- `src/lib/mock-data.ts` — added 18 skills + 4 testimonials (~1800 new lines)
+- `src/components/home/category-cards.tsx` — dynamic rendering from categories data
+- `src/components/home/hero.tsx` — updated tagline
+- `src/app/layout.tsx` — updated metadata description
+- `src/app/skills/client.tsx` — added pagination
+- `src/app/skills/[id]/client.tsx` — fixed like/bookmark persistence
+- `src/app/guide/page.tsx` — added prompt engineering techniques section
+- `README.md` — updated for 28 skills, 6 categories
+- `README_CN.md` — updated for 28 skills, 6 categories
+- `CONTRIBUTING.md` — translated to English
+
+---
+
 ## [v1.2.0] — 2026-05-05
 
 ### Added

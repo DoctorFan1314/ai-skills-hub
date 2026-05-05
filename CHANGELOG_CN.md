@@ -6,6 +6,39 @@
 
 ---
 
+## [v1.3.0] — 2026-05-05
+
+### 新增
+- **3 个新分类** — 数据分析（📊）、效率工具（⚡）、创意写作（✍️），从 3 个扩展到 6 个分类
+- **18 个新技能模板** — 共 28 个技能，覆盖 SQL 优化、数据清洗、图表推荐、数据洞察、会议纪要、任务分解、邮件批量生成、工作流自动化、日程规划、故事大纲、角色塑造、世界观搭建、对白优化、SEO 博客优化、社交媒体策略、React 组件生成、事故响应、SWOT 分析
+- **4 条新评价** — 来自数据分析师、网络小说作者、项目经理和在线教育从业者
+- **分页加载** — 技能市场每页 12 个，"加载更多"按钮
+- **Prompt 工程技巧** — 新手指南新增 Chain-of-Thought、Few-Shot、角色扮演、结构化输出、自我反思等技巧章节
+- **获得更好结果的秘诀** — 实用的前后对比示例
+
+### 变更
+- **分类卡片** — 从硬编码 3 个改为从数据动态渲染 6 个，响应式网格
+- **Hero 标语** — 更新为提及六大核心领域
+- **全局 Metadata** — description 更新覆盖六大分类
+- **技能详情页点赞/收藏** — 修复为 localStorage 持久化（之前刷新即失）
+- **CONTRIBUTING.md** — 翻译为英文
+
+### 修改文件
+- `src/lib/theme.ts` — 新增 3 个分类颜色（琥珀、红、粉）
+- `src/lib/categories.ts` — 新增 3 个分类定义
+- `src/lib/mock-data.ts` — 新增 18 个技能 + 4 条评价（约 1800 行）
+- `src/components/home/category-cards.tsx` — 从分类数据动态渲染
+- `src/components/home/hero.tsx` — 更新标语
+- `src/app/layout.tsx` — 更新 metadata description
+- `src/app/skills/client.tsx` — 新增分页
+- `src/app/skills/[id]/client.tsx` — 修复点赞/收藏持久化
+- `src/app/guide/page.tsx` — 新增 Prompt 工程技巧章节
+- `README.md` — 更新为 28 个技能、6 个分类
+- `README_CN.md` — 更新为 28 个技能、6 个分类
+- `CONTRIBUTING.md` — 翻译为英文
+
+---
+
 ## [v1.2.0] — 2026-05-05
 
 ### 新增

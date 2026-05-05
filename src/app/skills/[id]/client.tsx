@@ -35,9 +35,19 @@ function CopyButton({ text }: { text: string }) {
 export default function SkillDetailClient({ id }: { id: string }) {
   const skill = getSkillById(id);
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [likedIds, setLikedIds] = useLocalStorage<string[]>("ai-skills-hub-likes", []);
+  const [bookmarkedIds, setBookmarkedIds] = useLocalStorage<string[]>("ai-skills-hub-bookmarks", []);
   const [shareError, setShareError] = useState(false);
+
+  const liked = likedIds.includes(id);
+  const bookmarked = bookmarkedIds.includes(id);
+
+  const toggleLike = () => {
+    setLikedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+  const toggleBookmark = () => {
+    setBookmarkedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
 
   if (!skill) {
     return (
@@ -242,10 +252,10 @@ export default function SkillDetailClient({ id }: { id: string }) {
 
       {/* Actions */}
       <div className="flex items-center gap-3 mb-12">
-        <Button variant="outline" size="sm" className={`border-white/10 ${liked ? "text-[#00d4ff] border-[#00d4ff]/30" : "text-[#8b949e]"} hover:bg-white/5`} onClick={() => setLiked(!liked)} aria-label="点赞">
+        <Button variant="outline" size="sm" className={`border-white/10 ${liked ? "text-[#00d4ff] border-[#00d4ff]/30" : "text-[#8b949e]"} hover:bg-white/5`} onClick={toggleLike} aria-label="点赞">
           <ThumbsUp className={`h-4 w-4 mr-1.5 ${liked ? "fill-current" : ""}`} />{skill.likes + (liked ? 1 : 0)}
         </Button>
-        <Button variant="outline" size="sm" className={`border-white/10 ${bookmarked ? "text-yellow-400 border-yellow-400/30" : "text-[#8b949e]"} hover:bg-white/5`} onClick={() => setBookmarked(!bookmarked)} aria-label="收藏">
+        <Button variant="outline" size="sm" className={`border-white/10 ${bookmarked ? "text-yellow-400 border-yellow-400/30" : "text-[#8b949e]"} hover:bg-white/5`} onClick={toggleBookmark} aria-label="收藏">
           <Bookmark className={`h-4 w-4 mr-1.5 ${bookmarked ? "fill-current" : ""}`} />收藏
         </Button>
         <Button variant="outline" size="sm" className="border-white/10 text-[#8b949e] hover:bg-white/5" onClick={handleShare} aria-label="分享">

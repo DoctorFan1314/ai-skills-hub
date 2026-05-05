@@ -2,7 +2,7 @@
 
 > **[English](README.md)**
 
-> 高质量LLM技能模板 · 复制即用，去AI味 · 把强大AI真正变成你的生产力武器
+> 覆盖六大领域的LLM技能模板 · 复制即用，去AI味 · 把强大AI真正变成你的生产力武器
 
 完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama 等主流平台。
 
@@ -76,12 +76,12 @@ ai-skills-hub/
 │   │   ├── page.tsx                  # 首页
 │   │   ├── globals.css               # 全局样式 + CSS 变量 + 工具类
 │   │   ├── skills/
-│   │   │   ├── page.tsx              # 技能市场（搜索、筛选、排序）
+│   │   │   ├── page.tsx              # 技能市场（搜索、筛选、排序、分页）
 │   │   │   └── [id]/page.tsx         # 技能详情页
 │   │   ├── categories/
 │   │   │   ├── page.tsx              # 分类浏览
 │   │   │   └── [slug]/page.tsx       # 分类详情
-│   │   ├── guide/page.tsx            # 新手指南
+│   │   ├── guide/page.tsx            # 新手指南 + Prompt 工程技巧
 │   │   ├── submit/page.tsx           # 提交模板
 │   │   ├── login/page.tsx            # 登录
 │   │   └── register/page.tsx         # 注册
@@ -93,7 +93,7 @@ ai-skills-hub/
 │   │   ├── home/
 │   │   │   ├── hero.tsx              # Hero 区域
 │   │   │   ├── trust-bar.tsx         # 信任条
-│   │   │   ├── category-cards.tsx    # 三大入口卡片
+│   │   │   ├── category-cards.tsx    # 六大入口卡片
 │   │   │   ├── skill-section.tsx     # 技能列表区块
 │   │   │   └── testimonials.tsx      # 用户评价
 │   │   ├── skill/
@@ -107,8 +107,8 @@ ai-skills-hub/
 │   │   └── use-local-storage.ts      # localStorage Hook
 │   └── lib/
 │       ├── types.ts                  # TypeScript 类型定义
-│       ├── mock-data.ts              # Mock 数据（10个技能模板 + 6条评价）
-│       ├── categories.ts             # 分类定义
+│       ├── mock-data.ts              # Mock 数据（28个技能模板 + 10条评价）
+│       ├── categories.ts             # 分类定义（6个分类）
 │       ├── theme.ts                  # 颜色/主题常量
 │       └── utils.ts                  # 工具函数
 ├── public/                           # 静态资源
@@ -125,7 +125,7 @@ ai-skills-hub/
 ### 首页 `/`
 - Hero 区域：标题 + 副标题 + CTA 按钮
 - 信任条：统计数据展示
-- 三大入口卡片：语言与内容 / 编程与技术 / 思考与工作流
+- 六大入口卡片：语言与内容 / 编程与技术 / 思考与工作流 / 数据分析 / 效率工具 / 创意写作
 - 热门技能 / 最新模板 / 新手推荐：卡片列表
 - 用户评价
 
@@ -133,6 +133,7 @@ ai-skills-hub/
 - 全局搜索（标题、描述、标签）
 - 分类筛选、难度筛选、排序（最热/评分/最新）
 - 筛选状态同步到 URL（可分享、支持浏览器前进/后退）
+- 加载更多分页
 - 响应式网格布局
 
 ### 技能详情 `/skills/[id]`
@@ -148,10 +149,23 @@ ai-skills-hub/
 ### 其他页面
 - `/categories` — 分类浏览
 - `/categories/[slug]` — 分类详情
-- `/guide` — 新手指南
+- `/guide` — 新手指南 + Prompt 工程技巧（Chain-of-Thought、Few-Shot、角色扮演等）
 - `/submit` — 提交模板（含表单验证 + localStorage 持久化）
 - `/login` — 登录（基于 localStorage 的认证）
 - `/register` — 注册（基于 localStorage 的认证）
+
+---
+
+## 技能分类（6大分类，28个模板）
+
+| 分类 | 图标 | 数量 | 示例 |
+|------|------|------|------|
+| 语言与内容生产 | 💬 | 5 | 小红书笔记、翻译、标题生成、SEO博客、社交媒体策略 |
+| 编程与技术任务 | 🛠️ | 5 | 代码审查、API生成、Bug修复、React组件生成、事故响应 |
+| 思考与工作流 | ⚙️ | 5 | 周报、结构化思考、深度研究、邮件撰写、SWOT分析 |
+| 数据分析 | 📊 | 4 | SQL优化、数据清洗、图表推荐、数据洞察 |
+| 效率工具 | ⚡ | 5 | 会议纪要、任务分解、邮件批量生成、工作流自动化、日程规划 |
+| 创意写作 | ✍️ | 4 | 故事大纲、角色塑造、世界观搭建、对白优化 |
 
 ---
 
@@ -159,7 +173,7 @@ ai-skills-hub/
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| 技能市场 | ✅ | 搜索、筛选、排序、响应式网格 |
+| 技能市场 | ✅ | 搜索、筛选、排序、分页、响应式网格 |
 | 一键复制 Prompt | ✅ | 在线/本地版本，剪贴板 API |
 | 变量填充 | ✅ | 实时 Prompt 模板更新 |
 | Before/After 对比 | ✅ | 多模型输出 Tab |
@@ -174,6 +188,7 @@ ai-skills-hub/
 | 加载骨架屏 | ✅ | 技能详情页骨架屏 |
 | 可访问性 | ✅ | ARIA 角色、sr-only 标签、语义化 HTML |
 | 响应式设计 | ✅ | 移动端优先、Sheet 抽屉导航 |
+| Prompt 工程指南 | ✅ | CoT、Few-Shot、角色扮演等技巧 |
 
 ---
 
@@ -229,6 +244,12 @@ interface Skill {
 ### 添加新技能
 
 编辑 `src/lib/mock-data.ts`，在 `skills` 数组中添加新的 Skill 对象即可。
+
+---
+
+## 贡献指南
+
+见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ---
 

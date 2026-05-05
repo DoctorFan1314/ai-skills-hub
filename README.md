@@ -2,7 +2,7 @@
 
 > **[中文文档](README_CN.md)**
 
-> Production-ready LLM skill templates · Copy & use · Remove AI-sounding text · Turn AI into your real productivity weapon
+> Production-ready LLM skill templates across 6 categories · Copy & use · Remove AI-sounding text · Turn AI into your real productivity weapon
 
 Perfectly compatible with ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama and other mainstream platforms.
 
@@ -76,12 +76,12 @@ ai-skills-hub/
 │   │   ├── page.tsx                  # Homepage
 │   │   ├── globals.css               # Global styles + CSS variables + utilities
 │   │   ├── skills/
-│   │   │   ├── page.tsx              # Skill marketplace (search, filter, sort)
+│   │   │   ├── page.tsx              # Skill marketplace (search, filter, sort, pagination)
 │   │   │   └── [id]/page.tsx         # Skill detail page
 │   │   ├── categories/
 │   │   │   ├── page.tsx              # Category browse
 │   │   │   └── [slug]/page.tsx       # Category detail
-│   │   ├── guide/page.tsx            # Beginner guide
+│   │   ├── guide/page.tsx            # Beginner guide + prompt engineering tips
 │   │   ├── submit/page.tsx           # Submit template
 │   │   ├── login/page.tsx            # Login
 │   │   └── register/page.tsx         # Register
@@ -93,7 +93,7 @@ ai-skills-hub/
 │   │   ├── home/
 │   │   │   ├── hero.tsx              # Hero section
 │   │   │   ├── trust-bar.tsx         # Trust bar
-│   │   │   ├── category-cards.tsx    # Three entry cards
+│   │   │   ├── category-cards.tsx    # Six category entry cards
 │   │   │   ├── skill-section.tsx     # Skill list section
 │   │   │   └── testimonials.tsx      # User testimonials
 │   │   ├── skill/
@@ -107,8 +107,8 @@ ai-skills-hub/
 │   │   └── use-local-storage.ts      # localStorage hook
 │   └── lib/
 │       ├── types.ts                  # TypeScript type definitions
-│       ├── mock-data.ts              # Mock data (10 skill templates + 6 reviews)
-│       ├── categories.ts             # Category definitions
+│       ├── mock-data.ts              # Mock data (28 skill templates + 10 reviews)
+│       ├── categories.ts             # Category definitions (6 categories)
 │       ├── theme.ts                  # Color/theme constants
 │       └── utils.ts                  # Utility functions
 ├── public/                           # Static assets
@@ -125,7 +125,7 @@ ai-skills-hub/
 ### Homepage `/`
 - Hero section: title + subtitle + CTA buttons
 - Trust bar: stats display
-- Three entry cards: Language & Content / Coding & Tech / Thinking & Workflow
+- Six category entry cards: Language & Content / Coding & Tech / Thinking & Workflow / Data Analysis / Productivity / Creative Writing
 - Trending skills / Newest templates / Beginner picks: card lists
 - User testimonials
 
@@ -133,6 +133,7 @@ ai-skills-hub/
 - Full-text search (title, description, tags)
 - Category filter, difficulty filter, sort (trending / rating / newest)
 - URL-synced filters (shareable, browser back/forward supported)
+- Load-more pagination
 - Responsive grid layout
 
 ### Skill Detail `/skills/[id]`
@@ -148,10 +149,23 @@ ai-skills-hub/
 ### Other Pages
 - `/categories` — Category browse
 - `/categories/[slug]` — Category detail
-- `/guide` — Beginner guide
+- `/guide` — Beginner guide + prompt engineering techniques
 - `/submit` — Submit template (with validation + localStorage persistence)
 - `/login` — Login (localStorage-based auth)
 - `/register` — Register (localStorage-based auth)
+
+---
+
+## Skill Categories (6 Categories, 28 Templates)
+
+| Category | Icon | Skills | Examples |
+|----------|------|--------|----------|
+| Language & Content | 💬 | 5 | Xiaohongshu notes, translation, title generator, SEO blog, social media strategy |
+| Coding & Tech | 🛠️ | 5 | Code review, API generator, bug fixer, React component gen, incident responder |
+| Thinking & Workflow | ⚙️ | 5 | Weekly report, structured thinking, research assistant, email writer, SWOT analyzer |
+| Data Analysis | 📊 | 4 | SQL optimizer, data cleaner, chart advisor, data insights |
+| Productivity | ⚡ | 5 | Meeting summary, task planner, email batch generator, workflow automation, daily planner |
+| Creative Writing | ✍️ | 4 | Story outliner, character builder, worldbuilder, dialogue polisher |
 
 ---
 
@@ -159,7 +173,7 @@ ai-skills-hub/
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Skill marketplace | ✅ | Search, filter, sort, responsive grid |
+| Skill marketplace | ✅ | Search, filter, sort, pagination, responsive grid |
 | One-click prompt copy | ✅ | Online/Local versions, clipboard API |
 | Variable fill | ✅ | Real-time prompt template update |
 | Before/After comparison | ✅ | Multi-model output tabs |
@@ -174,6 +188,7 @@ ai-skills-hub/
 | Loading skeleton | ✅ | Skill detail page skeleton |
 | Accessibility | ✅ | ARIA roles, sr-only labels, semantic HTML |
 | Responsive design | ✅ | Mobile-first, Sheet drawer nav |
+| Prompt engineering guide | ✅ | CoT, Few-Shot, Role Prompting, etc. |
 
 ---
 
@@ -229,6 +244,12 @@ interface Skill {
 ### Adding New Skills
 
 Edit `src/lib/mock-data.ts` and add a new Skill object to the `skills` array.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 

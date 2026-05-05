@@ -20,9 +20,9 @@ export function Hero() {
             <span className="glow-text">AI Skills Hub</span>
           </h1>
           <p className="text-lg sm:text-xl text-[#8b949e] mb-4 max-w-2xl mx-auto leading-relaxed">
-            高质量LLM技能模板 · 复制即用，去AI味
+            高质量LLM技能模板 · 覆盖内容、编程、数据、效率、创意、思维六大领域
             <br />
-            <span className="text-white/80">把AI真正变成你的生产力武器</span>
+            <span className="text-white/80">复制即用，去AI味，把AI真正变成你的生产力武器</span>
           </p>
           <p className="text-sm text-[#8b949e]/60 mb-10">
             完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama

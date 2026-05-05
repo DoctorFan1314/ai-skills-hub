@@ -1,139 +1,139 @@
-# 贡献指南
+# Contributing
 
-感谢你对 AI Skills Hub 的关注！我们欢迎任何形式的贡献。
-
----
-
-## 如何贡献
-
-### 提交技能模板（最推荐！）
-
-这是最简单也最有价值的贡献方式：
-
-1. 直接在网站上使用「提交模板」功能
-2. 或者 Fork 本仓库，在 `src/lib/mock-data.ts` 中添加新的 Skill 对象，然后提交 PR
-
-#### Skill 模板标准
-
-每个模板必须包含：
-
-- **标题**：清晰描述功能，包含版本号（如 `v2.1`）
-- **一句话描述**：不超过 50 字
-- **在线版 Prompt**：适用于 ChatGPT/Claude/Grok 等平台
-- **本地版 Prompt**：适用于 LM Studio/Ollama 等本地工具
-- **变量定义**：用户需要填写的变量（如 `{{主题}}`）
-- **Before/After 示例**：至少一个真实的输入输出对比
-- **推荐模型**：注明推荐的模型和适用场景
-- **使用步骤**：在线和本地分别说明
-
-#### 质量要求
-
-- Prompt 必须经过至少 2 个不同模型实测
-- 输出效果自然，无明显 AI 味
-- 覆盖真实生产力场景，而非纯演示
-
-### 报告 Bug
-
-在 [Issues](../../issues) 中提交 Bug 报告，请包含：
-
-- 问题描述
-- 复现步骤
-- 预期行为 vs 实际行为
-- 浏览器和操作系统信息
-- 截图（如有）
-
-### 功能建议
-
-在 [Issues](../../issues) 中提交功能建议，请描述：
-
-- 你希望实现什么功能
-- 为什么需要这个功能
-- 你设想的使用场景
-
-### 代码贡献
-
-1. Fork 本仓库
-2. 创建你的功能分支：`git checkout -b feature/your-feature`
-3. 提交你的修改：`git commit -m 'feat: add some feature'`
-4. 推送到分支：`git push origin feature/your-feature`
-5. 提交 Pull Request
+Thank you for your interest in AI Skills Hub! We welcome all forms of contributions.
 
 ---
 
-## 开发环境
+## How to Contribute
+
+### Submit Skill Templates (Most Welcome!)
+
+This is the simplest and most valuable way to contribute:
+
+1. Use the "Submit Template" feature directly on the website
+2. Or fork this repo, add a new Skill object in `src/lib/mock-data.ts`, and submit a PR
+
+#### Skill Template Requirements
+
+Each template must include:
+
+- **Title**: Clear description of functionality, with version number (e.g., `v2.1`)
+- **Subtitle**: One-line description, no more than 50 characters
+- **Online Prompt**: For ChatGPT / Claude / Grok and similar platforms
+- **Local Prompt**: For LM Studio / Ollama and similar local tools
+- **Variable Definitions**: Variables the user needs to fill in (e.g., `{{topic}}`)
+- **Before/After Example**: At least one real input/output comparison
+- **Recommended Models**: Note recommended models and their use cases
+- **Usage Steps**: Separate instructions for online and local usage
+
+#### Quality Standards
+
+- Prompts must be tested on at least 2 different models
+- Output should be natural and free of obvious AI-sounding text
+- Cover real productivity scenarios, not just demos
+
+### Report Bugs
+
+Submit bug reports in [Issues](../../issues), including:
+
+- Problem description
+- Steps to reproduce
+- Expected behavior vs. actual behavior
+- Browser and operating system information
+- Screenshots (if applicable)
+
+### Feature Requests
+
+Submit feature requests in [Issues](../../issues), describing:
+
+- What feature you'd like to see
+- Why you need this feature
+- Your envisioned use case
+
+### Code Contributions
+
+1. Fork this repository
+2. Create your feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'feat: add some feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Submit a Pull Request
+
+---
+
+## Development Setup
 
 ```bash
-# 克隆你的 Fork
-git clone https://github.com/你的用户名/ai-skills-hub.git
+# Clone your fork
+git clone https://github.com/your-username/ai-skills-hub.git
 cd ai-skills-hub
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start development server
 npm run dev
 ```
 
-浏览器打开 http://localhost:3000 查看效果。
+Open http://localhost:3000 in your browser.
 
 ---
 
-## 项目结构简述
+## Project Structure
 
 ```
 src/
-├── app/              # 页面路由
-├── components/       # 组件
-│   ├── ui/           # shadcn/ui 基础组件
-│   ├── layout/       # 布局组件（Navbar, Footer）
-│   ├── home/         # 首页组件
-│   └── skill/        # 技能相关组件
+├── app/              # Page routes
+├── components/       # Components
+│   ├── ui/           # shadcn/ui base components
+│   ├── layout/       # Layout components (Navbar, Footer)
+│   ├── home/         # Homepage components
+│   └── skill/        # Skill-related components
 └── lib/
-    ├── types.ts      # 类型定义
-    ├── mock-data.ts  # 数据源（添加新模板改这里）
-    └── categories.ts # 分类定义
+    ├── types.ts      # Type definitions
+    ├── mock-data.ts  # Data source (add new templates here)
+    └── categories.ts # Category definitions
 ```
 
 ---
 
-## 提交规范
+## Commit Convention
 
-使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式：
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-- `feat:` 新功能
-- `fix:` Bug 修复
-- `docs:` 文档更新
-- `style:` 代码格式调整（不影响逻辑）
-- `refactor:` 重构
-- `perf:` 性能优化
-- `test:` 测试相关
-- `chore:` 构建/工具链相关
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation update
+- `style:` Code formatting (no logic change)
+- `refactor:` Refactoring
+- `perf:` Performance improvement
+- `test:` Testing related
+- `chore:` Build/toolchain related
 
-示例：
+Examples:
 ```
-feat: 添加「短视频脚本生成器」技能模板
-fix: 修复移动端导航菜单无法关闭的问题
-docs: 更新 README 添加部署说明
+feat: add "Short Video Script Generator" skill template
+fix: fix mobile nav menu not closing properly
+docs: update README with deployment instructions
 ```
 
 ---
 
-## 行为准则
+## Code of Conduct
 
-- 尊重每一位贡献者
-- 使用友善和包容的语言
-- 接受建设性批评
-- 专注于对社区最有利的事情
+- Respect every contributor
+- Use friendly and inclusive language
+- Accept constructive criticism
+- Focus on what is best for the community
 
 ---
 
-## 联系方式
+## Contact
 
-- GitHub Issues: 提交 Bug 或建议
-- Email: [待补充]
+- GitHub Issues: Submit bugs or suggestions
+- Email: [TBD]
 
 ---
 
 ## License
 
-本项目使用 [MIT License](./LICENSE)。提交贡献即表示你同意你的代码以 MIT 协议开源。
+This project uses the [MIT License](./LICENSE). By submitting a contribution, you agree that your code will be open-sourced under the MIT license.

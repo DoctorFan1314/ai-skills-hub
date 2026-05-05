@@ -89,6 +89,83 @@ export default function GuidePage() {
         </div>
       </section>
 
+      <section className="glass-card p-8 mb-8">
+        <h2 className="text-xl font-bold text-white mb-6">🧠 Prompt 工程技巧</h2>
+        <p className="text-[#8b949e] mb-6">掌握这些核心技巧，让 AI 输出质量更上一层楼：</p>
+        <div className="space-y-6">
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">1. 链式思考（Chain-of-Thought）</h3>
+            <p className="text-sm text-[#8b949e] mb-3">让 AI 逐步推理，而非直接给答案。加入 &ldquo;请一步步分析&rdquo; 或 &ldquo;让我们逐步思考&rdquo; 可以显著提升复杂问题的回答质量。</p>
+            <div className="bg-black/40 border border-white/10 rounded-lg p-3">
+              <p className="text-xs text-[#8b949e]/60 mb-1">示例：</p>
+              <p className="text-sm text-white font-mono">&ldquo;请一步步分析这个 SQL 查询的性能问题，先看执行计划，再找瓶颈，最后给出优化方案。&rdquo;</p>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">2. 少样本学习（Few-Shot）</h3>
+            <p className="text-sm text-[#8b949e] mb-3">给 AI 提供 1-3 个输入→输出示例，让它理解你期望的格式和风格。适合需要统一格式的批量任务。</p>
+            <div className="bg-black/40 border border-white/10 rounded-lg p-3">
+              <p className="text-xs text-[#8b949e]/60 mb-1">示例：</p>
+              <p className="text-sm text-white font-mono">&ldquo;按以下格式输出：输入 &lsquo;React&rsquo; → 输出 &lsquo;⚛️ React — 用于构建用户界面的 JavaScript 库&rsquo;&rdquo;</p>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">3. 角色扮演（Role Prompting）</h3>
+            <p className="text-sm text-[#8b949e] mb-3">给 AI 一个具体的专业角色，获得更专业、更有深度的回答。角色越具体，输出越精准。</p>
+            <div className="bg-black/40 border border-white/10 rounded-lg p-3">
+              <p className="text-xs text-[#8b949e]/60 mb-1">示例：</p>
+              <p className="text-sm text-white font-mono">&ldquo;你是一位有 10 年经验的资深前端架构师，专注于 React 性能优化...&rdquo;</p>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">4. 结构化输出（Structured Output）</h3>
+            <p className="text-sm text-[#8b949e] mb-3">明确指定输出格式（Markdown、JSON、表格等），减少 AI 的 &ldquo;自由发挥&rdquo;，让结果更可控、更易用。</p>
+            <div className="bg-black/40 border border-white/10 rounded-lg p-3">
+              <p className="text-xs text-[#8b949e]/60 mb-1">示例：</p>
+              <p className="text-sm text-white font-mono">&ldquo;请用 Markdown 表格输出，包含：名称 | 优势 | 适用场景 三列&rdquo;</p>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">5. 自我反思（Self-Critique）</h3>
+            <p className="text-sm text-[#8b949e] mb-3">让 AI 检查并改进自己的输出。在 Prompt 末尾加上 &ldquo;请检查你的回答是否有错误或遗漏&rdquo;，可以显著提升准确性。</p>
+            <div className="bg-black/40 border border-white/10 rounded-lg p-3">
+              <p className="text-xs text-[#8b949e]/60 mb-1">示例：</p>
+              <p className="text-sm text-white font-mono">&ldquo;请检查你刚才的代码，列出可能的 Bug 和改进点，然后给出修正版本。&rdquo;</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="glass-card p-8 mb-8">
+        <h2 className="text-xl font-bold text-white mb-6">💡 获得更好结果的秘诀</h2>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">🎯 具体胜过模糊</h3>
+            <p className="text-xs text-[#8b949e]/60 mb-2">❌ 不好：</p>
+            <p className="text-sm text-[#8b949e] mb-2">&ldquo;帮我写个邮件&rdquo;</p>
+            <p className="text-xs text-[#8b949e]/60 mb-2">✅ 更好：</p>
+            <p className="text-sm text-[#8b949e]">&ldquo;给客户张总写一封项目进度汇报邮件，语气专业友好，包含本周完成的3个里程碑&rdquo;</p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">📋 指定输出格式</h3>
+            <p className="text-xs text-[#8b949e]/60 mb-2">❌ 不好：</p>
+            <p className="text-sm text-[#8b949e] mb-2">&ldquo;分析一下这个数据&rdquo;</p>
+            <p className="text-xs text-[#8b949e]/60 mb-2">✅ 更好：</p>
+            <p className="text-sm text-[#8b949e]">&ldquo;用表格对比 Q1 和 Q2 的数据变化，标注增长率超过 20% 的指标&rdquo;</p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">🔄 迭代优化</h3>
+            <p className="text-xs text-[#8b949e]/60 mb-2">技巧：</p>
+            <p className="text-sm text-[#8b949e]">不要期望一次完美。先让 AI 生成初版，然后针对性地要求 &ldquo;更口语化&rdquo;、&ldquo;缩短到200字&rdquo;、&ldquo;加入数据支撑&rdquo;。</p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/10 rounded-lg p-5">
+            <h3 className="font-semibold text-white mb-2">📎 提供上下文</h3>
+            <p className="text-xs text-[#8b949e]/60 mb-2">技巧：</p>
+            <p className="text-sm text-[#8b949e]">背景信息越丰富，AI 越能理解你的需求。告诉它你的身份、目的、受众，输出会更贴合预期。</p>
+          </div>
+        </div>
+      </section>
+
       <div className="text-center">
         <p className="text-[#8b949e] mb-4">准备好了吗？开始探索吧！</p>
         <Link href="/skills">

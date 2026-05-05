@@ -9,6 +9,7 @@ import { SkillCard } from "@/components/skill/skill-card";
 import { categories } from "@/lib/categories";
 
 const difficulties = ["全部", "新手友好", "进阶", "高级"];
+const PAGE_SIZE = 12;
 
 export default function SkillsClient() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function SkillsClient() {
       ? searchParams.get("sort")
       : "trending") as "trending" | "rating" | "newest",
   );
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -54,6 +56,7 @@ export default function SkillsClient() {
   );
 
   useEffect(() => () => clearTimeout(debounceRef.current), []);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [category, difficulty, sortBy]);
 
   const filtered = (() => {
     let result = [...skills];
@@ -126,11 +129,23 @@ export default function SkillsClient() {
           <p className="text-[#8b949e]/60 text-sm">尝试调整搜索词或筛选条件</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((skill) => (
-            <SkillCard key={skill.id} skill={skill} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filtered.slice(0, visibleCount).map((skill) => (
+              <SkillCard key={skill.id} skill={skill} />
+            ))}
+          </div>
+          {filtered.length > visibleCount && (
+            <div className="text-center mt-10">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                className="px-6 py-2.5 text-sm rounded-lg border border-white/10 text-[#8b949e] hover:text-white hover:bg-white/5 hover:border-[#00d4ff]/30 transition-colors"
+              >
+                加载更多（还剩 {filtered.length - visibleCount} 个）
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
