@@ -275,23 +275,25 @@ Or connect the GitHub repo to [Vercel](https://vercel.com) for automatic deploym
 
 ## License
 
-MIT
+Licensed under the [Apache License, Version 2.0](LICENSE).
 
 ---
 
 ## Disclaimer
 
-**This project is for learning, teaching, and personal research only. It does not constitute any form of commercial service or professional advice.**
+### No Warranty
 
-### Project Nature
-
-AI Skills Hub is a frontend learning project demonstrating how to build full-stack applications with Next.js, Tailwind CSS, shadcn/ui and other modern web technologies. All data in the project is mock data and does not represent real users, real reviews, or real business.
+This software is provided "AS IS", WITHOUT WARRANTY OF ANY KIND, express or implied. See the [Apache License 2.0](LICENSE) for full details.
 
 ### AI Output Disclaimer
 
 - The prompt templates and agent skills provided are examples only and do not guarantee accuracy, safety, or suitability of AI model outputs
 - AI-generated content may contain errors, bias, or inappropriate information — users should judge independently
 - Users bear full responsibility for any consequences from using prompt templates or agent skills
+
+### Mock Data Notice
+
+All data in this project (including prompt templates, example outputs, user reviews, download counts, and ratings) is fictional mock data for demonstration purposes. It does not represent real users, real reviews, or real business metrics.
 
 ### Trademark Notice
 
@@ -300,12 +302,6 @@ ChatGPT (OpenAI), Claude (Anthropic), Grok (xAI), DeepSeek, Qwen (Alibaba), Llam
 ### Third-Party Services
 
 This project may involve third-party API or service calls. Users should comply with the relevant terms of service. This project is not responsible for the behavior or availability of any third-party services.
-
-### Content Compliance
-
-- All text content (including prompt templates, example outputs, user reviews) is fictional
-- This project does not encourage using AI-generated content directly in legal, medical, financial, or other professional scenarios
-- Users should ensure their use of this project complies with local laws and regulations
 
 ---
 
