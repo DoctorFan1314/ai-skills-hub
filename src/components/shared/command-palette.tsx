@@ -10,9 +10,10 @@ export function CommandPalette() {
   const [query, setQuery] = useState("");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
 
-  const items = getCommandItems({ push: (url: string) => { router.push(url); setOpen(false); setQuery(""); } });
+  const items = getCommandItems({ push: (url: string) => { router.push(url); handleClose(); } });
 
   const filtered = query.trim()
     ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
@@ -25,7 +26,14 @@ export function CommandPalette() {
 
   const flatFiltered = filtered;
 
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    previousFocusRef.current?.focus();
+  }, []);
+
   const handleOpen = useCallback(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
     setOpen(true);
     setSelectedIdx(0);
     setQuery("");
@@ -46,13 +54,12 @@ export function CommandPalette() {
   useEffect(() => {
     if (!open) return;
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") { setOpen(false); setQuery(""); }
+      if (e.key === "Escape") { handleClose(); }
       if (e.key === "ArrowDown") { e.preventDefault(); setSelectedIdx((i) => Math.min(i + 1, flatFiltered.length - 1)); }
       if (e.key === "ArrowUp") { e.preventDefault(); setSelectedIdx((i) => Math.max(i - 1, 0)); }
       if (e.key === "Enter" && flatFiltered[selectedIdx]) {
         flatFiltered[selectedIdx].action();
-        setOpen(false);
-        setQuery("");
+        handleClose();
       }
     }
     window.addEventListener("keydown", handleKey);
@@ -64,10 +71,10 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={() => { setOpen(false); setQuery(""); }}>
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={handleClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]" />
       <div
-        className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-[slideDown_0.15s_ease-out]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 border-b border-border">
@@ -98,7 +105,7 @@ export function CommandPalette() {
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors text-left ${
                         idx === selectedIdx ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
                       }`}
-                      onClick={() => { item.action(); setOpen(false); setQuery(""); }}
+                      onClick={() => { item.action(); handleClose(); }}
                       onMouseEnter={() => setSelectedIdx(idx)}
                     >
                       <span className="truncate">{item.label}</span>

@@ -5,11 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Download, Star, Copy, Check, Terminal } from "lucide-react";
 import { useState } from "react";
 import type { AgentSkill } from "@/lib/types";
-
-function formatNumber(n: number): string {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  return n.toString();
-}
+import { formatNumber } from "@/lib/utils";
 
 export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
   const [copied, setCopied] = useState(false);

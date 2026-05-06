@@ -153,15 +153,7 @@ ai-skills-hub/
 ### Agent 技能详情 `/skills/[id]`
 - **Tab 1 — 技能介绍**：左侧 80% README 渲染 + 右侧 20% 来源/安装侧边栏（安装命令、下载、元数据表）
 - **Tab 2 — 技能文件**：左侧文件树（含文件大小）、右侧语法高亮代码查看器、单文件下载、全部打包下载
-- **Tab 3 — 交流反馈**：评论输入 + 社区评价（星评、点赞）
-
-### 发布技能 `/publish`
-- 完整的 Agent 技能发布表单
-- 字段：名称、标题、描述、分类、开发者、安装命令、版本、许可证
-- README 编辑器（Markdown）
-- 动态文件列表（添加/删除文件及内容）
-- 演示输入/输出、标签
-- 保存到 localStorage，可在技能详情页查看
+- **Tab 3 — 交流反馈**：评论输入 + 社区评价（星评、点赞、回复）
 
 ### Prompt 模板 `/prompts`
 - 搜索、筛选、排序 Prompt 模板
@@ -177,7 +169,7 @@ ai-skills-hub/
 - `/categories` — 分类浏览（Prompt）
 - `/categories/[slug]` — 分类详情
 - `/trending` — 排行榜
-- `/tags` — 标签云
+- `/tags` — 标签云（支持搜索）
 - `/guide` — 新手指南 + Prompt 工程技巧
 - `/submit` — 提交 Prompt 模板
 - `/login` / `/register` — 认证（基于 localStorage）
@@ -201,9 +193,16 @@ ai-skills-hub/
 | 点赞/收藏 | ✅ | localStorage 持久化 |
 | 国际化 | ✅ | 中文/英文，基于 Context |
 | 暗色/亮色主题 | ✅ | 系统默认 + 手动切换 |
-| SEO | ✅ | 页面级 metadata、sitemap、robots.txt |
+| SEO | ✅ | 页面级 metadata、OG、canonical URL、sitemap、robots.txt、JSON-LD |
 | 响应式设计 | ✅ | 移动端优先、Sheet 抽屉导航 |
-| 命令面板 | ✅ | 键盘快捷键 |
+| 加载骨架屏 | ✅ | 技能列表、详情、分类、排行榜、标签、个人中心骨架屏 |
+| 面包屑导航 | ✅ | 可复用面包屑组件，详情页使用 |
+| 移动端原生分享 | ✅ | 移动端 navigator.share()，桌面端剪贴板回退 |
+| 页面过渡动画 | ✅ | 路由切换时 CSS 渐入动画 |
+| 评论回复 | ✅ | 回复评论，支持 @提及 和视觉指示器 |
+| 标签云搜索 | ✅ | 按名称实时过滤标签，显示计数 |
+| Newsletter 取消订阅 | ✅ | 页脚 Newsletter 管理偏好 / 取消订阅 |
+| 命令面板 | ✅ | 键盘快捷键，焦点恢复 + 动画 |
 
 ---
 

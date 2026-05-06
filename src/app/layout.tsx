@@ -24,8 +24,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ai-skills-hub.vercel.app"),
   title: "AI Skills Hub — 高质量LLM技能模板库",
   description: "高质量LLM技能模板，覆盖内容创作、编程开发、数据分析、效率工具、创意写作、思考工作流六大领域。复制即用，去AI味。完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen 等主流平台。",
+  icons: { icon: "/icon", apple: "/apple-icon" },
+  openGraph: {
+    title: "AI Skills Hub — 高质量LLM技能模板库",
+    description: "高质量LLM技能模板，覆盖内容创作、编程开发、数据分析、效率工具、创意写作、思考工作流六大领域。",
+    url: "https://ai-skills-hub.vercel.app",
+    siteName: "AI Skills Hub",
+    type: "website",
+    locale: "zh_CN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Skills Hub — 高质量LLM技能模板库",
+    description: "高质量LLM技能模板，覆盖内容创作、编程开发、数据分析、效率工具、创意写作、思考工作流六大领域。",
+  },
+  alternates: {
+    canonical: "https://ai-skills-hub.vercel.app",
+  },
 };
 
 export default function RootLayout({

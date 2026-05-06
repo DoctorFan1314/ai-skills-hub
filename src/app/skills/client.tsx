@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Zap, SlidersHorizontal } from "lucide-react";
@@ -14,6 +14,8 @@ import { useI18n } from "@/contexts/i18n-context";
 const collections = ["全部", "Vercel Agent Toolkit", "Anthropic Agent Suite", "Inference.sh Toolkit", "社区精选", "开发者工具", "效率工具", "数据工具"];
 const categories = ["全部", "Skills 管理", "Web 开发", "Web 搜索", "多平台交互", "代码执行", "文件处理", "通讯协作", "数据分析"];
 
+const PAGE_SIZE = 12;
+
 export default function SkillsClient() {
   const { t } = useI18n();
   const [query, setQuery] = useState("");
@@ -24,10 +26,13 @@ export default function SkillsClient() {
   const [showGithub, setShowGithub] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [, setRefresh] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const allSkills = useMemo(() => [...agentSkills, ...getPublishedSkills()], []);
 
   const handleCreated = useCallback(() => setRefresh((r) => r + 1), []);
+
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [selectedCollection, selectedCategory, sortBy]);
 
   let filtered = query.trim()
     ? allSkills.filter(
@@ -159,11 +164,23 @@ export default function SkillsClient() {
           <p className="text-muted-foreground text-lg mb-2">{t.agentSkills.emptySearch}</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((skill) => (
-            <AgentSkillCard key={skill.id} skill={skill} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.slice(0, visibleCount).map((skill) => (
+              <AgentSkillCard key={skill.id} skill={skill} />
+            ))}
+          </div>
+          {filtered.length > visibleCount && (
+            <div className="text-center mt-10">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
+              >
+                {t.common.more}（{filtered.length - visibleCount}）
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

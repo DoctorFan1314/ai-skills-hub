@@ -3,13 +3,11 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Search, Zap } from "lucide-react";
+import { Search, Zap, Plus } from "lucide-react";
 import { skills, getPublishedPrompts } from "@/lib/mock-data";
 import { SkillCard } from "@/components/skill/skill-card";
 import { categories } from "@/lib/categories";
 import { useI18n } from "@/contexts/i18n-context";
-import { CreateDropdown } from "@/components/skills/create-dropdown";
-import { CreateFromGithubPrompt } from "@/components/skills/create-from-github-prompt";
 import { CreateFromUploadPrompt } from "@/components/skills/create-from-upload-prompt";
 
 const PAGE_SIZE = 12;
@@ -31,7 +29,6 @@ export default function PromptsClient() {
       : "trending") as "trending" | "rating" | "newest",
   );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [showGithub, setShowGithub] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [, setRefresh] = useState(0);
 
@@ -99,11 +96,13 @@ export default function PromptsClient() {
           </div>
           <p className="text-muted-foreground">{t.prompts.subtitle} · {allPrompts.length}+</p>
         </div>
-        <CreateDropdown
-          label={t.create.newPrompt}
-          onSelectGithub={() => setShowGithub(true)}
-          onSelectUpload={() => setShowUpload(true)}
-        />
+        <button
+          onClick={() => setShowUpload(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          {t.create.newPrompt}
+        </button>
       </div>
 
       <div className="space-y-4 mb-8">
@@ -172,8 +171,7 @@ export default function PromptsClient() {
         </>
       )}
 
-      {/* Modals */}
-      <CreateFromGithubPrompt open={showGithub} onClose={() => setShowGithub(false)} onCreated={handleCreated} />
+      {/* Modal */}
       <CreateFromUploadPrompt open={showUpload} onClose={() => setShowUpload(false)} onCreated={handleCreated} />
     </div>
   );

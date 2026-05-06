@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/contexts/auth-context";
 import { Calendar, Mail, User } from "lucide-react";
+import Image from "next/image";
 
 export function ProfileHeader() {
   const { user } = useAuth();
@@ -10,9 +11,9 @@ export function ProfileHeader() {
   return (
     <div className="glass-card p-6 mb-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-2xl font-bold text-primary shrink-0">
+        <div className="relative h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-2xl font-bold text-primary shrink-0">
           {user.avatar ? (
-            <img src={user.avatar} alt={user.username} className="h-full w-full rounded-full object-cover" />
+            <Image src={user.avatar} alt={user.username} fill className="rounded-full object-cover" unoptimized />
           ) : (
             user.username.charAt(0).toUpperCase()
           )}

@@ -10,7 +10,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${skill.title} — AI Skills Hub`,
     description: skill.subtitle,
-    openGraph: { title: `${skill.title} — AI Skills Hub`, description: skill.subtitle },
+    openGraph: {
+      title: `${skill.title} — AI Skills Hub`,
+      description: skill.subtitle,
+      url: `https://ai-skills-hub.vercel.app/prompts/${id}`,
+      type: "article",
+    },
+    twitter: { card: "summary_large_image", title: `${skill.title} — AI Skills Hub` },
+    alternates: { canonical: `https://ai-skills-hub.vercel.app/prompts/${id}` },
   };
 }
 

@@ -56,10 +56,11 @@ export interface Dictionary {
     title: string; subtitle: string; hot: string; newest: string;
     featured: string; mostLiked: string; gold: string; silver: string; bronze: string;
   };
-  tags: { title: string; subtitle: string; relatedSkills: string; backToCloud: string; };
+  tags: { title: string; subtitle: string; relatedSkills: string; backToCloud: string; searchPlaceholder: string; tagCount: string; };
   comments: {
     title: string; writeComment: string; placeholder: string; submitComment: string;
     loginToComment: string; noComments: string; rating: string; likes: string;
+    reply: string; cancelReply: string; replyingTo: string;
   };
   profile: {
     title: string; overview: string; favorites: string; likes: string;
@@ -100,6 +101,7 @@ export interface Dictionary {
     description: string; quickLinks: string; resources: string; community: string;
     blog: string; changelog: string; api: string; github: string; discord: string;
     twitter: string; newsletter: string; newsletterPlaceholder: string; subscribe: string;
+    unsubscribe: string; unsubscribeDesc: string; managePreferences: string;
     copyright: string; platforms: string;
   };
   create: {

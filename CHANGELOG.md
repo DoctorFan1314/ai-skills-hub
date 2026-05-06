@@ -6,6 +6,50 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.5.2] — 2026-05-06
+
+### Added
+- **Comment reply** — Reply button on each comment in skill detail page; clicking sets `replyTo` state, pre-fills `@username` in input, shows visual "replying to" indicator, and cancel button to clear reply state
+- **Tag cloud search** — Real-time search input at the top of `/tags` page filters tags by name; tag count display shows filtered results
+- **Newsletter unsubscribe** — "Manage Preferences" link appears after subscribing in the footer; clicking shows unsubscribe/cancel options; unsubscribed state persists via localStorage
+- **Breadcrumb navigation** — Reusable `Breadcrumb` component; replaces back-links on skill detail, category detail, and tag detail pages
+- **Native share on mobile** — Prompt detail page share button uses `navigator.share()` on mobile, falls back to clipboard copy on desktop
+- **Command palette improvements** — Focus restoration on close, fade-in/slide-down animation
+- **Page transitions** — Subtle 200ms opacity fade-in on route changes via `src/app/template.tsx`
+- **OG images + canonical URLs** — Added `openGraph`, `twitter`, and `alternates.canonical` to root layout and all detail pages (skills, prompts, categories)
+- **Loading skeletons** — Loading states for skills, skill detail, categories, trending, tags, and profile pages
+
+### Changed
+- **Particle background optimization** — Cached `getComputedStyle` with `MutationObserver` invalidation; halved particle count on mobile (15 vs 30); no longer re-reads CSS variables every frame
+- **Profile avatar** — Replaced `<img>` with `next/image` `Image` component for optimized loading
+
+### Files Modified
+- `src/app/skills/[id]/client.tsx` — added reply functionality
+- `src/app/tags/client.tsx` — added search input and tag count
+- `src/components/shared/newsletter-form.tsx` — added manage preferences / unsubscribe flow
+- `src/components/shared/particle-bg.tsx` — cached CSS variable read, mobile particle reduction, MutationObserver cleanup
+- `src/components/profile/profile-header.tsx` — `<img>` → `<Image>` from next/image
+- `src/app/layout.tsx` — added `metadataBase`, `openGraph`, `twitter`, `alternates`
+- `src/app/skills/[id]/page.tsx` — added OG, twitter, canonical
+- `src/app/prompts/[id]/page.tsx` — added OG, twitter, canonical
+- `src/app/categories/[slug]/page.tsx` — added OG, twitter, canonical
+- `src/lib/i18n/types.ts` — added `reply`, `cancelReply`, `replyingTo` to `comments`; added `searchPlaceholder`, `tagCount` to `tags`; added `unsubscribe`, `unsubscribeDesc`, `managePreferences` to `footer`
+- `src/lib/i18n/zh.ts` — Chinese translations for new keys
+- `src/lib/i18n/en.ts` — English translations for new keys
+- `README.md` / `README_CN.md` — updated features table
+
+### New Files
+- `src/app/template.tsx` — page transition wrapper (CSS fade-in)
+- `src/components/shared/breadcrumb.tsx` — reusable breadcrumb navigation
+- `src/app/skills/loading.tsx` — skills list skeleton
+- `src/app/skills/[id]/loading.tsx` — skill detail skeleton
+- `src/app/categories/[slug]/loading.tsx` — category detail skeleton
+- `src/app/trending/loading.tsx` — trending skeleton
+- `src/app/tags/loading.tsx` — tags skeleton
+- `src/app/profile/loading.tsx` — profile skeleton
+
+---
+
 ## [v1.5.1] — 2026-05-06
 
 ### Added

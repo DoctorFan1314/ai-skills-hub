@@ -108,12 +108,17 @@ export default function SkillDetailClient({ id }: { id: string }) {
   const promptLocal = buildPrompt(skill.promptLocal);
 
   async function handleShare() {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setShareError(false);
-    } catch {
-      setShareError(true);
-      setTimeout(() => setShareError(false), 3000);
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: skill?.title, url }); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareError(false);
+      } catch {
+        setShareError(true);
+        setTimeout(() => setShareError(false), 3000);
+      }
     }
   }
 

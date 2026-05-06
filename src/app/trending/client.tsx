@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { skills } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Star, TrendingUp, Clock, Award, ThumbsUp } from "lucide-react";
+import { useI18n } from "@/contexts/i18n-context";
 
 type TabKey = "hot" | "new" | "featured" | "liked";
 
-const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-  { key: "hot", label: "本周热门", icon: <TrendingUp className="h-4 w-4" /> },
-  { key: "new", label: "最新技能", icon: <Clock className="h-4 w-4" /> },
-  { key: "featured", label: "编辑精选", icon: <Award className="h-4 w-4" /> },
-  { key: "liked", label: "最多点赞", icon: <ThumbsUp className="h-4 w-4" /> },
-];
+function getTabs(t: ReturnType<typeof useI18n>["t"]): { key: TabKey; label: string; icon: React.ReactNode }[] {
+  return [
+    { key: "hot", label: t.trending.hot, icon: <TrendingUp className="h-4 w-4" /> },
+    { key: "new", label: t.trending.newest, icon: <Clock className="h-4 w-4" /> },
+    { key: "featured", label: t.trending.featured, icon: <Award className="h-4 w-4" /> },
+    { key: "liked", label: t.trending.mostLiked, icon: <ThumbsUp className="h-4 w-4" /> },
+  ];
+}
 
 function getRankColor(rank: number) {
   if (rank === 1) return "from-yellow-500/20 to-yellow-600/5 border-yellow-500/30";
@@ -29,8 +32,13 @@ function getRankBadge(rank: number) {
   return "";
 }
 
+const PAGE_SIZE = 15;
+
 export default function TrendingClient() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<TabKey>("hot");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const TABS = getTabs(t);
 
   const sorted = [...skills].sort((a, b) => {
     if (tab === "hot") return b.usageCount - a.usageCount;
@@ -41,33 +49,35 @@ export default function TrendingClient() {
 
   const list = tab === "featured" ? sorted.filter((s) => s.featured) : sorted;
 
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab]);
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 lg:px-8">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-foreground mb-2">排行榜</h1>
-        <p className="text-muted-foreground">发现社区中最受欢迎的 AI 技能</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t.trending.title}</h1>
+        <p className="text-muted-foreground">{t.trending.subtitle}</p>
       </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-8">
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tabItem.key}
+            onClick={() => setTab(tabItem.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
-              tab === t.key
+              tab === tabItem.key
                 ? "bg-primary/10 text-primary border-primary/30"
                 : "bg-secondary text-muted-foreground border-border hover:text-foreground"
             }`}
           >
-            {t.icon}{t.label}
+            {tabItem.icon}{tabItem.label}
           </button>
         ))}
       </div>
 
       {/* List */}
       <div className="space-y-3">
-        {list.map((skill, i) => {
+        {list.slice(0, visibleCount).map((skill, i) => {
           const rank = i + 1;
           return (
             <Link
@@ -84,7 +94,7 @@ export default function TrendingClient() {
                     <h3 className="text-foreground font-semibold truncate">{skill.title}</h3>
                     {rank <= 3 && (
                       <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                        {rank === 1 ? "金牌" : rank === 2 ? "银牌" : "铜牌"}
+                        {rank === 1 ? t.trending.gold : rank === 2 ? t.trending.silver : t.trending.bronze}
                       </Badge>
                     )}
                   </div>
@@ -99,6 +109,16 @@ export default function TrendingClient() {
           );
         })}
       </div>
+      {list.length > visibleCount && (
+        <div className="text-center mt-10">
+          <button
+            onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+            className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
+          >
+            加载更多（{list.length - visibleCount}）
+          </button>
+        </div>
+      )}
     </div>
   );
 }

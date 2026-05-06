@@ -153,7 +153,7 @@ ai-skills-hub/
 ### Agent Skill Detail `/skills/[id]`
 - **Tab 1 — Skill Intro**: Left 80% README markdown rendering + Right 20% source/install sidebar (install command, download, metadata table)
 - **Tab 2 — Skill Files**: File tree sidebar with file sizes, syntax-highlighted code viewer, per-file download, zip download all
-- **Tab 3 — Feedback**: Comment input + community reviews with star ratings and likes
+- **Tab 3 — Feedback**: Comment input + community reviews with star ratings, likes, and reply support
 
 ### Prompt Templates `/prompts`
 - Search, filter, sort prompt templates
@@ -170,7 +170,7 @@ ai-skills-hub/
 - `/categories` — Category browse (Prompt)
 - `/categories/[slug]` — Category detail
 - `/trending` — Trending prompts
-- `/tags` — Tag cloud
+- `/tags` — Tag cloud with search filter
 - `/guide` — Beginner guide + prompt engineering tips
 - `/submit` — Submit prompt template
 - `/login` / `/register` — Auth (localStorage-based)
@@ -194,9 +194,16 @@ ai-skills-hub/
 | Like/Bookmark | ✅ | Persisted via localStorage |
 | i18n | ✅ | Chinese/English, context-based |
 | Dark/Light theme | ✅ | System default + manual toggle |
-| SEO | ✅ | Per-page metadata, sitemap, robots.txt |
+| SEO | ✅ | Per-page metadata, OG, canonical URLs, sitemap, robots.txt, JSON-LD |
 | Responsive design | ✅ | Mobile-first, Sheet drawer nav |
-| Command palette | ✅ | Keyboard shortcuts |
+| Loading skeletons | ✅ | Skeleton screens for skills, detail, categories, trending, tags, profile |
+| Breadcrumb navigation | ✅ | Reusable breadcrumb on detail pages |
+| Native share | ✅ | navigator.share() on mobile, clipboard fallback on desktop |
+| Page transitions | ✅ | CSS fade-in animation on route changes |
+| Comment reply | ✅ | Reply to comments with @mention and visual indicator |
+| Tag cloud search | ✅ | Real-time tag filtering by name with count display |
+| Newsletter unsubscribe | ✅ | Manage preferences / unsubscribe from footer newsletter |
+| Command palette | ✅ | Keyboard shortcuts with focus restore + animation |
 
 ---
 

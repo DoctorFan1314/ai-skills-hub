@@ -6,6 +6,50 @@
 
 ---
 
+## [v1.5.2] — 2026-05-06
+
+### 新增
+- **评论回复** — 技能详情页每条评论下方新增「回复」按钮；点击后设置 `replyTo` 状态，输入框预填 `@用户名`，显示「正在回复」视觉指示器，支持取消回复
+- **标签云搜索** — `/tags` 页面顶部新增实时搜索输入框，按名称过滤标签；新增标签计数显示
+- **Newsletter 取消订阅** — 页脚订阅成功后显示「管理偏好」链接；点击后展示「取消订阅」/「取消」选项；取消订阅状态通过 localStorage 持久化
+- **面包屑导航** — 可复用 `Breadcrumb` 组件；技能详情、分类详情、标签详情页替换返回链接
+- **移动端原生分享** — Prompt 详情页分享按钮在移动端使用 `navigator.share()`，桌面端回退到剪贴板复制
+- **命令面板改进** — 关闭时恢复焦点，新增淡入/下滑动画
+- **页面过渡动画** — 通过 `src/app/template.tsx` 实现路由切换时 200ms 透明度渐变
+- **OG 图片 + 规范链接** — 根布局及所有详情页（技能、Prompt、分类）新增 `openGraph`、`twitter`、`alternates.canonical`
+- **加载骨架屏** — 技能列表、技能详情、分类详情、排行榜、标签云、个人中心页面新增加载状态
+
+### 变更
+- **粒子背景优化** — 缓存 `getComputedStyle`，通过 `MutationObserver` 在主题变化时失效；移动端粒子数减半（15 vs 30）；不再每帧读取 CSS 变量
+- **用户头像** — `<img>` 替换为 `next/image` 的 `Image` 组件，优化加载
+
+### 修改文件
+- `src/app/skills/[id]/client.tsx` — 新增回复功能
+- `src/app/tags/client.tsx` — 新增搜索输入框和标签计数
+- `src/components/shared/newsletter-form.tsx` — 新增管理偏好/取消订阅流程
+- `src/components/shared/particle-bg.tsx` — 缓存 CSS 变量读取、移动端粒子减半、MutationObserver 清理
+- `src/components/profile/profile-header.tsx` — `<img>` → `<Image>` from next/image
+- `src/app/layout.tsx` — 新增 `metadataBase`、`openGraph`、`twitter`、`alternates`
+- `src/app/skills/[id]/page.tsx` — 新增 OG、twitter、canonical
+- `src/app/prompts/[id]/page.tsx` — 新增 OG、twitter、canonical
+- `src/app/categories/[slug]/page.tsx` — 新增 OG、twitter、canonical
+- `src/lib/i18n/types.ts` — `comments` 新增 `reply`、`cancelReply`、`replyingTo`；`tags` 新增 `searchPlaceholder`、`tagCount`；`footer` 新增 `unsubscribe`、`unsubscribeDesc`、`managePreferences`
+- `src/lib/i18n/zh.ts` — 新键的中文翻译
+- `src/lib/i18n/en.ts` — 新键的英文翻译
+- `README.md` / `README_CN.md` — 更新功能清单
+
+### 新文件
+- `src/app/template.tsx` — 页面过渡动画包装组件（CSS 渐变）
+- `src/components/shared/breadcrumb.tsx` — 可复用面包屑导航组件
+- `src/app/skills/loading.tsx` — 技能列表骨架屏
+- `src/app/skills/[id]/loading.tsx` — 技能详情骨架屏
+- `src/app/categories/[slug]/loading.tsx` — 分类详情骨架屏
+- `src/app/trending/loading.tsx` — 排行榜骨架屏
+- `src/app/tags/loading.tsx` — 标签云骨架屏
+- `src/app/profile/loading.tsx` — 个人中心骨架屏
+
+---
+
 ## [v1.5.1] — 2026-05-06
 
 ### 新增

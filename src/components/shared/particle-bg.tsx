@@ -13,12 +13,15 @@ export function ParticleBackground() {
 
     let animationId: number;
     let paused = false;
+    const isMobile = window.innerWidth < 768;
     const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = [];
-    const count = 30;
+    const count = isMobile ? 15 : 30;
     const connectionDist = 150;
     const connectionDistSq = connectionDist * connectionDist;
 
-    function getPrimaryRGB(): [number, number, number] {
+    // Cache the primary color — re-read only when theme changes
+    let cachedPrimary: [number, number, number] | null = null;
+    function readPrimaryRGB(): [number, number, number] {
       const style = getComputedStyle(document.documentElement);
       const hex = style.getPropertyValue("--primary").trim();
       if (!hex || !hex.startsWith("#")) return [0, 212, 255];
@@ -27,6 +30,13 @@ export function ParticleBackground() {
       const b = parseInt(hex.slice(5, 7), 16);
       return [r, g, b];
     }
+    function getCachedPrimary(): [number, number, number] {
+      if (!cachedPrimary) cachedPrimary = readPrimaryRGB();
+      return cachedPrimary;
+    }
+    // Invalidate cache when theme class changes on <html>
+    const themeObserver = new MutationObserver(() => { cachedPrimary = null; });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     function resize() {
       if (!canvas) return;
@@ -52,7 +62,7 @@ export function ParticleBackground() {
     function animate() {
       if (paused) return;
       if (!canvas || !ctx) return;
-      const [r, g, b] = getPrimaryRGB();
+      const [r, g, b] = getCachedPrimary();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const p of particles) {
         p.x += p.vx;
@@ -103,6 +113,7 @@ export function ParticleBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      themeObserver.disconnect();
     };
   }, []);
 

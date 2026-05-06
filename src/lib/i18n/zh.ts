@@ -170,6 +170,8 @@ export const zh: Dictionary = {
     subtitle: "按标签快速发现相关内容",
     relatedSkills: "共 {count} 个相关模板",
     backToCloud: "返回标签云",
+    searchPlaceholder: "搜索标签...",
+    tagCount: "共 {count} 个标签",
   },
   comments: {
     title: "用户评价",
@@ -180,6 +182,9 @@ export const zh: Dictionary = {
     noComments: "暂无评论，来写第一条吧！",
     rating: "评分",
     likes: "赞",
+    reply: "回复",
+    cancelReply: "取消回复",
+    replyingTo: "正在回复",
   },
   profile: {
     title: "个人中心",
@@ -297,6 +302,9 @@ export const zh: Dictionary = {
     newsletter: "订阅更新",
     newsletterPlaceholder: "输入邮箱订阅",
     subscribe: "订阅",
+    unsubscribe: "取消订阅",
+    unsubscribeDesc: "已取消订阅",
+    managePreferences: "管理偏好",
     copyright: "© 2026 AI Skills Hub. All rights reserved.",
     platforms: "适配平台",
   },

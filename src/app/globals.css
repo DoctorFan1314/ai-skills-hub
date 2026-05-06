@@ -182,4 +182,17 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  .animate-page-fade-in {
+    animation: fadeIn 200ms ease-out;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

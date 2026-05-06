@@ -6,16 +6,19 @@ import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft, Download, Star, Copy, Check,
-  Terminal, FileCode, Clock, MessageSquare, ThumbsUp
+  Download, Star, Copy, Check,
+  Terminal, FileCode, Clock, ThumbsUp, Reply, X
 } from "lucide-react";
+import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { useI18n } from "@/contexts/i18n-context";
+import { useToast } from "@/contexts/toast-context";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import ts from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
 import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
 import md from "react-syntax-highlighter/dist/esm/languages/hljs/markdown";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { formatNumber } from "@/lib/utils";
 
 SyntaxHighlighter.registerLanguage("typescript", ts);
 SyntaxHighlighter.registerLanguage("json", json);
@@ -49,11 +52,6 @@ function CopyButton({ text }: { text: string }) {
       {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
     </Button>
   );
-}
-
-function formatNumber(n: number): string {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  return n.toString();
 }
 
 function getLang(filename: string): string {
@@ -168,19 +166,44 @@ function MarkdownRenderer({ content }: { content: string }) {
 
 // Mock comments
 const mockComments = [
-  { id: "1", user: "Alice", avatar: "A", content: "非常好用的技能！帮我解决了搜索多个平台的需求，安装也很简单。", rating: 5, date: "2026-04-28", likes: 12 },
-  { id: "2", user: "Bob", avatar: "B", content: "帮我解决了大问题，搜索功能很强，推荐给所有需要多平台数据的开发者。", rating: 4, date: "2026-04-25", likes: 8 },
-  { id: "3", user: "Charlie", avatar: "C", content: "安装简单，文档清晰，社区维护活跃。期待更多平台的支持。", rating: 5, date: "2026-04-20", likes: 5 },
+  { id: "1", user: "Alice", avatar: "A", content: "非常好用的技能！帮我解决了搜索多个平台的需求，安装也很简单。", rating: 5, date: "2026-04-28", likes: 12, replyTo: null as string | null },
+  { id: "2", user: "Bob", avatar: "B", content: "帮我解决了大问题，搜索功能很强，推荐给所有需要多平台数据的开发者。", rating: 4, date: "2026-04-25", likes: 8, replyTo: null as string | null },
+  { id: "3", user: "Charlie", avatar: "C", content: "安装简单，文档清晰，社区维护活跃。期待更多平台的支持。", rating: 5, date: "2026-04-20", likes: 5, replyTo: null as string | null },
 ];
 
 export default function AgentSkillDetailClient({ id }: { id: string }) {
   const skill = getAgentSkillById(id);
   const { t } = useI18n();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"intro" | "files" | "feedback">("intro");
   const [activeFile, setActiveFile] = useState<string>("");
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [commentRating, setCommentRating] = useState(5);
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
+  const [localComments, setLocalComments] = useState(mockComments);
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyToUser, setReplyToUser] = useState<string | null>(null);
+
+  function handleSubmitComment() {
+    if (!commentText.trim()) return;
+    const newComment = {
+      id: `local-${Date.now()}`,
+      user: "User",
+      avatar: "U",
+      content: commentText.trim(),
+      rating: commentRating,
+      date: new Date().toISOString().slice(0, 10),
+      likes: 0,
+      replyTo: replyToUser,
+    };
+    setLocalComments((prev) => [newComment, ...prev]);
+    setCommentText("");
+    setCommentRating(5);
+    setReplyTo(null);
+    setReplyToUser(null);
+    toast(t.comments.title, "success");
+  }
 
   if (!skill) {
     return (
@@ -202,9 +225,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
-      <Link href="/skills" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-        <ArrowLeft className="h-4 w-4" />{t.agentSkills.backToList}
-      </Link>
+      <Breadcrumb items={[{ label: t.common.skills, href: "/skills" }, { label: skill.name }]} />
 
       {/* Header section */}
       <div className="mb-6">
@@ -442,14 +463,43 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
                 U
               </div>
               <div className="flex-1">
+                {replyToUser && (
+                  <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-xs text-primary">
+                    <Reply className="h-3 w-3" />
+                    <span>{t.comments.replyingTo} @{replyToUser}</span>
+                    <button
+                      onClick={() => { setReplyTo(null); setReplyToUser(null); setCommentText(""); }}
+                      className="ml-auto hover:text-primary/70 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
                 <textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  placeholder={t.agentSkills.writeComment}
+                  placeholder={replyToUser ? `@${replyToUser} ` : t.agentSkills.writeComment}
                   className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none min-h-[80px]"
                 />
-                <div className="flex justify-end mt-2">
-                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={!commentText.trim()}>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setCommentRating(i + 1)}
+                        aria-label={`${i + 1} star`}
+                      >
+                        <Star className={`h-4 w-4 ${i < commentRating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={!commentText.trim()}
+                    onClick={handleSubmitComment}
+                  >
                     {t.comments.submitComment}
                   </Button>
                 </div>
@@ -459,7 +509,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
 
           {/* Comments list */}
           <div className="space-y-4">
-            {mockComments.map((comment) => (
+            {localComments.map((comment) => (
               <div key={comment.id} className="glass-card p-5">
                 <div className="flex gap-3">
                   <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-medium shrink-0">
@@ -468,6 +518,12 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-foreground">{comment.user}</span>
+                      {comment.replyTo && (
+                        <span className="text-xs text-primary/70 flex items-center gap-1">
+                          <Reply className="h-2.5 w-2.5" />
+                          @{comment.replyTo}
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground">{comment.date}</span>
                       <div className="flex items-center gap-0.5 ml-auto">
                         {Array.from({ length: 5 }).map((_, i) => (
@@ -476,13 +532,25 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-2">{comment.content}</p>
-                    <button
-                      onClick={() => setCommentLikes(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <ThumbsUp className={`h-3 w-3 ${commentLikes[comment.id] ? "text-primary fill-primary" : ""}`} />
-                      {comment.likes + (commentLikes[comment.id] ? 1 : 0)}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setCommentLikes(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <ThumbsUp className={`h-3 w-3 ${commentLikes[comment.id] ? "text-primary fill-primary" : ""}`} />
+                        {comment.likes + (commentLikes[comment.id] ? 1 : 0)}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReplyToUser(comment.user);
+                          setCommentText(`@${comment.user} `);
+                        }}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Reply className="h-3 w-3" />
+                        {t.comments.reply}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

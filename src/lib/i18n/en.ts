@@ -170,6 +170,8 @@ export const en: Dictionary = {
     subtitle: "Quickly discover related content by tags",
     relatedSkills: "{count} related templates",
     backToCloud: "Back to Tag Cloud",
+    searchPlaceholder: "Search tags...",
+    tagCount: "{count} tags",
   },
   comments: {
     title: "Reviews",
@@ -180,6 +182,9 @@ export const en: Dictionary = {
     noComments: "No reviews yet. Be the first!",
     rating: "Rating",
     likes: "Likes",
+    reply: "Reply",
+    cancelReply: "Cancel Reply",
+    replyingTo: "Replying to",
   },
   profile: {
     title: "Profile",
@@ -297,6 +302,9 @@ export const en: Dictionary = {
     newsletter: "Newsletter",
     newsletterPlaceholder: "Enter email to subscribe",
     subscribe: "Subscribe",
+    unsubscribe: "Unsubscribe",
+    unsubscribeDesc: "Unsubscribed successfully",
+    managePreferences: "Manage Preferences",
     copyright: "© 2026 AI Skills Hub. All rights reserved.",
     platforms: "Platforms",
   },

@@ -6,16 +6,16 @@ import { SkillCard } from "@/components/skill/skill-card";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "分类浏览 — AI Skills Hub",
-  description: "按领域探索最适合你的 AI 技能模板，覆盖内容创作、编程开发、职场工作",
+  title: "Categories — AI Skills Hub",
+  description: "Explore AI skill templates by domain, covering content creation, programming, and workplace productivity",
 };
 
 export default function CategoriesPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-foreground mb-2">分类浏览</h1>
-        <p className="text-muted-foreground">按领域探索最适合你的AI技能模板</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Categories</h1>
+        <p className="text-muted-foreground">Explore AI skill templates by domain</p>
       </div>
       <div className="space-y-12">
         {categories.map((cat) => {
@@ -39,7 +39,7 @@ export default function CategoriesPage() {
               </div>
               {catSkills.length > 4 && (
                 <Link href={`/categories/${cat.slug}`} className="inline-flex items-center gap-1.5 text-sm text-primary mt-4 hover:underline">
-                  查看全部 {catSkills.length} 个技能 <ArrowRight className="h-3.5 w-3.5" />
+                  View all {catSkills.length} skills <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               )}
             </section>
