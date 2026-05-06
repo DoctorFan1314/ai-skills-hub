@@ -14,6 +14,8 @@ export const STORAGE_KEYS = {
   activity: (email: string) => `ai-skills-hub-activity-${email}`,
   // Published agent skills
   publishedSkills: "ai-skills-hub-published-skills",
+  // Published prompt templates
+  publishedPrompts: "ai-skills-hub-published-prompts",
   // Legacy global keys (for migration)
   legacyLikes: "ai-skills-hub-likes",
   legacyBookmarks: "ai-skills-hub-bookmarks",

@@ -257,53 +257,85 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
 
       {/* Tab: Skill Intro */}
       {activeTab === "intro" && (
-        <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-          {/* Metadata table */}
-          <div className="glass-card p-5 h-fit">
-            <h3 className="text-sm font-semibold text-foreground mb-4">{t.agentSkills.metadata}</h3>
-            <table className="w-full text-sm">
-              <tbody>
-                {[
-                  ["name", skill.name],
-                  ["description", skill.description.slice(0, 60) + "..."],
-                  ["category", skill.category],
-                  [t.agentSkills.developer, skill.developer],
-                  [t.agentSkills.version, skill.version],
-                  [t.agentSkills.license, skill.license],
-                ].map(([key, val]) => (
-                  <tr key={key} className="border-b border-border last:border-0">
-                    <td className="py-2.5 pr-3 text-muted-foreground align-top whitespace-nowrap">{key}</td>
-                    <td className="py-2.5 text-foreground break-all">{val}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Install command */}
-            <div className="mt-4">
-              <p className="text-xs text-muted-foreground mb-2">install</p>
-              <div
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border cursor-pointer hover:border-primary/30 transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(skill.installCommand);
-                  setCopiedInstall(true);
-                  setTimeout(() => setCopiedInstall(false), 2000);
-                }}
-              >
-                <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <code className="text-xs text-foreground font-mono flex-1 truncate">{skill.installCommand}</code>
-                {copiedInstall ? (
-                  <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
-                )}
-              </div>
-            </div>
-          </div>
-
+        <div className="grid lg:grid-cols-[1fr_280px] gap-6">
           {/* README content */}
           <div className="glass-card p-6">
             <MarkdownRenderer content={skill.readme} />
+          </div>
+
+          {/* Sidebar: source + metadata */}
+          <div className="space-y-4">
+            {/* Source / Install card */}
+            <div className="glass-card p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">{t.agentSkills.overview}</h3>
+
+              {/* Install command */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">install</p>
+                <div
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border cursor-pointer hover:border-primary/30 transition-colors"
+                  onClick={() => {
+                    navigator.clipboard.writeText(skill.installCommand);
+                    setCopiedInstall(true);
+                    setTimeout(() => setCopiedInstall(false), 2000);
+                  }}
+                >
+                  <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <code className="text-xs text-foreground font-mono flex-1 truncate">{skill.installCommand}</code>
+                  {copiedInstall ? (
+                    <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                  )}
+                </div>
+              </div>
+
+              {/* Download */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-border text-foreground hover:bg-secondary"
+                onClick={() => downloadAll(skill)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {t.agentSkills.downloadAll}
+              </Button>
+
+              {/* Source link */}
+              {skill.installCommand.includes("@") && (
+                <a
+                  href={`https://github.com/${skill.author.replace(/^@/, "")}/${skill.name}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <FileCode className="h-3.5 w-3.5" />
+                  GitHub
+                </a>
+              )}
+            </div>
+
+            {/* Metadata table */}
+            <div className="glass-card p-5">
+              <h3 className="text-sm font-semibold text-foreground mb-4">{t.agentSkills.metadata}</h3>
+              <table className="w-full text-sm">
+                <tbody>
+                  {[
+                    ["name", skill.name],
+                    ["description", skill.description.slice(0, 60) + "..."],
+                    ["category", skill.category],
+                    [t.agentSkills.developer, skill.developer],
+                    [t.agentSkills.version, skill.version],
+                    [t.agentSkills.license, skill.license],
+                  ].map(([key, val]) => (
+                    <tr key={key} className="border-b border-border last:border-0">
+                      <td className="py-2.5 pr-3 text-muted-foreground align-top whitespace-nowrap">{key}</td>
+                      <td className="py-2.5 text-foreground break-all">{val}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

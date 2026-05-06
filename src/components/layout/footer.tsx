@@ -16,7 +16,6 @@ export function Footer() {
   const footerLinks: Record<string, FooterLink[]> = {
     [t.common.skills]: [
       { label: t.common.skills, href: "/skills" },
-      { label: t.publish.title, href: "/publish" },
     ],
     [t.common.prompts]: [
       { label: t.common.prompts, href: "/prompts" },

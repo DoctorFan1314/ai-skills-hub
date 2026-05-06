@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { skills } from "@/lib/mock-data";
+import { Search, Zap } from "lucide-react";
+import { skills, getPublishedPrompts } from "@/lib/mock-data";
 import { SkillCard } from "@/components/skill/skill-card";
 import { categories } from "@/lib/categories";
 import { useI18n } from "@/contexts/i18n-context";
+import { CreateDropdown } from "@/components/skills/create-dropdown";
+import { CreateFromGithubPrompt } from "@/components/skills/create-from-github-prompt";
+import { CreateFromUploadPrompt } from "@/components/skills/create-from-upload-prompt";
 
 const PAGE_SIZE = 12;
 
@@ -28,8 +31,13 @@ export default function PromptsClient() {
       : "trending") as "trending" | "rating" | "newest",
   );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [showGithub, setShowGithub] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
+  const [, setRefresh] = useState(0);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const allPrompts = useMemo(() => [...skills, ...getPublishedPrompts()], []);
 
   const updateURL = useCallback(
     (overrides: Record<string, string>) => {
@@ -62,8 +70,10 @@ export default function PromptsClient() {
   useEffect(() => () => clearTimeout(debounceRef.current), []);
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [category, difficulty, sortBy]);
 
+  const handleCreated = useCallback(() => setRefresh((r) => r + 1), []);
+
   const filtered = (() => {
-    let result = [...skills];
+    let result = [...allPrompts];
     if (query) {
       const q = query.toLowerCase();
       result = result.filter(
@@ -80,9 +90,20 @@ export default function PromptsClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-foreground mb-2">{t.prompts.title}</h1>
-        <p className="text-muted-foreground">{t.prompts.subtitle} · {skills.length}+</p>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-10">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Zap className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">{t.prompts.title}</h1>
+          </div>
+          <p className="text-muted-foreground">{t.prompts.subtitle} · {allPrompts.length}+</p>
+        </div>
+        <CreateDropdown
+          label={t.create.newPrompt}
+          onSelectGithub={() => setShowGithub(true)}
+          onSelectUpload={() => setShowUpload(true)}
+        />
       </div>
 
       <div className="space-y-4 mb-8">
@@ -150,6 +171,10 @@ export default function PromptsClient() {
           )}
         </>
       )}
+
+      {/* Modals */}
+      <CreateFromGithubPrompt open={showGithub} onClose={() => setShowGithub(false)} onCreated={handleCreated} />
+      <CreateFromUploadPrompt open={showUpload} onClose={() => setShowUpload(false)} onCreated={handleCreated} />
     </div>
   );
 }

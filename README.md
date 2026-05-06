@@ -75,7 +75,6 @@ ai-skills-hub/
 │   │   ├── prompts/                  # Prompt Templates
 │   │   │   ├── page.tsx              # Prompt list
 │   │   │   └── [id]/page.tsx         # Prompt detail
-│   │   ├── publish/page.tsx          # Publish your own Agent Skill
 │   │   ├── categories/
 │   │   │   ├── page.tsx              # Category browse (Prompt)
 │   │   │   └── [slug]/page.tsx       # Category detail
@@ -99,6 +98,12 @@ ai-skills-hub/
 │   │   │   └── testimonials.tsx      # User testimonials
 │   │   ├── agent-skill/
 │   │   │   └── agent-skill-card.tsx  # Agent skill marketplace card
+│   │   ├── skills/
+│   │   │   ├── create-dropdown.tsx   # New button + dropdown menu
+│   │   │   ├── create-from-github.tsx # Github import wizard (Skill)
+│   │   │   ├── create-from-upload.tsx # Upload form (Skill)
+│   │   │   ├── create-from-github-prompt.tsx # Github import wizard (Prompt)
+│   │   │   └── create-from-upload-prompt.tsx # Upload form (Prompt)
 │   │   └── shared/
 │   │       └── particle-bg.tsx       # Particle background animation
 │   ├── contexts/
@@ -142,23 +147,17 @@ ai-skills-hub/
 - Sort by downloads / stars / newest
 - Filter by collection and category
 - Marketplace-grade cards: avatar, author, description, tags, stats, install command
+- **New Skill** button with dropdown: Quick Create (Github import) or Custom Create (file upload)
 
 ### Agent Skill Detail `/skills/[id]`
-- **Tab 1 — Skill Intro**: Metadata table (name, description, category, developer, version, license, install command) + README markdown rendering
+- **Tab 1 — Skill Intro**: Left 80% README markdown rendering + Right 20% source/install sidebar (install command, download, metadata table)
 - **Tab 2 — Skill Files**: File tree sidebar with file sizes, syntax-highlighted code viewer, per-file download, zip download all
 - **Tab 3 — Feedback**: Comment input + community reviews with star ratings and likes
-
-### Publish Skill `/publish`
-- Full form for publishing your own Agent Skill
-- Fields: name, title, description, category, developer, install command, version, license
-- README editor (Markdown)
-- Dynamic file list (add/remove files with content)
-- Demo input/output, tags
-- Saves to localStorage, viewable in skill detail page
 
 ### Prompt Templates `/prompts`
 - Search, filter, sort prompt templates
 - Category, difficulty, sort options
+- **New Template** button with dropdown: Quick Create (Github import) or Custom Create (manual form)
 
 ### Prompt Detail `/prompts/[id]`
 - Online/Local prompt versions
@@ -185,7 +184,8 @@ ai-skills-hub/
 | Skill detail page | ✅ | 3-tab layout: intro, files, feedback |
 | File download | ✅ | Single file + zip bundle download (JSZip) |
 | Code highlighting | ✅ | react-syntax-highlighter with dark theme |
-| Publish skills | ✅ | Full form, localStorage persistence |
+| Quick Create (Github) | ✅ | Import skills/templates from Github repo |
+| Custom Create (Upload) | ✅ | Upload local files or fill prompt form |
 | Prompt templates | ✅ | 28 templates, search, filter, sort |
 | One-click prompt copy | ✅ | Online/Local versions, clipboard API |
 | Variable fill | ✅ | Real-time prompt template update |

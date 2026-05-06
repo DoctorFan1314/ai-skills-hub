@@ -6,6 +6,59 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.5.0] — 2026-05-06
+
+### Added
+- **"New Skill" button** on Agent Skills page — dropdown with two create flows:
+  - **Quick Create (Github Import)**: 3-step wizard — enter Github URL → mock parse skills → select and confirm. Saves `AgentSkill` to localStorage
+  - **Custom Create (Local Upload)**: form with fields (English name, display name, source URL, owner, visibility, description, skill type, tags, icon picker, file upload). Saves `AgentSkill` to localStorage
+- **"New Template" button** on Prompt Templates page — dropdown with two Prompt-specific create flows:
+  - **Quick Create (Github Import)**: 3-step wizard parsing Github repos into `Skill` templates. Saves to `publishedPrompts` localStorage
+  - **Custom Create (Manual Form)**: form with Prompt-specific fields (title, subtitle, description, category, difficulty, online/local prompts, version, tags). Saves `Skill` to `publishedPrompts` localStorage
+- `publishedPrompts` storage key in `storage-keys.ts`
+- `getPublishedPrompts()` helper in `mock-data.ts`
+- Prompt-specific i18n keys for template creation (templateTitle, templateSubtitle, templateCategory, templateDifficulty, promptOnline, promptLocal, etc.)
+- Reusable `CreateDropdown` component for both pages
+
+### Changed
+- **Removed `/publish` page** — standalone publish page deleted, replaced by in-page create buttons
+- **Navigation back to 3 items** — removed "发布技能" from navbar
+- **Footer** — removed "发布技能" link
+- **Sitemap** — removed `/publish` route
+- **Keyboard shortcuts** — removed "发布技能" command
+- **Skill detail intro tab layout** — changed from `[280px_1fr]` to `[1fr_280px]`: README on left (80%), source/install sidebar on right (20%)
+- **i18n** — `publish` section replaced with `create` section, added Prompt-specific create keys
+- **README.md & README_CN.md** — updated project structure, pages, and features
+
+### Files Modified
+- `src/app/skills/client.tsx` — new header layout with create button, modal rendering
+- `src/app/prompts/client.tsx` — new header with create button, merged published prompts
+- `src/app/skills/[id]/client.tsx` — intro tab layout flipped (left README, right sidebar)
+- `src/components/layout/navbar.tsx` — removed 4th nav link
+- `src/components/layout/footer.tsx` — removed "发布技能" link
+- `src/app/sitemap.ts` — removed `/publish`
+- `src/hooks/use-keyboard-shortcuts.ts` — removed "发布技能" command
+- `src/lib/i18n/types.ts` — `publish` → `create`, added Prompt-specific keys
+- `src/lib/i18n/zh.ts` — updated translations
+- `src/lib/i18n/en.ts` — updated translations
+- `src/lib/storage-keys.ts` — added `publishedPrompts`
+- `src/lib/mock-data.ts` — added `getPublishedPrompts()`
+- `README.md` — updated structure, pages, features
+- `README_CN.md` — updated structure, pages, features
+
+### New Files
+- `src/components/skills/create-dropdown.tsx` — reusable new button + dropdown
+- `src/components/skills/create-from-github.tsx` — Github import wizard (Agent Skill)
+- `src/components/skills/create-from-upload.tsx` — upload form (Agent Skill)
+- `src/components/skills/create-from-github-prompt.tsx` — Github import wizard (Prompt)
+- `src/components/skills/create-from-upload-prompt.tsx` — upload form (Prompt)
+
+### Removed
+- `src/app/publish/page.tsx` — standalone publish page
+- `src/app/publish/client.tsx` — publish form component
+
+---
+
 ## [v1.4.0] — 2026-05-05
 
 ### Added

@@ -102,25 +102,42 @@ export interface Dictionary {
     twitter: string; newsletter: string; newsletterPlaceholder: string; subscribe: string;
     copyright: string; platforms: string;
   };
-  publish: {
-    title: string; subtitle: string;
-    basicInfo: string; skillName: string; skillNamePlaceholder: string;
-    displayName: string; displayNamePlaceholder: string;
+  create: {
+    newSkill: string; newPrompt: string;
+    quickCreate: string; quickCreateDesc: string;
+    customCreate: string; customCreateDesc: string;
+    // Github import
+    importGithub: string; githubUrl: string; githubUrlPlaceholder: string;
+    parse: string; selectSkills: string; confirmCreate: string; importSuccess: string;
+    selectPrompts: string; selectPromptsDesc: string;
+    // Custom create — Agent Skill
+    englishName: string; displayName: string; displayNamePlaceholder: string;
+    sourceUrl: string; sourceUrlPlaceholder: string;
+    owner: string; ownerPlaceholder: string;
+    isPublic: string; publicLabel: string; privateLabel: string;
     description: string; descriptionPlaceholder: string;
-    category: string; developer: string; developerPlaceholder: string;
-    installCommand: string; installCommandPlaceholder: string;
-    version: string; license: string;
-    content: string; readme: string; readmePlaceholder: string;
-    files: string; addFile: string; fileName: string; fileContent: string; removeFile: string;
-    examples: string; demoInput: string; demoInputPlaceholder: string;
-    demoOutput: string; demoOutputPlaceholder: string;
-    tags: string; tagsPlaceholder: string;
-    submitBtn: string; successTitle: string; successDesc: string;
-    continueSubmit: string; mySkills: string;
-    nameRequired: string; titleRequired: string; descRequired: string;
-    developerRequired: string; installRequired: string; versionRequired: string;
-    readmeRequired: string; filesRequired: string;
-    viewSkill: string; publishAnother: string;
+    skillType: string; customTags: string; customTagsPlaceholder: string;
+    icon: string; changeIcon: string;
+    skillFile: string; noFileSelected: string; uploadHint: string;
+    // Custom create — Prompt Template
+    templateTitle: string; templateTitlePlaceholder: string;
+    templateSubtitle: string; templateSubtitlePlaceholder: string;
+    templateDesc: string; templateDescPlaceholder: string;
+    templateCategory: string; templateDifficulty: string;
+    promptOnline: string; promptOnlinePlaceholder: string;
+    promptLocal: string; promptLocalPlaceholder: string;
+    promptVersion: string; templateTags: string; templateTagsPlaceholder: string;
+    difficultyEasy: string; difficultyMedium: string; difficultyHard: string;
+    promptRequired: string; templateCategoryRequired: string;
+    // Common
+    step: string; parsing: string; parsingDesc: string;
+    back: string; next: string; finish: string;
+    successTitle: string; successDesc: string;
+    createAnother: string; viewSkill: string;
+    // Validation
+    nameRequired: string; displayNameRequired: string;
+    ownerRequired: string; descRequired: string; fileRequired: string;
+    githubUrlRequired: string; selectAtLeastOne: string;
   };
   admin: {
     title: string; pendingSubmissions: string; userManage: string; skillAnalytics: string;

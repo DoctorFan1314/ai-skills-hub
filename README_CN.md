@@ -75,7 +75,6 @@ ai-skills-hub/
 │   │   ├── prompts/                  # Prompt 模板
 │   │   │   ├── page.tsx              # 模板列表
 │   │   │   └── [id]/page.tsx         # 模板详情
-│   │   ├── publish/page.tsx          # 发布自己的 Agent 技能
 │   │   ├── categories/
 │   │   │   ├── page.tsx              # 分类浏览（Prompt）
 │   │   │   └── [slug]/page.tsx       # 分类详情
@@ -99,6 +98,12 @@ ai-skills-hub/
 │   │   │   └── testimonials.tsx      # 用户评价
 │   │   ├── agent-skill/
 │   │   │   └── agent-skill-card.tsx  # Agent 技能卡片
+│   │   ├── skills/
+│   │   │   ├── create-dropdown.tsx   # 新建按钮+下拉菜单
+│   │   │   ├── create-from-github.tsx # Github 导入向导（技能）
+│   │   │   ├── create-from-upload.tsx # 本地上传表单（技能）
+│   │   │   ├── create-from-github-prompt.tsx # Github 导入向导（模板）
+│   │   │   └── create-from-upload-prompt.tsx # 本地上传表单（模板）
 │   │   └── shared/
 │   │       └── particle-bg.tsx       # 粒子背景动画
 │   ├── contexts/
@@ -142,9 +147,10 @@ ai-skills-hub/
 - 按下载量 / 星标 / 最新排序
 - 按合集和分类筛选
 - 市场级卡片：头像、作者、描述、标签、统计、安装命令
+- **新建 Skill** 按钮，hover 弹出下拉菜单：快速创建（Github 导入）或自定义创建（本地上传）
 
 ### Agent 技能详情 `/skills/[id]`
-- **Tab 1 — 技能介绍**：元数据表（名称、描述、分类、开发者、版本、许可证、安装命令）+ README 渲染
+- **Tab 1 — 技能介绍**：左侧 80% README 渲染 + 右侧 20% 来源/安装侧边栏（安装命令、下载、元数据表）
 - **Tab 2 — 技能文件**：左侧文件树（含文件大小）、右侧语法高亮代码查看器、单文件下载、全部打包下载
 - **Tab 3 — 交流反馈**：评论输入 + 社区评价（星评、点赞）
 
@@ -185,7 +191,8 @@ ai-skills-hub/
 | 技能详情页 | ✅ | 三栏布局：介绍、文件、反馈 |
 | 文件下载 | ✅ | 单文件 + zip 打包下载（JSZip） |
 | 代码高亮 | ✅ | react-syntax-highlighter 暗色主题 |
-| 发布技能 | ✅ | 完整表单，localStorage 持久化 |
+| 快速创建（Github） | ✅ | 从 Github 仓库导入技能/模板 |
+| 自定义创建（上传） | ✅ | 本地文件上传或手动填写表单 |
 | Prompt 模板 | ✅ | 28个模板，搜索、筛选、排序 |
 | 一键复制 Prompt | ✅ | 在线/本地版本，剪贴板 API |
 | 变量填充 | ✅ | 实时 Prompt 模板更新 |

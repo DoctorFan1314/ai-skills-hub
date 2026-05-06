@@ -6,6 +6,59 @@
 
 ---
 
+## [v1.5.0] — 2026-05-06
+
+### 新增
+- **Agent 技能页「新建 Skill」按钮** — hover 弹出下拉菜单，包含两种创建方式：
+  - **快速创建（Github 导入）**：3 步向导 — 输入 Github 仓库地址 → 模拟解析 Skills → 选择并确认。保存 `AgentSkill` 到 localStorage
+  - **自定义创建（本地上传）**：表单包含英文名称、展示名称、来源地址、所有者、是否公开、描述、Skill 类型、标签、图标选择、文件上传。保存 `AgentSkill` 到 localStorage
+- **Prompt 模板页「新建模板」按钮** — hover 弹出下拉菜单，包含两种 Prompt 专用创建方式：
+  - **快速创建（Github 导入）**：3 步向导解析 Github 仓库为 `Skill` 模板。保存到 `publishedPrompts` localStorage
+  - **自定义创建（手动填写）**：表单包含 Prompt 专用字段（标题、副标题、描述、分类、难度、在线/本地 Prompt、版本、标签）。保存 `Skill` 到 `publishedPrompts` localStorage
+- `storage-keys.ts` 新增 `publishedPrompts` 存储键
+- `mock-data.ts` 新增 `getPublishedPrompts()` 辅助函数
+- i18n 新增 Prompt 创建专用键（templateTitle、templateSubtitle、templateCategory、templateDifficulty、promptOnline、promptLocal 等）
+- 可复用的 `CreateDropdown` 组件，两个页面共用
+
+### 变更
+- **删除 `/publish` 独立页面** — 改为页面内创建按钮
+- **导航栏回到 3 项** — 去掉「发布技能」
+- **Footer** — 去掉「发布技能」链接
+- **Sitemap** — 去掉 `/publish` 路由
+- **键盘快捷键** — 去掉「发布技能」命令
+- **技能详情页介绍 Tab 布局** — 从 `[280px_1fr]` 改为 `[1fr_280px]`：左侧 80% README，右侧 20% 来源/安装侧边栏
+- **i18n** — `publish` section 替换为 `create` section，新增 Prompt 创建专用键
+- **README.md 和 README_CN.md** — 更新项目结构、页面说明和功能清单
+
+### 修改文件
+- `src/app/skills/client.tsx` — 新头部布局含创建按钮，渲染模态框
+- `src/app/prompts/client.tsx` — 新头部含创建按钮，合并已发布模板
+- `src/app/skills/[id]/client.tsx` — 介绍 Tab 布局翻转（左 README，右侧边栏）
+- `src/components/layout/navbar.tsx` — 去掉第 4 个导航链接
+- `src/components/layout/footer.tsx` — 去掉「发布技能」链接
+- `src/app/sitemap.ts` — 去掉 `/publish`
+- `src/hooks/use-keyboard-shortcuts.ts` — 去掉「发布技能」命令
+- `src/lib/i18n/types.ts` — `publish` → `create`，新增 Prompt 创建键
+- `src/lib/i18n/zh.ts` — 更新翻译
+- `src/lib/i18n/en.ts` — 更新翻译
+- `src/lib/storage-keys.ts` — 新增 `publishedPrompts`
+- `src/lib/mock-data.ts` — 新增 `getPublishedPrompts()`
+- `README.md` — 更新结构、页面、功能
+- `README_CN.md` — 更新结构、页面、功能
+
+### 新文件
+- `src/components/skills/create-dropdown.tsx` — 可复用新建按钮+下拉菜单
+- `src/components/skills/create-from-github.tsx` — Github 导入向导（Agent Skill）
+- `src/components/skills/create-from-upload.tsx` — 本地上传表单（Agent Skill）
+- `src/components/skills/create-from-github-prompt.tsx` — Github 导入向导（Prompt）
+- `src/components/skills/create-from-upload-prompt.tsx` — 本地上传表单（Prompt）
+
+### 移除
+- `src/app/publish/page.tsx` — 独立发布页面
+- `src/app/publish/client.tsx` — 发布表单组件
+
+---
+
 ## [v1.4.0] — 2026-05-05
 
 ### 新增

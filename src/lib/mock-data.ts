@@ -2165,3 +2165,12 @@ export function getBeginnerSkills(): Skill[] {
 export function getFeaturedSkills(): Skill[] {
   return skills.filter((s) => s.featured);
 }
+export function getPublishedPrompts(): Skill[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem("ai-skills-hub-published-prompts");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
