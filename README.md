@@ -105,7 +105,8 @@ ai-skills-hub/
 │   │   │   ├── create-from-github-prompt.tsx # Github import wizard (Prompt)
 │   │   │   └── create-from-upload-prompt.tsx # Upload form (Prompt)
 │   │   └── shared/
-│   │       └── particle-bg.tsx       # Particle background animation
+│   │       ├── particle-bg.tsx       # Particle background animation
+│   │       └── scroll-to-top.tsx     # Scroll-to-top floating button
 │   ├── contexts/
 │   │   ├── toast-context.tsx         # Toast notification system
 │   │   ├── auth-context.tsx          # Auth context (localStorage-based)

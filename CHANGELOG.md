@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.5.1] — 2026-05-06
+
+### Added
+- **Scroll-to-top button** — floating button appears after scrolling 400px, smooth-scrolls to top
+- **Context-aware navbar search** — search now routes to `/skills?q=...` when on a skills page, `/prompts?q=...` otherwise (uses `usePathname()`)
+
+### Files Modified
+- `src/app/layout.tsx` — imported and rendered `<ScrollToTop />`
+- `src/components/layout/navbar.tsx` — added `usePathname()`, search routes based on current path
+
+### New Files
+- `src/components/shared/scroll-to-top.tsx` — scroll-to-top floating button component
+
+---
+
 ## [v1.5.0] — 2026-05-06
 
 ### Added

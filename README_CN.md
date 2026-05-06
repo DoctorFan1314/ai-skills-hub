@@ -105,7 +105,8 @@ ai-skills-hub/
 │   │   │   ├── create-from-github-prompt.tsx # Github 导入向导（模板）
 │   │   │   └── create-from-upload-prompt.tsx # 本地上传表单（模板）
 │   │   └── shared/
-│   │       └── particle-bg.tsx       # 粒子背景动画
+│   │       ├── particle-bg.tsx       # 粒子背景动画
+│   │       └── scroll-to-top.tsx     # 回到顶部浮动按钮
 │   ├── contexts/
 │   │   ├── toast-context.tsx         # Toast 通知系统
 │   │   ├── auth-context.tsx          # 认证上下文（基于 localStorage）

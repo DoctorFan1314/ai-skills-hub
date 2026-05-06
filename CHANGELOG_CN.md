@@ -6,6 +6,21 @@
 
 ---
 
+## [v1.5.1] — 2026-05-06
+
+### 新增
+- **回到顶部按钮** — 滚动超过 400px 后显示浮动按钮，点击平滑滚动回顶部
+- **上下文感知导航栏搜索** — 在技能页面搜索时自动路由到 `/skills?q=...`，其他页面路由到 `/prompts?q=...`（基于 `usePathname()`）
+
+### 修改文件
+- `src/app/layout.tsx` — 导入并渲染 `<ScrollToTop />`
+- `src/components/layout/navbar.tsx` — 新增 `usePathname()`，搜索根据当前路径路由
+
+### 新文件
+- `src/components/shared/scroll-to-top.tsx` — 回到顶部浮动按钮组件
+
+---
+
 ## [v1.5.0] — 2026-05-06
 
 ### 新增
