@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 ## [v1.6.2] — 2026-05-06
 
 ### Changed
-- **License switched to Apache-2.0** — from MIT; provides explicit patent grant protection, better suited for future commercialization and software copyright registration
+- **License switched to Apache-2.0** — from MIT; provides explicit patent grant protection
 - **Disclaimer sections rewritten** — removed "learning project only" framing; added clear no-warranty statement linked to Apache 2.0; separated mock data notice, AI output disclaimer, and trademark notice
 - **Layout widened to 1440px** — skill list and featured section now use `max-w-[1440px]` instead of `max-w-7xl` (1280px), reducing excessive side whitespace on large screens
 - **4-column grid on xl screens** — skill cards, featured section, and homepage category cards now show 4 columns on 1440px+ screens (`xl:grid-cols-4`)
