@@ -6,6 +6,33 @@
 
 ---
 
+## [v1.6.1] — 2026-05-06
+
+### 变更
+- **新手指南重写** — 现在同时介绍 Agent 技能和 Prompt 模板，包含双轨快速上手和双 CTA 按钮
+- **排行榜页** — 现在同时展示 Agent 技能和 Prompt 模板，新增内容类型筛选 Tab（全部 / Agent / Prompt）；链接指向正确的详情页
+- **标签系统** — `tag-utils.ts` 现在同时索引 Agent 技能标签；标签详情页分区域渲染 AgentSkillCard 和 SkillCard
+- **分类详情页** — 每个分类同时展示 Agent 技能和 Prompt 模板
+- **分类列表页** — 每个分类预览同时显示两种内容类型
+- **页脚** — 重组为 4 组：Agent 技能 + Prompt（顶级）、浏览（分类/排行榜/标签）、资源、社区
+- **提交页** — 更新 metadata，提示 Agent 技能提交请前往技能市场页面
+
+### 修改文件
+- `src/app/guide/page.tsx` — 全面重写，覆盖双轨内容
+- `src/app/trending/client.tsx` — 统一 Agent + Prompt 数据，新增内容类型筛选
+- `src/app/categories/[slug]/client.tsx` — 新增 Agent 技能展示
+- `src/app/categories/page.tsx` — 每个分类展示两种内容类型
+- `src/app/tags/[tag]/page.tsx` — 传递 prompts 和 agents 两组数据
+- `src/app/tags/[tag]/client.tsx` — 分区域渲染两种卡片
+- `src/app/submit/page.tsx` — 更新 metadata
+- `src/lib/tag-utils.ts` — 索引 Agent 技能标签
+- `src/lib/i18n/types.ts` — footer 新增 `browse` 键
+- `src/lib/i18n/zh.ts` — 新增 `browse` 翻译
+- `src/lib/i18n/en.ts` — 新增 `browse` 翻译
+- `src/components/layout/footer.tsx` — 重组链接分组
+
+---
+
 ## [v1.6.0] — 2026-05-06
 
 ### 变更

@@ -101,7 +101,7 @@ export interface Dictionary {
     loginNow: string; registerNow: string;
   };
   footer: {
-    description: string; quickLinks: string; resources: string; community: string;
+    description: string; quickLinks: string; browse: string; resources: string; community: string;
     blog: string; changelog: string; api: string; github: string; discord: string;
     twitter: string; newsletter: string; newsletterPlaceholder: string; subscribe: string;
     unsubscribe: string; unsubscribeDesc: string; managePreferences: string;

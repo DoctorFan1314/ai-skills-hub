@@ -1,4 +1,5 @@
 import { skills } from "@/lib/mock-data";
+import { agentSkills } from "@/lib/mock-agent-skills";
 
 export interface TagInfo {
   tag: string;
@@ -12,13 +13,20 @@ export function getAllTags(): TagInfo[] {
       map.set(tag, (map.get(tag) || 0) + 1);
     }
   }
+  for (const skill of agentSkills) {
+    for (const tag of skill.tags) {
+      map.set(tag, (map.get(tag) || 0) + 1);
+    }
+  }
   return Array.from(map.entries())
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
 }
 
 export function getSkillsByTag(tag: string) {
-  return skills.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+  const matchedPrompts = skills.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+  const matchedAgents = agentSkills.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+  return { prompts: matchedPrompts, agents: matchedAgents };
 }
 
 export function getTagCloud(): { tag: string; count: number; weight: number }[] {

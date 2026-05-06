@@ -6,6 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.6.1] — 2026-05-06
+
+### Changed
+- **Guide page rewritten** — Now covers both Agent Skills and Prompt Templates with separate explanations, two-track quickstart, and dual CTA buttons
+- **Trending page** — Now shows both Agent Skills and Prompt Templates with content type filter tabs (All / Agent / Prompt); items link to correct detail pages
+- **Tag system** — `tag-utils.ts` now indexes Agent Skill tags alongside Prompt tags; tag detail page renders both `AgentSkillCard` and `SkillCard` in separate sections
+- **Category detail pages** — Show both Agent Skills and Prompt Templates per category using a category mapping
+- **Category listing page** — Shows preview cards from both content types
+- **Footer** — Reorganized into 4 groups: Agent Skills + Prompts (top-level), Browse (categories/trending/tags), Resources, Community
+- **Submit page** — Updated metadata to note Agent Skill submission is via the Skills page
+
+### Files Modified
+- `src/app/guide/page.tsx` — Full rewrite with dual-content sections
+- `src/app/trending/client.tsx` — Unified Agent + Prompt data, content type filter tabs
+- `src/app/categories/[slug]/client.tsx` — Added Agent Skill display per category
+- `src/app/categories/page.tsx` — Shows both content types per category
+- `src/app/tags/[tag]/page.tsx` — Updated to pass both prompts and agents
+- `src/app/tags/[tag]/client.tsx` — Renders AgentSkillCard and SkillCard separately
+- `src/app/submit/page.tsx` — Updated metadata
+- `src/lib/tag-utils.ts` — Now indexes Agent Skills tags
+- `src/lib/i18n/types.ts` — Added `browse` key to footer section
+- `src/lib/i18n/zh.ts` — Added `browse` translation
+- `src/lib/i18n/en.ts` — Added `browse` translation
+- `src/components/layout/footer.tsx` — Reorganized link groups
+
+---
+
 ## [v1.6.0] — 2026-05-06
 
 ### Changed

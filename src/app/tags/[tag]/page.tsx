@@ -12,15 +12,15 @@ export async function generateMetadata({ params }: { params: Promise<{ tag: stri
   const decoded = decodeURIComponent(tag);
   return {
     title: `#${decoded} — AI Skills Hub`,
-    description: `浏览所有与「${decoded}」相关的 AI 技能模板`,
+    description: `浏览所有与「${decoded}」相关的 Agent 技能和 Prompt 模板`,
   };
 }
 
 export default async function TagDetailPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;
   const decoded = decodeURIComponent(tag);
-  const skills = getSkillsByTag(decoded);
-  if (skills.length === 0) notFound();
+  const { prompts, agents } = getSkillsByTag(decoded);
+  if (prompts.length === 0 && agents.length === 0) notFound();
 
-  return <TagDetailClient tag={decoded} skills={skills} />;
+  return <TagDetailClient tag={decoded} prompts={prompts} agents={agents} />;
 }

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Copy, Zap, Globe, Laptop, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, Copy, Zap, Globe, Laptop, ArrowRight, Sparkles, Bot, Terminal } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "新手指南 — AI Skills Hub",
-  description: "即使你从未写过 Prompt，也能在 3 分钟内上手使用我们的高质量技能模板",
+  description: "3 分钟上手 Agent 技能与 Prompt 模板，让 AI 真正为你工作",
 };
 
 export default function GuidePage() {
@@ -16,7 +16,7 @@ export default function GuidePage() {
           <BookOpen className="h-3.5 w-3.5" />新手指南
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">欢迎来到 AI Skills Hub</h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">即使你从未写过 Prompt，也能在 3 分钟内上手使用我们的高质量技能模板</p>
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">3 分钟上手 Agent 技能与 Prompt 模板，让 AI 真正为你工作</p>
       </div>
 
       <section className="glass-card p-8 mb-8">
@@ -24,8 +24,18 @@ export default function GuidePage() {
           <Sparkles className="h-5 w-5 text-primary" />AI Skills Hub 是什么？
         </h2>
         <div className="text-muted-foreground space-y-3 leading-relaxed">
-          <p>AI Skills Hub 是一个专注于<strong className="text-foreground">大语言模型（LLM）</strong>的高质量技能模板市场。我们精心设计并实测了上千个 Prompt 模板，覆盖内容创作、编程开发、职场工作等核心场景。</p>
-          <p>你<strong className="text-foreground">不需要精通 Prompt 工程</strong>，只需找到合适的模板，复制粘贴，替换变量，就能获得高质量的 AI 输出。</p>
+          <p>AI Skills Hub 是一个专注于<strong className="text-foreground">大语言模型（LLM）</strong>的双轨技能市场，提供两大核心内容：</p>
+          <div className="grid md:grid-cols-2 gap-4 mt-4">
+            <div className="bg-secondary/30 border border-border rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2"><Bot className="h-4 w-4 text-primary" /><h3 className="font-semibold text-foreground">Agent 技能</h3></div>
+              <p className="text-sm">可执行的 AI 能力组件，一键安装即可让 Agent 搜索网页、编写代码、管理文件、发送邮件等。</p>
+            </div>
+            <div className="bg-secondary/30 border border-border rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2"><Copy className="h-4 w-4 text-purple-400" /><h3 className="font-semibold text-foreground">Prompt 模板</h3></div>
+              <p className="text-sm">高质量提示词模板，覆盖内容创作、编程开发、职场工作等场景。复制粘贴、替换变量即可使用。</p>
+            </div>
+          </div>
+          <p>你<strong className="text-foreground">不需要精通 Prompt 工程</strong>，只需找到合适的技能或模板，就能获得高质量的 AI 输出。</p>
         </div>
       </section>
 
@@ -40,6 +50,21 @@ export default function GuidePage() {
             <p className="text-xs text-muted-foreground/60 mb-2">示例：</p>
             <p className="text-sm text-foreground">&ldquo;你是一位小红书内容创作者。请根据以下主题生成一篇高质量笔记：<strong className="text-primary">春季穿搭心得</strong>&rdquo;</p>
             <p className="text-xs text-muted-foreground/60 mt-2">↑ 蓝色部分就是你需要替换的变量</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="glass-card p-8 mb-8">
+        <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+          <Terminal className="h-5 w-5 text-primary" />什么是 Agent 技能？
+        </h2>
+        <div className="text-muted-foreground space-y-3 leading-relaxed">
+          <p><strong className="text-foreground">Agent 技能</strong>是可安装、可执行的 AI 能力模块。与 Prompt 模板不同，Agent 技能让 AI 能够<strong className="text-foreground">真正行动</strong>——不只是生成文本，而是搜索互联网、执行代码、操作文件。</p>
+          <p>安装一条命令，你的 AI Agent 就多了一项新能力。</p>
+          <div className="bg-secondary border border-border rounded-lg p-4 mt-4">
+            <p className="text-xs text-muted-foreground/60 mb-2">示例安装命令：</p>
+            <p className="text-sm text-foreground font-mono">npx skills install web-scraper</p>
+            <p className="text-xs text-muted-foreground/60 mt-2">↑ 安装后 Agent 即可自动抓取网页内容</p>
           </div>
         </div>
       </section>
@@ -71,26 +96,48 @@ export default function GuidePage() {
 
       <section className="glass-card p-8 mb-8">
         <h2 className="text-xl font-bold text-foreground mb-6">3 分钟快速上手</h2>
-        <div className="space-y-6">
-          {[
-            { step: 1, title: "选择技能模板", desc: "浏览 Prompt 市场，找到你需要的模板。" },
-            { step: 2, title: "复制 Prompt", desc: "点击「复制完整 Prompt」按钮，填写变量后复制。" },
-            { step: 3, title: "粘贴到 AI 平台", desc: "打开 ChatGPT、Claude 等平台，粘贴 Prompt。" },
-            { step: 4, title: "获取高质量输出", desc: "AI 会根据模板生成专业、自然的内容。" },
-          ].map((item) => (
-            <div key={item.step} className="flex gap-4">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-bold">{item.step}</div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </div>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Bot className="h-4 w-4 text-primary" />使用 Agent 技能</h3>
+            <div className="space-y-4">
+              {[
+                { step: 1, title: "浏览技能市场", desc: "找到你需要的 Agent 技能。" },
+                { step: 2, title: "一键安装", desc: "复制安装命令，在终端执行。" },
+                { step: 3, title: "开始使用", desc: "在 AI 平台中直接调用新能力。" },
+              ].map((item) => (
+                <div key={item.step} className="flex gap-3">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm">{item.step}</div>
+                  <div>
+                    <h4 className="font-medium text-foreground text-sm mb-0.5">{item.title}</h4>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2"><Copy className="h-4 w-4 text-purple-400" />使用 Prompt 模板</h3>
+            <div className="space-y-4">
+              {[
+                { step: 1, title: "选择模板", desc: "浏览 Prompt 市场，找到需要的模板。" },
+                { step: 2, title: "填写变量", desc: "输入变量内容，点击复制。" },
+                { step: 3, title: "粘贴使用", desc: "在 ChatGPT、Claude 等平台粘贴发送。" },
+              ].map((item) => (
+                <div key={item.step} className="flex gap-3">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-sm">{item.step}</div>
+                  <div>
+                    <h4 className="font-medium text-foreground text-sm mb-0.5">{item.title}</h4>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="glass-card p-8 mb-8">
-        <h2 className="text-xl font-bold text-foreground mb-6">🧠 Prompt 工程技巧</h2>
+        <h2 className="text-xl font-bold text-foreground mb-6">Prompt 工程技巧</h2>
         <p className="text-muted-foreground mb-6">掌握这些核心技巧，让 AI 输出质量更上一层楼：</p>
         <div className="space-y-6">
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
@@ -137,30 +184,28 @@ export default function GuidePage() {
       </section>
 
       <section className="glass-card p-8 mb-8">
-        <h2 className="text-xl font-bold text-foreground mb-6">💡 获得更好结果的秘诀</h2>
+        <h2 className="text-xl font-bold text-foreground mb-6">获得更好结果的秘诀</h2>
         <div className="grid sm:grid-cols-2 gap-5">
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
-            <h3 className="font-semibold text-foreground mb-2">🎯 具体胜过模糊</h3>
-            <p className="text-xs text-muted-foreground/60 mb-2">❌ 不好：</p>
+            <h3 className="font-semibold text-foreground mb-2">具体胜过模糊</h3>
+            <p className="text-xs text-muted-foreground/60 mb-2">不好：</p>
             <p className="text-sm text-muted-foreground mb-2">&ldquo;帮我写个邮件&rdquo;</p>
-            <p className="text-xs text-muted-foreground/60 mb-2">✅ 更好：</p>
+            <p className="text-xs text-muted-foreground/60 mb-2">更好：</p>
             <p className="text-sm text-muted-foreground">&ldquo;给客户张总写一封项目进度汇报邮件，语气专业友好，包含本周完成的3个里程碑&rdquo;</p>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
-            <h3 className="font-semibold text-foreground mb-2">📋 指定输出格式</h3>
-            <p className="text-xs text-muted-foreground/60 mb-2">❌ 不好：</p>
+            <h3 className="font-semibold text-foreground mb-2">指定输出格式</h3>
+            <p className="text-xs text-muted-foreground/60 mb-2">不好：</p>
             <p className="text-sm text-muted-foreground mb-2">&ldquo;分析一下这个数据&rdquo;</p>
-            <p className="text-xs text-muted-foreground/60 mb-2">✅ 更好：</p>
+            <p className="text-xs text-muted-foreground/60 mb-2">更好：</p>
             <p className="text-sm text-muted-foreground">&ldquo;用表格对比 Q1 和 Q2 的数据变化，标注增长率超过 20% 的指标&rdquo;</p>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
-            <h3 className="font-semibold text-foreground mb-2">🔄 迭代优化</h3>
-            <p className="text-xs text-muted-foreground/60 mb-2">技巧：</p>
+            <h3 className="font-semibold text-foreground mb-2">迭代优化</h3>
             <p className="text-sm text-muted-foreground">不要期望一次完美。先让 AI 生成初版，然后针对性地要求 &ldquo;更口语化&rdquo;、&ldquo;缩短到200字&rdquo;、&ldquo;加入数据支撑&rdquo;。</p>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
-            <h3 className="font-semibold text-foreground mb-2">📎 提供上下文</h3>
-            <p className="text-xs text-muted-foreground/60 mb-2">技巧：</p>
+            <h3 className="font-semibold text-foreground mb-2">提供上下文</h3>
             <p className="text-sm text-muted-foreground">背景信息越丰富，AI 越能理解你的需求。告诉它你的身份、目的、受众，输出会更贴合预期。</p>
           </div>
         </div>
@@ -168,11 +213,18 @@ export default function GuidePage() {
 
       <div className="text-center">
         <p className="text-muted-foreground mb-4">准备好了吗？开始探索吧！</p>
-        <Link href="/prompts">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-8 h-12 text-base">
-            浏览技能市场 <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link href="/skills">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-8 h-12 text-base">
+              <Zap className="h-4 w-4 mr-2" />浏览 Agent 技能 <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </Link>
+          <Link href="/prompts">
+            <Button variant="outline" className="border-border text-foreground hover:bg-secondary px-8 h-12 text-base">
+              <Copy className="h-4 w-4 mr-2" />浏览 Prompt 模板 <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

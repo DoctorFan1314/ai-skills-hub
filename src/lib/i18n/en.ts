@@ -296,6 +296,7 @@ export const en: Dictionary = {
   footer: {
     description: "Discover and share the best AI Prompt templates and Agent Skills for everyone.",
     quickLinks: "Quick Links",
+    browse: "Browse",
     resources: "Resources",
     community: "Community",
     blog: "Blog",

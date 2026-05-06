@@ -296,6 +296,7 @@ export const zh: Dictionary = {
   footer: {
     description: "发现和分享最佳 AI Prompt 模板和 Agent 技能，让每个人都能高效使用 AI。",
     quickLinks: "快速链接",
+    browse: "浏览",
     resources: "资源",
     community: "社区",
     blog: "博客",
