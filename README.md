@@ -136,12 +136,10 @@ ai-skills-hub/
 ## Pages
 
 ### Homepage `/`
-- Hero section: Skills-focused title + CTA buttons
-- Trust bar: platform compatibility stats
-- Trending Agent Skills: marketplace cards with downloads, stars, install commands
-- Six category entry cards
-- Newest / Beginner-friendly Prompt Templates
-- User testimonials
+- Hero section: Skills-focused title + inline trust stats + CTA smooth-scrolls to Tab section
+- **Featured Section**: Tab switcher ("Agent Skills" | "Prompt Templates") with 6 trending cards per tab
+- Six core direction category cards
+- User testimonials (6 curated reviews)
 
 ### Agent Skills Marketplace `/skills`
 - Full-text search (name, title, description, triggers, tags)

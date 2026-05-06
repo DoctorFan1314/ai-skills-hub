@@ -14,7 +14,7 @@ export function Testimonials() {
         <p className="text-muted-foreground">{t.home.testimonialSubtitle}</p>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {testimonials.map((item) => (
+        {testimonials.slice(0, 6).map((item) => (
           <div key={item.id} className="glass-card p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold text-primary">

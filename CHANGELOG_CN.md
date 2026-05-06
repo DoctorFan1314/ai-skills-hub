@@ -6,6 +6,31 @@
 
 ---
 
+## [v1.6.0] — 2026-05-06
+
+### 变更
+- **首页重构** — 将 6 个零散区块 + 4 个分隔线替换为紧凑的 4 区块布局：
+  1. **Hero 区** — 融入信任统计数据（技能数量、模板数量、平台兼容）；主 CTA 改为平滑滚动到 Tab 区，而非跳转页面
+  2. **核心 Tab 切换区** — 新增 "Agent 技能" | "Prompt 模板" 双 Tab 切换（pill 按钮）；每个 Tab 展示 6 张热门卡片 + "查看全部" 链接；替代原 `AgentSkillSection` 和两个 `SkillSection` 区块
+  3. **分类卡片** — 标题改为 "探索核心方向"；去掉硬编码营销描述，直接使用 `category.description`
+  4. **用户评价** — 从 10 条精简为 6 条，布局更紧凑
+- **TrustBar** 从首页移除（统计数据融入 Hero 底部）；文件保留但不再渲染
+- **i18n** — `home` section 新增 `featuredTitle`、`featuredSubtitle`、`tabAgent`、`tabPrompt`、`exploreDirections`
+
+### 修改文件
+- `src/app/page.tsx` — 重写：4 个区块替代 6+4 个
+- `src/components/home/hero.tsx` — 内联信任统计，CTA 使用 `scrollIntoView` 平滑滚动到 `#featured-section`
+- `src/components/home/category-cards.tsx` — 去掉硬编码 `descriptions`，标题改用 `t.home.exploreDirections`
+- `src/components/home/testimonials.tsx` — `.slice(0, 6)` 显示 6 条
+- `src/lib/i18n/types.ts` — `home` 新增 5 个键
+- `src/lib/i18n/zh.ts` — 新增中文翻译
+- `src/lib/i18n/en.ts` — 新增英文翻译
+
+### 新文件
+- `src/components/home/featured-section.tsx` — Tab 切换组件，Agent/Prompt 双 Tab，6 卡片网格，淡入过渡
+
+---
+
 ## [v1.5.2] — 2026-05-06
 
 ### 新增

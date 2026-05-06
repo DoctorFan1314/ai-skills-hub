@@ -4,10 +4,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Zap, BookOpen } from "lucide-react";
 import { agentSkills } from "@/lib/mock-agent-skills";
+import { skills } from "@/lib/mock-data";
 import { useI18n } from "@/contexts/i18n-context";
 
 export function Hero() {
   const { t } = useI18n();
+
+  function scrollToFeatured() {
+    document.getElementById("featured-section")?.scrollIntoView({ behavior: "smooth" });
+  }
 
   return (
     <section className="relative overflow-hidden">
@@ -28,19 +33,29 @@ export function Hero() {
           <p className="text-sm text-muted-foreground/60 mb-10">
             {t.home.heroPlatforms}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/skills">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-8 h-12 text-base">
-                <Zap className="h-4 w-4 mr-2" />
-                {t.agentSkills.heroCta}
-              </Button>
-            </Link>
-            <Link href="/prompts">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+            <Button
+              size="lg"
+              onClick={scrollToFeatured}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-8 h-12 text-base cursor-pointer"
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              {t.agentSkills.heroCta}
+            </Button>
+            <Link href="/guide">
               <Button variant="outline" size="lg" className="border-border text-foreground hover:bg-secondary px-8 h-12 text-base">
                 <BookOpen className="h-4 w-4 mr-2" />
-                {t.common.prompts}
+                {t.home.heroCtaGuide}
               </Button>
             </Link>
+          </div>
+          {/* Inline trust stats */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground/50">
+            <span>{agentSkills.length}+ Agent Skills</span>
+            <span className="hidden sm:inline text-muted-foreground/20">·</span>
+            <span>{skills.length}+ Prompt Templates</span>
+            <span className="hidden sm:inline text-muted-foreground/20">·</span>
+            <span>{t.home.heroPlatforms}</span>
           </div>
         </div>
       </div>

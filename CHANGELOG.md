@@ -6,6 +6,31 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.6.0] — 2026-05-06
+
+### Changed
+- **Homepage redesign** — Replaced 6 fragmented sections + 4 dividers with a cohesive 4-section layout:
+  1. **Hero** — Inlined trust stats (skill count, template count, platform compatibility); primary CTA now smooth-scrolls to the Tab section instead of navigating away
+  2. **Featured Section** — New Tab switcher ("Agent Skills" | "Prompt Templates") with pill-style buttons; shows 6 trending cards per tab with a "View All" link; replaces both `AgentSkillSection` and dual `SkillSection` blocks
+  3. **Category Cards** — Title changed to "Explore Core Directions"; removed hardcoded per-slug marketing descriptions (uses `category.description` directly)
+  4. **Testimonials** — Trimmed from 10 to 6 items for a tighter layout
+- **TrustBar** removed from homepage (stats moved inline to Hero); file kept but no longer rendered
+- **i18n** — Added `featuredTitle`, `featuredSubtitle`, `tabAgent`, `tabPrompt`, `exploreDirections` to `home` section
+
+### Files Modified
+- `src/app/page.tsx` — Rewritten: 4 sections instead of 6 + 4 dividers
+- `src/components/home/hero.tsx` — Inline trust stats, CTA uses `scrollIntoView` for smooth scroll to `#featured-section`
+- `src/components/home/category-cards.tsx` — Removed hardcoded `descriptions` record, changed title to `t.home.exploreDirections`
+- `src/components/home/testimonials.tsx` — `.slice(0, 6)` to show 6 items
+- `src/lib/i18n/types.ts` — Added 5 new keys to `home` section
+- `src/lib/i18n/zh.ts` — Chinese translations for new keys
+- `src/lib/i18n/en.ts` — English translations for new keys
+
+### New Files
+- `src/components/home/featured-section.tsx` — Tab switch component with Agent/Prompt toggle, 6-card grid, fade transition
+
+---
+
 ## [v1.5.2] — 2026-05-06
 
 ### Added

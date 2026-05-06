@@ -8,6 +8,9 @@ export interface Dictionary {
     more: string; all: string; viewAll: string;
   };
   home: {
+    featuredTitle: string; featuredSubtitle: string;
+    tabAgent: string; tabPrompt: string;
+    exploreDirections: string;
     heroTitle: string; heroSubtitle: string; heroCta: string; heroCtaGuide: string;
     heroBadge: string; heroPlatforms: string; heroTrust: string;
     sectionHot: string; sectionHotSub: string;
