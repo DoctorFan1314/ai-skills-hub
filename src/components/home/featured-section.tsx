@@ -55,7 +55,7 @@ export function FeaturedSection({ tab, onTabChange }: { tab: "agent" | "prompt";
       </div>
 
       {/* Tab content */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {tab === "agent"
           ? trendingAgents.map((s) => <AgentSkillCard key={s.id} skill={s} />)
           : trendingPrompts.map((s) => <SkillCard key={s.id} skill={s} />)}

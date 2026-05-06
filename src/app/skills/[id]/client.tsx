@@ -110,7 +110,6 @@ function MarkdownRenderer({ content }: { content: string }) {
   let codeLines: string[] = [];
   let codeLang = "";
   let tableRows: string[][] = [];
-  let isHeaderRow = true;
 
   function flushTable() {
     if (tableRows.length === 0) return;
@@ -118,26 +117,38 @@ function MarkdownRenderer({ content }: { content: string }) {
     elements.push(
       <div key={`table-${elements.length}`} className="my-4 overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
-          {tableRows.map((row, ri) => (
-            <tr key={ri} className={ri === 0 ? "bg-secondary/50" : "border-t border-border"}>
-              {row.map((cell, ci) => {
-                const Tag = ri === 0 ? "th" : "td";
-                return (
-                  <Tag key={ci} className="px-3 py-2 text-left text-muted-foreground">
+          <thead>
+            {tableRows.slice(0, 1).map((row, ri) => (
+              <tr key={ri} className="bg-secondary/50">
+                {row.map((cell, ci) => (
+                  <th key={ci} className="px-3 py-2 text-left text-muted-foreground font-medium">
                     <InlineMarkdown text={cell} />
-                  </Tag>
-                );
-              })}
-              {row.length < colCount && Array.from({ length: colCount - row.length }).map((_, ci) => (
-                <td key={`pad-${ci}`} className="px-3 py-2" />
-              ))}
-            </tr>
-          ))}
+                  </th>
+                ))}
+                {row.length < colCount && Array.from({ length: colCount - row.length }).map((_, ci) => (
+                  <th key={`pad-${ci}`} className="px-3 py-2" />
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {tableRows.slice(1).map((row, ri) => (
+              <tr key={ri} className="border-t border-border">
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-3 py-2 text-left text-muted-foreground">
+                    <InlineMarkdown text={cell} />
+                  </td>
+                ))}
+                {row.length < colCount && Array.from({ length: colCount - row.length }).map((_, ci) => (
+                  <td key={`pad-${ci}`} className="px-3 py-2" />
+                ))}
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     );
     tableRows = [];
-    isHeaderRow = true;
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -182,7 +193,6 @@ function MarkdownRenderer({ content }: { content: string }) {
       elements.push(<h3 key={i} className="text-base font-semibold text-foreground mt-4 mb-2">{line.slice(4)}</h3>);
     } else if (line.startsWith("| ") || line.startsWith("|")) {
       if (isTableSeparator(line)) {
-        isHeaderRow = false;
         continue;
       }
       const cells = line.split("|").slice(1, -1).map(c => c.trim());
