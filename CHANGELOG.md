@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file.
 ## [v1.6.2] — 2026-05-06
 
 ### Changed
+- **License switched to Apache-2.0** — from MIT; provides explicit patent grant protection, better suited for future commercialization and software copyright registration
+- **Disclaimer sections rewritten** — removed "learning project only" framing; added clear no-warranty statement linked to Apache 2.0; separated mock data notice, AI output disclaimer, and trademark notice
+- **Layout widened to 1440px** — skill list and featured section now use `max-w-[1440px]` instead of `max-w-7xl` (1280px), reducing excessive side whitespace on large screens
+- **4-column grid on xl screens** — skill cards, featured section, and homepage category cards now show 4 columns on 1440px+ screens (`xl:grid-cols-4`)
+- **Table hydration fix** — MarkdownRenderer table rows now wrapped in `<thead>` and `<tbody>` to match browser DOM tree, eliminating React hydration warning
 - **MarkdownRenderer rewrite** — Skill detail page README now renders properly: table separator rows (`|---|`) are skipped, tables render as `<table>` with header distinction, inline `**bold**` and `` `code` `` formatting processed in bullet points and numbered lists, not just in paragraphs
 - **Agent Skill category system** — New `agent-skill-categories.ts` with 8 independent categories (Skills管理, Web开发, Web搜索, 多平台交互, 代码执行, 文件处理, 通讯协作, 数据分析); `skills/client.tsx` now uses the centralized category definitions instead of a hardcoded array
 - **Homepage dual-category** — `CategoryCards` now dynamically shows Agent Skill categories or Prompt categories based on the active Tab; grid adapts to 4 columns for Agent (8 categories) vs 3 for Prompt (6 categories)

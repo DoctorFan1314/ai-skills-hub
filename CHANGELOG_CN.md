@@ -9,10 +9,15 @@
 ## [v1.6.2] — 2026-05-06
 
 ### 变更
-- **MarkdownRenderer 重写** — 技能详情页 README 渲染修复：表格分隔行（`|---|`）跳过、表格用 `<table>` 渲染带表头区分、列表和表格单元格内支持 `**粗体**` 和 `` `代码` `` 内联格式化
-- **Agent 技能分类系统** — 新建 `agent-skill-categories.ts`，8 个独立分类（Skills管理、Web开发、Web搜索、多平台交互、代码执行、文件处理、通讯协作、数据分析）；`skills/client.tsx` 改用集中定义的分类
-- **首页双分类** — `CategoryCards` 根据当前 Tab 动态显示 Agent 技能分类或 Prompt 分类；Agent 8 个分类使用 4 列网格
-- **Tab 状态提升** — `FeaturedSection` 和 `CategoryCards` 通过 `page.tsx` 共享 tab 状态，切换 Tab 时卡片和分类同步更新
+- **许可证切换为 Apache-2.0** — 从 MIT 切换；提供明确的专利授权保护，更适合未来商业化和软著申请
+- **免责声明重写** — 移除"仅供学习"的表述；新增与 Apache 2.0 关联的无担保声明；分离模拟数据声明、AI 输出免责和商标声明
+- **布局加宽至 1440px** — 技能列表和精选区域从 `max-w-7xl`（1280px）改为 `max-w-[1440px]`，减少大屏两侧空白
+- **xl 屏幕 4 列网格** — 技能卡片、精选区域和首页分类卡片在 1440px+ 屏幕显示 4 列（`xl:grid-cols-4`）
+- **表格 hydration 修复** — MarkdownRenderer 表格行包裹在 `<thead>` 和 `<tbody>` 中，消除 React hydration 警告
+- **MarkdownRenderer 重写** — 技能详情页 README 渲染修复：表格分隔行跳过、表格用 `<table>` 渲染带表头区分、列表和表格单元格内支持内联粗体和代码格式化
+- **Agent 技能分类系统** — 新建 `agent-skill-categories.ts`，8 个独立分类；`skills/client.tsx` 改用集中定义的分类
+- **首页双分类** — `CategoryCards` 根据当前 Tab 动态显示 Agent 技能分类或 Prompt 分类
+- **Tab 状态提升** — `FeaturedSection` 和 `CategoryCards` 通过 `page.tsx` 共享 tab 状态
 - **URL 分类筛选** — `/skills?category=Web开发` 自动选中对应分类
 
 ### 修改文件
