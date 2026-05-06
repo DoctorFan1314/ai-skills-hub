@@ -6,6 +6,8 @@ export interface Dictionary {
     save: string; cancel: string; delete: string; edit: string; confirm: string;
     copy: string; copied: string; share: string; like: string; bookmark: string;
     more: string; all: string; viewAll: string;
+    or: string; closeSearch: string; toggleTheme: string; switchLanguage: string;
+    openNavigation: string; navigationMenu: string;
   };
   home: {
     featuredTitle: string; featuredSubtitle: string;
@@ -74,6 +76,7 @@ export interface Dictionary {
     likedLabel: string; bookmarkedLabel: string; commentedLabel: string;
     submittedLabel: string; viewedLabel: string; copiedLabel: string;
     copiedPrompt: string; viewedSkill: string;
+    adminRole: string; userRole: string;
     stats: { submissions: string; likes: string; bookmarks: string; comments: string; };
   };
   settings: {
@@ -85,6 +88,8 @@ export interface Dictionary {
     profileUpdated: string; passwordChanged: string; wrongPassword: string;
     saveProfile: string; exportDesc: string; dangerZone: string;
     dangerDesc: string; confirmDelete: string;
+    usernameRequired: string; passwordMinLength: string; fillAllFields: string;
+    dataExported: string; dataCleared: string; accountDeleted: string;
   };
   submit: {
     title: string; subtitle: string; basicInfo: string; templateName: string;
@@ -94,11 +99,65 @@ export interface Dictionary {
     submitBtn: string; successTitle: string; successDesc: string; continueSubmit: string;
     viewHistory: string; mySubmissions: string;
   };
-  guide: { title: string; subtitle: string; };
+  guide: {
+    title: string; subtitle: string;
+    badge: string; welcome: string;
+    whatIsHub: string; hubDesc: string;
+    agentSkillsLabel: string; agentSkillsDesc: string;
+    promptTemplatesLabel: string; promptTemplatesDesc: string;
+    noExpertise: string; noExpertiseDesc: string;
+    whatIsPrompt: string; promptDesc: string; promptDesc2: string;
+    example: string; promptExample: string; variableNote: string;
+    whatIsAgentSkill: string; agentSkillDesc1: string; agentSkillDesc2: string;
+    installExample: string; installNote: string;
+    onlineVsLocal: string;
+    onlineTitle: string; onlineDesc: string; onlinePro1: string; onlinePro2: string; onlineCon: string;
+    localTitle: string; localDesc: string; localPro: string; localCon: string;
+    quickStart: string;
+    useAgentSkill: string;
+    browseMarket: string; browseMarketDesc: string;
+    oneClickInstall: string; oneClickInstallDesc: string;
+    startUsing: string; startUsingDesc: string;
+    usePromptTemplate: string;
+    selectTemplate: string; selectTemplateDesc: string;
+    fillVariables: string; fillVariablesDesc: string;
+    pasteAndUse: string; pasteAndUseDesc: string;
+    engineeringTips: string; engineeringTipsDesc: string;
+    cotTitle: string; cotDesc: string; cotExample: string;
+    fewShotTitle: string; fewShotDesc: string; fewShotExample: string;
+    roleTitle: string; roleDesc: string; roleExample: string;
+    structuredTitle: string; structuredDesc: string; structuredExample: string;
+    selfCritiqueTitle: string; selfCritiqueDesc: string; selfCritiqueExample: string;
+    betterResults: string;
+    specificVsVague: string; vagueLabel: string; vagueExample: string;
+    betterLabel: string; betterExample1: string;
+    specifyFormat: string; vagueFormatLabel: string; vagueFormatExample: string;
+    betterFormatLabel: string; betterFormatExample: string;
+    iterate: string; iterateDesc: string;
+    provideContext: string; provideContextDesc: string;
+    readyToStart: string; browseAgentSkills: string; browsePromptTemplates: string;
+  };
   auth: {
     loginTitle: string; loginSubtitle: string; registerTitle: string; registerSubtitle: string;
     email: string; password: string; username: string; noAccount: string; hasAccount: string;
     loginNow: string; registerNow: string;
+    fillAllFields: string; emailOrPasswordError: string; loginSuccess: string;
+    welcomeBack: string; forgotPassword: string;
+    oauthComingSoon: string; loginWithGoogle: string; loginWithGithub: string;
+    passwordMinLength: string; emailInvalid: string; emailExists: string;
+    registerSuccess: string; createAccountDesc: string;
+    usernamePlaceholder: string; passwordPlaceholder: string;
+    oauthRegisterComingSoon: string; registerWithGoogle: string; registerWithGithub: string;
+  };
+  notFound: {
+    title: string; description: string; backHome: string;
+  };
+  error: {
+    title: string; description: string; retry: string;
+  };
+  commandPalette: {
+    searchPlaceholder: string; noResults: string;
+    navigationHint: string; shortcutHint: string;
   };
   footer: {
     description: string; quickLinks: string; browse: string; resources: string; community: string;
@@ -106,6 +165,7 @@ export interface Dictionary {
     twitter: string; newsletter: string; newsletterPlaceholder: string; subscribe: string;
     unsubscribe: string; unsubscribeDesc: string; managePreferences: string;
     copyright: string; platforms: string;
+    emailRequired: string; emailInvalid: string; alreadySubscribed: string; subscribeSuccess: string;
   };
   create: {
     newSkill: string; newPrompt: string;
@@ -143,6 +203,9 @@ export interface Dictionary {
     nameRequired: string; displayNameRequired: string;
     ownerRequired: string; descRequired: string; fileRequired: string;
     githubUrlRequired: string; selectAtLeastOne: string;
+    skillTypeWebDev: string; skillTypeCodeExec: string; skillTypeFileProc: string;
+    skillTypeDataAnalysis: string; skillTypeMultiPlatform: string;
+    skillTypeCommunication: string; skillTypeOther: string;
   };
   admin: {
     title: string; pendingSubmissions: string; userManage: string; skillAnalytics: string;
@@ -150,5 +213,8 @@ export interface Dictionary {
     noPending: string; registeredUsers: string; noUsers: string;
     totalSubmissions: string; totalComments: string; adminBadge: string;
     reviewed: string; approved: string; rejected: string;
+    noAccess: string; noAccessDesc: string; backHome: string;
+    reviewNotePlaceholder: string; adminSubtitle: string;
+    noComments: string; skillPrefix: string;
   };
 }

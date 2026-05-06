@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
+import { useI18n } from "@/contexts/i18n-context";
 
 export default function RegisterClient() {
   const [username, setUsername] = useState("");
@@ -16,28 +17,29 @@ export default function RegisterClient() {
   const { register } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useI18n();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (!username.trim() || !email.trim() || !password) {
-      setError("请填写所有字段");
+      setError(t.auth.fillAllFields);
       return;
     }
     if (password.length < 8) {
-      setError("密码至少需要 8 位字符");
+      setError(t.auth.passwordMinLength);
       return;
     }
     if (!email.includes("@")) {
-      setError("请输入有效的邮箱地址");
+      setError(t.auth.emailInvalid);
       return;
     }
     const ok = await register(username, email, password);
     if (!ok) {
-      setError("该邮箱已被注册");
+      setError(t.auth.emailExists);
       return;
     }
-    toast("注册成功！", "success");
+    toast(t.auth.registerSuccess, "success");
     router.push("/");
   }
 
@@ -45,36 +47,36 @@ export default function RegisterClient() {
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">免费注册</h1>
-          <p className="text-muted-foreground">创建账号，解锁全部 AI 技能模板</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{t.auth.registerTitle}</h1>
+          <p className="text-muted-foreground">{t.auth.createAccountDesc}</p>
         </div>
         <div className="glass-card p-8">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="username" className="text-sm text-foreground mb-1.5 block">用户名</label>
-              <Input id="username" autoComplete="username" placeholder="你的用户名" value={username} onChange={(e) => setUsername(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
+              <label htmlFor="username" className="text-sm text-foreground mb-1.5 block">{t.auth.username}</label>
+              <Input id="username" autoComplete="username" placeholder={t.auth.usernamePlaceholder} value={username} onChange={(e) => setUsername(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             </div>
             <div>
-              <label htmlFor="email" className="text-sm text-foreground mb-1.5 block">邮箱</label>
+              <label htmlFor="email" className="text-sm text-foreground mb-1.5 block">{t.auth.email}</label>
               <Input id="email" type="email" autoComplete="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             </div>
             <div>
-              <label htmlFor="password" className="text-sm text-foreground mb-1.5 block">密码</label>
-              <Input id="password" type="password" autoComplete="new-password" placeholder="至少 8 位字符" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
+              <label htmlFor="password" className="text-sm text-foreground mb-1.5 block">{t.auth.password}</label>
+              <Input id="password" type="password" autoComplete="new-password" placeholder={t.auth.passwordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             </div>
             {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">注册</Button>
+            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{t.auth.registerNow}</Button>
           </form>
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs"><span className="px-3 bg-card text-muted-foreground">或</span></div>
+            <div className="relative flex justify-center text-xs"><span className="px-3 bg-card text-muted-foreground">{t.common.or}</span></div>
           </div>
           <div className="space-y-3">
-            <Button variant="outline" type="button" onClick={() => toast("OAuth 注册即将推出，敬请期待！")} className="w-full border-border text-foreground hover:bg-secondary">使用 Google 注册</Button>
-            <Button variant="outline" type="button" onClick={() => toast("OAuth 注册即将推出，敬请期待！")} className="w-full border-border text-foreground hover:bg-secondary">使用 GitHub 注册</Button>
+            <Button variant="outline" type="button" onClick={() => toast(t.auth.oauthRegisterComingSoon)} className="w-full border-border text-foreground hover:bg-secondary">{t.auth.registerWithGoogle}</Button>
+            <Button variant="outline" type="button" onClick={() => toast(t.auth.oauthRegisterComingSoon)} className="w-full border-border text-foreground hover:bg-secondary">{t.auth.registerWithGithub}</Button>
           </div>
           <p className="text-center text-sm text-muted-foreground mt-6">
-            已有账号？ <Link href="/login" className="text-primary hover:underline">登录</Link>
+            {t.auth.hasAccount} <Link href="/login" className="text-primary hover:underline">{t.auth.loginNow}</Link>
           </p>
         </div>
       </div>

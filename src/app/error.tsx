@@ -14,10 +14,10 @@ export default function GlobalError({
   return (
     <div className="mx-auto max-w-7xl px-4 py-20 text-center">
       <div className="glass-card p-8 max-w-md mx-auto">
-        <h2 className="text-xl font-bold text-foreground mb-3">出了点问题</h2>
-        <p className="text-muted-foreground text-sm mb-6">{error.message || "页面加载时发生了未知错误"}</p>
+        <h2 className="text-xl font-bold text-foreground mb-3">{t.error.title}</h2>
+        <p className="text-muted-foreground text-sm mb-6">{error.message || t.error.description}</p>
         <Button onClick={reset} className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
-          重试
+          {t.error.retry}
         </Button>
       </div>
     </div>

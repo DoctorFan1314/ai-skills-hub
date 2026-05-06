@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { skills } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
 import { categories } from "@/lib/categories";
+import type { Dictionary } from "@/lib/i18n/types";
 
 interface CommandItem {
   label: string;
@@ -24,7 +25,7 @@ export function useCommandPalette(onOpen: () => void) {
       }
       if (e.key === "/" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) {
         e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="搜索"]');
+        const searchInput = document.querySelector<HTMLInputElement>('input[type="search"], input[placeholder]');
         if (searchInput) {
           searchInput.focus();
           searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -36,29 +37,34 @@ export function useCommandPalette(onOpen: () => void) {
   }, [onOpen, router]);
 }
 
-export function getCommandItems(router: { push: (url: string) => void }): CommandItem[] {
+export function getCommandItems(router: { push: (url: string) => void }, t: Dictionary): CommandItem[] {
+  const navLabel = "Navigation";
+  const catLabel = t.categories.title;
+  const promptLabel = t.common.prompts;
+  const skillLabel = t.common.skills;
+
   const items: CommandItem[] = [
-    { label: "首页", action: () => router.push("/"), category: "导航" },
-    { label: "Prompt 模板", action: () => router.push("/prompts"), category: "导航" },
-    { label: "Agent 技能", action: () => router.push("/skills"), category: "导航" },
-    { label: "分类浏览", action: () => router.push("/categories"), category: "导航" },
-    { label: "排行榜", action: () => router.push("/trending"), category: "导航" },
-    { label: "标签云", action: () => router.push("/tags"), category: "导航" },
-    { label: "新手指南", action: () => router.push("/guide"), category: "导航" },
-    { label: "提交模板", action: () => router.push("/submit"), category: "导航" },
-    { label: "个人中心", action: () => router.push("/profile"), category: "导航" },
+    { label: t.common.home, action: () => router.push("/"), category: navLabel },
+    { label: t.common.prompts, action: () => router.push("/prompts"), category: navLabel },
+    { label: t.common.skills, action: () => router.push("/skills"), category: navLabel },
+    { label: t.common.categories, action: () => router.push("/categories"), category: navLabel },
+    { label: t.common.trending, action: () => router.push("/trending"), category: navLabel },
+    { label: t.common.tags, action: () => router.push("/tags"), category: navLabel },
+    { label: t.common.guide, action: () => router.push("/guide"), category: navLabel },
+    { label: t.common.submit, action: () => router.push("/submit"), category: navLabel },
+    { label: t.common.profile, action: () => router.push("/profile"), category: navLabel },
   ];
 
   for (const cat of categories) {
-    items.push({ label: `分类：${cat.name}`, action: () => router.push(`/categories/${cat.slug}`), category: "分类" });
+    items.push({ label: `${catLabel}：${cat.name}`, action: () => router.push(`/categories/${cat.slug}`), category: catLabel });
   }
 
   for (const skill of skills.slice(0, 20)) {
-    items.push({ label: skill.title, action: () => router.push(`/prompts/${skill.id}`), category: "Prompt" });
+    items.push({ label: skill.title, action: () => router.push(`/prompts/${skill.id}`), category: promptLabel });
   }
 
   for (const skill of agentSkills) {
-    items.push({ label: skill.name, action: () => router.push(`/skills/${skill.id}`), category: "Agent 技能" });
+    items.push({ label: skill.name, action: () => router.push(`/skills/${skill.id}`), category: skillLabel });
   }
 
   return items;

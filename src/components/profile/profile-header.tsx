@@ -1,11 +1,13 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
+import { useI18n } from "@/contexts/i18n-context";
 import { Calendar, Mail, User } from "lucide-react";
 import Image from "next/image";
 
 export function ProfileHeader() {
   const { user } = useAuth();
+  const { t } = useI18n();
   if (!user) return null;
 
   return (
@@ -23,8 +25,8 @@ export function ProfileHeader() {
           {user.bio && <p className="text-sm text-muted-foreground mb-2">{user.bio}</p>}
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{user.email}</span>
-            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />加入于 {new Date(user.joinDate).toLocaleDateString("zh-CN")}</span>
-            <span className="flex items-center gap-1"><User className="h-3 w-3" />{user.role === "admin" ? "管理员" : "用户"}</span>
+            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{t.profile.joinedAt} {new Date(user.joinDate).toLocaleDateString("zh-CN")}</span>
+            <span className="flex items-center gap-1"><User className="h-3 w-3" />{user.role === "admin" ? t.profile.adminRole : t.profile.userRole}</span>
           </div>
         </div>
       </div>

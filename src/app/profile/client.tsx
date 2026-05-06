@@ -11,22 +11,22 @@ import { MySubmissionsTab } from "@/components/profile/my-submissions-tab";
 import { MyCommentsTab } from "@/components/profile/my-comments-tab";
 import { UsageHistoryTab } from "@/components/profile/usage-history-tab";
 import { SettingsTab } from "@/components/profile/settings-tab";
+import { useI18n } from "@/contexts/i18n-context";
 import { User, Heart, Bookmark, FileText, MessageSquare, Clock, Settings } from "lucide-react";
 
-const tabs = [
-  { id: "overview", label: "概览", icon: User },
-  { id: "favorites", label: "我的收藏", icon: Bookmark },
-  { id: "likes", label: "我的点赞", icon: Heart },
-  { id: "submissions", label: "我的提交", icon: FileText },
-  { id: "comments", label: "我的评论", icon: MessageSquare },
-  { id: "history", label: "使用历史", icon: Clock },
-  { id: "settings", label: "设置", icon: Settings },
-] as const;
-
-type TabId = (typeof tabs)[number]["id"];
-
 export default function ProfileClient() {
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "favorites" | "likes" | "submissions" | "comments" | "history" | "settings">("overview");
+  const { t } = useI18n();
+
+  const tabs = [
+    { id: "overview" as const, label: t.profile.overview, icon: User },
+    { id: "favorites" as const, label: t.profile.favorites, icon: Bookmark },
+    { id: "likes" as const, label: t.profile.likes, icon: Heart },
+    { id: "submissions" as const, label: t.profile.submissions, icon: FileText },
+    { id: "comments" as const, label: t.profile.comments, icon: MessageSquare },
+    { id: "history" as const, label: t.profile.history, icon: Clock },
+    { id: "settings" as const, label: t.profile.settings, icon: Settings },
+  ];
 
   return (
     <AuthGuard>

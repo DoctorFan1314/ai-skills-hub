@@ -10,16 +10,6 @@ import { useToast } from "@/contexts/toast-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { AgentSkill } from "@/lib/types";
 
-const SKILL_TYPES = [
-  "Web 开发",
-  "代码执行",
-  "文件处理",
-  "数据分析",
-  "多平台交互",
-  "通讯协作",
-  "其他",
-];
-
 const ICONS = ["📦", "🔧", "🌐", "📊", "⚡", "🤖", "📧", "🔍", "🛠️", "💡", "🎯", "🚀"];
 
 interface Props {
@@ -32,6 +22,16 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
   const { t } = useI18n();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const SKILL_TYPES = [
+    t.create.skillTypeWebDev,
+    t.create.skillTypeCodeExec,
+    t.create.skillTypeFileProc,
+    t.create.skillTypeDataAnalysis,
+    t.create.skillTypeMultiPlatform,
+    t.create.skillTypeCommunication,
+    t.create.skillTypeOther,
+  ];
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");

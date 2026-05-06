@@ -6,6 +6,37 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.6.3] — 2026-05-06
+
+### Changed
+- **Comprehensive i18n fix** — All 14 components with hardcoded Chinese strings now use `useI18n()` hook for full English/Chinese support. Affects: login, register, not-found, error, profile (tabs/header/stats/settings), admin dashboard, guide page, newsletter form, command palette, navbar aria-labels, create-from-upload skill types, and keyboard shortcuts command items
+- **Guide page split** — `guide/page.tsx` converted from server component to `page.tsx` (server, metadata only) + `client.tsx` (client, i18n-aware rendering)
+- **Accessibility: aria-labels** — Navbar search, theme toggle, language switch, mobile menu buttons now have localized `aria-label` attributes
+- **Command palette i18n** — Navigation items and category labels now localized; `getCommandItems()` accepts `t` dictionary parameter
+
+### Files Modified
+- `src/app/login/client.tsx` — i18n for form labels and validation messages
+- `src/app/register/client.tsx` — i18n for form labels and validation messages
+- `src/app/not-found.tsx` — Added `"use client"` + i18n
+- `src/app/error.tsx` — i18n for title/description/retry
+- `src/app/profile/client.tsx` — Tab labels via `useI18n()`
+- `src/components/profile/profile-header.tsx` — Join date, role labels
+- `src/components/profile/stats-dashboard.tsx` — Stat labels
+- `src/components/profile/settings-tab.tsx` — All 32 UI strings
+- `src/app/admin/client.tsx` — All admin UI strings
+- `src/app/guide/page.tsx` — Server component, metadata only
+- `src/app/guide/client.tsx` — **New** — Client component with full i18n guide content
+- `src/components/shared/newsletter-form.tsx` — Error messages, button labels
+- `src/components/shared/command-palette.tsx` — Search placeholder, hints
+- `src/components/layout/navbar.tsx` — 6 aria-labels + SheetTitle
+- `src/components/skills/create-from-upload.tsx` — SKILL_TYPES array now uses i18n
+- `src/hooks/use-keyboard-shortcuts.ts` — `getCommandItems()` accepts `t` param, localized labels
+- `src/lib/i18n/types.ts` — Added `create.skillType*` keys
+- `src/lib/i18n/zh.ts` — Added 7 skill type translations
+- `src/lib/i18n/en.ts` — Added 7 skill type translations
+
+---
+
 ## [v1.6.2] — 2026-05-06
 
 ### Changed

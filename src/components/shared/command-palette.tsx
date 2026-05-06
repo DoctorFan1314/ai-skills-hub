@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ArrowRight, Command } from "lucide-react";
 import { getCommandItems } from "@/hooks/use-keyboard-shortcuts";
+import { useI18n } from "@/contexts/i18n-context";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -12,8 +13,9 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
+  const { t } = useI18n();
 
-  const items = getCommandItems({ push: (url: string) => { router.push(url); handleClose(); } });
+  const items = getCommandItems({ push: (url: string) => { router.push(url); handleClose(); } }, t);
 
   const filtered = query.trim()
     ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
@@ -83,7 +85,7 @@ export function CommandPalette() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索技能、页面或命令..."
+            placeholder={t.commandPalette.searchPlaceholder}
             className="flex-1 h-12 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-sm"
           />
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] text-muted-foreground bg-secondary border border-border rounded">
@@ -92,7 +94,7 @@ export function CommandPalette() {
         </div>
         <div className="max-h-72 overflow-y-auto p-2">
           {flatFiltered.length === 0 ? (
-            <p className="text-center text-muted-foreground text-sm py-8">没有找到匹配项</p>
+            <p className="text-center text-muted-foreground text-sm py-8">{t.commandPalette.noResults}</p>
           ) : (
             Object.entries(grouped).map(([category, items]) => (
               <div key={category}>
@@ -118,8 +120,8 @@ export function CommandPalette() {
           )}
         </div>
         <div className="flex items-center justify-between px-4 py-2 border-t border-border text-xs text-muted-foreground">
-          <span>↑↓ 导航 · Enter 选择 · Esc 关闭</span>
-          <span className="flex items-center gap-1"><Command className="h-3 w-3" />K 打开面板</span>
+          <span>{t.commandPalette.navigationHint}</span>
+          <span className="flex items-center gap-1"><Command className="h-3 w-3" />{t.commandPalette.shortcutHint}</span>
         </div>
       </div>
     </div>

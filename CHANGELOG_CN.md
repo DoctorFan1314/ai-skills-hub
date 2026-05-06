@@ -6,6 +6,37 @@
 
 ---
 
+## [v1.6.3] — 2026-05-06
+
+### 变更
+- **全面 i18n 修复** — 14 个包含硬编码中文字符串的组件全部改用 `useI18n()` 钩子，实现完整中英文支持。涉及：登录、注册、404、错误页、个人中心（标签/头部/统计/设置）、管理后台、新手指南、订阅表单、命令面板、导航栏 aria-labels、创建技能类型、快捷键命令项
+- **新手指南页拆分** — `guide/page.tsx` 从服务器组件拆分为 `page.tsx`（服务器组件，仅 metadata）+ `client.tsx`（客户端组件，i18n 渲染）
+- **无障碍：aria-labels** — 导航栏搜索、主题切换、语言切换、移动端菜单按钮均已添加本地化 `aria-label`
+- **命令面板 i18n** — 导航项和分类标签已本地化；`getCommandItems()` 接受 `t` 字典参数
+
+### 修改文件
+- `src/app/login/client.tsx` — 表单标签和验证消息 i18n
+- `src/app/register/client.tsx` — 表单标签和验证消息 i18n
+- `src/app/not-found.tsx` — 添加 `"use client"` + i18n
+- `src/app/error.tsx` — 标题/描述/重试按钮 i18n
+- `src/app/profile/client.tsx` — 标签页标签使用 `useI18n()`
+- `src/components/profile/profile-header.tsx` — 加入日期、角色标签
+- `src/components/profile/stats-dashboard.tsx` — 统计标签
+- `src/components/profile/settings-tab.tsx` — 全部 32 个 UI 字符串
+- `src/app/admin/client.tsx` — 全部管理后台 UI 字符串
+- `src/app/guide/page.tsx` — 服务器组件，仅保留 metadata
+- `src/app/guide/client.tsx` — **新建** — 客户端组件，完整 i18n 指南内容
+- `src/components/shared/newsletter-form.tsx` — 错误消息、按钮标签
+- `src/components/shared/command-palette.tsx` — 搜索占位符、提示文字
+- `src/components/layout/navbar.tsx` — 6 个 aria-label + SheetTitle
+- `src/components/skills/create-from-upload.tsx` — SKILL_TYPES 数组改用 i18n
+- `src/hooks/use-keyboard-shortcuts.ts` — `getCommandItems()` 接受 `t` 参数，标签本地化
+- `src/lib/i18n/types.ts` — 新增 `create.skillType*` 键
+- `src/lib/i18n/zh.ts` — 新增 7 个技能类型翻译
+- `src/lib/i18n/en.ts` — 新增 7 个技能类型翻译
+
+---
+
 ## [v1.6.2] — 2026-05-06
 
 ### 变更

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
+import { useI18n } from "@/contexts/i18n-context";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { Submission, Comment, UserActivity } from "@/lib/types";
@@ -8,6 +9,7 @@ import { FileText, Heart, Bookmark, MessageSquare } from "lucide-react";
 
 export function StatsDashboard() {
   const { user } = useAuth();
+  const { t } = useI18n();
   if (!user) return null;
 
   const submissionsKey = STORAGE_KEYS.submissions(user.email);
@@ -24,10 +26,10 @@ export function StatsDashboard() {
   };
 
   const stats = [
-    { label: "我的提交", value: getLen(submissionsKey), icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-    { label: "我的点赞", value: getLen(likesKey), icon: Heart, color: "text-red-400", bg: "bg-red-400/10" },
-    { label: "我的收藏", value: getLen(bookmarksKey), icon: Bookmark, color: "text-yellow-400", bg: "bg-yellow-400/10" },
-    { label: "我的评论", value: getLen(commentsKey), icon: MessageSquare, color: "text-purple-400", bg: "bg-purple-400/10" },
+    { label: t.profile.stats.submissions, value: getLen(submissionsKey), icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+    { label: t.profile.stats.likes, value: getLen(likesKey), icon: Heart, color: "text-red-400", bg: "bg-red-400/10" },
+    { label: t.profile.stats.bookmarks, value: getLen(bookmarksKey), icon: Bookmark, color: "text-yellow-400", bg: "bg-yellow-400/10" },
+    { label: t.profile.stats.comments, value: getLen(commentsKey), icon: MessageSquare, color: "text-purple-400", bg: "bg-purple-400/10" },
   ];
 
   return (
