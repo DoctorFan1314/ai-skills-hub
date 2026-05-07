@@ -30,6 +30,9 @@ export function CreateDropdown({ onSelectGithub, onSelectUpload, label }: Create
       <button
         onClick={() => setOpen(!open)}
         onMouseEnter={() => setOpen(true)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={label}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
       >
         <Plus className="h-4 w-4" />
@@ -37,10 +40,12 @@ export function CreateDropdown({ onSelectGithub, onSelectUpload, label }: Create
       </button>
       {open && (
         <div
+          role="menu"
           className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden"
           onMouseLeave={() => setOpen(false)}
         >
           <button
+            role="menuitem"
             onClick={() => { setOpen(false); onSelectGithub(); }}
             className="w-full flex items-start gap-3 px-4 py-3.5 hover:bg-secondary/60 transition-colors text-left"
           >
@@ -52,6 +57,7 @@ export function CreateDropdown({ onSelectGithub, onSelectUpload, label }: Create
           </button>
           <div className="border-t border-border" />
           <button
+            role="menuitem"
             onClick={() => { setOpen(false); onSelectUpload(); }}
             className="w-full flex items-start gap-3 px-4 py-3.5 hover:bg-secondary/60 transition-colors text-left"
           >

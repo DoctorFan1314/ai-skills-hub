@@ -18,6 +18,7 @@ const categoryOptions = categories.map((c) => ({ name: c.name, slug: c.slug }));
 
 export default function SubmitClient() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,6 +52,7 @@ export default function SubmitClient() {
     const errs = validate(fd);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
+    setSubmitting(true);
 
     const submission: Submission = {
       id: crypto.randomUUID(),
@@ -70,6 +72,7 @@ export default function SubmitClient() {
 
     setSubmissions((prev) => [...prev, submission]);
     setSubmitted(true);
+    setSubmitting(false);
     toast(t.submit.savedLocally, "success");
   }
 
@@ -155,8 +158,8 @@ export default function SubmitClient() {
             {errors.usage && <p className="text-xs text-red-400 mt-1">{errors.usage}</p>}
           </div>
         </div>
-        <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-12 text-base">
-          <Send className="h-4 w-4 mr-2" />{t.submit.submitBtn}
+        <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-12 text-base">
+          {submitting ? "..." : <><Send className="h-4 w-4 mr-2" />{t.submit.submitBtn}</>}
         </Button>
       </form>
     </div>

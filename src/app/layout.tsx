@@ -27,24 +27,26 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ai-skills-hub.vercel.app"),
   title: {
-    default: "AI Skills Hub — 高质量LLM技能模板库",
+    default: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
     template: "%s | AI Skills Hub",
   },
-  description: "高质量LLM技能模板，覆盖内容创作、编程开发、数据分析、效率工具、创意写作、思考工作流六大领域。复制即用，去AI味。完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen 等主流平台。",
+  description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install, works with ChatGPT, Claude, Grok, DeepSeek, Qwen, LM Studio, Ollama.",
   icons: { icon: "/icon", apple: "/apple-icon" },
   openGraph: {
-    title: "AI Skills Hub — 高质量LLM技能模板库",
-    description: "高质量LLM技能模板，覆盖内容创作、编程开发、数据分析、效率工具、创意写作、思考工作流六大领域。",
+    title: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
+    description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install.",
     url: "https://ai-skills-hub.vercel.app",
     siteName: "AI Skills Hub",
     type: "website",
-    locale: "zh_CN",
-    alternateLocale: "en_US",
+    locale: "en_US",
+    alternateLocale: "zh_CN",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "AI Skills Hub" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
     description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install, works with ChatGPT, Claude, Grok, DeepSeek, Qwen.",
+    images: ["/og.png"],
   },
   alternates: {
     canonical: "https://ai-skills-hub.vercel.app",
@@ -81,8 +83,11 @@ export default function RootLayout({
             <I18nProvider>
               <AuthProvider>
                 <HtmlLangUpdater />
+                <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm">
+                  Skip to main content
+                </a>
                 <Navbar />
-                <main className="flex-1 relative z-10">{children}</main>
+                <main id="main-content" className="flex-1 relative z-10">{children}</main>
                 <Footer />
                 <Toaster />
                 <CommandPalette />

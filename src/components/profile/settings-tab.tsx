@@ -276,7 +276,7 @@ export function SettingsTab() {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => {
-                  if (deleteConfirmText !== "DELETE") {
+                  if (deleteConfirmText !== "DELETE" && deleteConfirmText !== "删除") {
                     toast(t.settings.deleteConfirmMismatch, "error");
                     return;
                   }

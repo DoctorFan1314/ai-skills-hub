@@ -6,29 +6,35 @@ import { ArrowRight, Download, Star, Copy, Check, Terminal } from "lucide-react"
 import { useState } from "react";
 import type { AgentSkill } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
+import { useI18n } from "@/contexts/i18n-context";
 
 export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
 
   return (
-    <div className="glass-card glass-card-hover p-5 h-full cursor-pointer group flex flex-col relative overflow-hidden">
+    <div className="glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden">
       {skill.trending && (
         <div className="absolute top-3 right-3 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
-            Popular
+            {t.agentSkills.trending}
           </span>
         </div>
       )}
 
       <div className="flex items-start gap-3 mb-3">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-lg">
-          {skill.avatar || skill.name.charAt(0).toUpperCase()}
-        </div>
+        <Link href={`/skills/${skill.id}`} className="shrink-0" aria-label={skill.title}>
+          <div className="h-10 w-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-lg hover:border-primary/40 transition-colors">
+            {skill.avatar || skill.name.charAt(0).toUpperCase()}
+          </div>
+        </Link>
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex items-center gap-2 mb-0.5 pr-20">
-            <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors min-w-0">
-              {skill.name}
-            </h3>
+            <Link href={`/skills/${skill.id}`} className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {skill.name}
+              </h3>
+            </Link>
             {skill.authorBadge && (
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/20 border shrink-0">
                 {skill.authorBadge}
@@ -39,18 +45,21 @@ export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
-        {skill.description}
-      </p>
+      <Link href={`/skills/${skill.id}`} className="block">
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
+          {skill.description}
+        </p>
+      </Link>
 
       <div className="flex flex-wrap gap-1.5 mb-3">
         {skill.tags.slice(0, 3).map((tag) => (
-          <span
+          <Link
             key={tag}
-            className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border"
+            href={`/tags/${encodeURIComponent(tag)}`}
+            className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border hover:text-primary hover:border-primary/30 transition-colors"
           >
             {tag}
-          </span>
+          </Link>
         ))}
       </div>
 
@@ -92,10 +101,6 @@ export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
         <code className="text-xs text-muted-foreground truncate flex-1 font-mono">{skill.installCommand}</code>
         {copied ? <Check className="h-3 w-3 text-green-400 shrink-0" /> : <Copy className="h-3 w-3 text-muted-foreground/60 group-hover/install:text-muted-foreground shrink-0" />}
       </div>
-
-      <Link href={`/skills/${skill.id}`} className="absolute inset-0" aria-label={skill.title}>
-        <span className="sr-only">View {skill.title}</span>
-      </Link>
     </div>
   );
 }

@@ -43,15 +43,15 @@ export default function TagsClient() {
 
       <div className="glass-card p-8 flex flex-wrap items-center justify-center gap-3">
         {filteredTags.length > 0 ? (
-          filteredTags.map((t) => (
+          filteredTags.map((tagItem) => (
             <Link
-              key={t.tag}
-              href={`/tags/${encodeURIComponent(t.tag)}`}
+              key={tagItem.tag}
+              href={`/tags/${encodeURIComponent(tagItem.tag)}`}
               className="inline-block px-3 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors"
-              style={{ fontSize: `${Math.round(0.75 + t.weight * 1.2)}rem` }}
+              style={{ fontSize: `${Math.round(0.75 + tagItem.weight * 1.2)}rem` }}
             >
-              {t.tag}
-              <span className="ml-1 text-xs text-muted-foreground/50">{t.count}</span>
+              {tagItem.tag}
+              <span className="ml-1 text-xs text-muted-foreground/50">{tagItem.count}</span>
             </Link>
           ))
         ) : (

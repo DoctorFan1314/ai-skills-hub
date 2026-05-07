@@ -6,6 +6,65 @@
 
 ---
 
+## [v2.0.4] — 2026-05-07
+
+### 无障碍
+- **Skills 页面添加 Suspense 边界** — `SkillsClient` 使用 `useSearchParams()` 但未包裹 `<Suspense>`，Next.js 16 会报运行时错误；添加 Suspense + 骨架屏 fallback
+- **Skip Navigation Link** — 根布局添加"跳转到主内容"链接（WCAG 2.4.1 Level A），`<main>` 添加 `id="main-content"`
+- **CreateDropdown ARIA** — 触发按钮添加 `aria-expanded`、`aria-haspopup="menu"`、`aria-label`；下拉菜单添加 `role="menu"`，选项添加 `role="menuitem"`
+- **CommentSection 按钮无障碍** — 点赞按钮添加 `aria-label` + `aria-pressed`；编辑/删除按钮添加 `aria-label`
+- **Prompts 筛选按钮添加 `role="radiogroup"`** — 分类、难度、排序三组筛选按钮各包裹在 `role="radiogroup"` 容器中
+- **AgentSkillCard 修复嵌套交互** — 移除覆盖整个卡片的 `<Link>` overlay，改为标题/头像/描述各自独立 `<Link>`，使复制按钮可键盘访问
+- **手写模态框添加 ARIA** — `CreateFromUpload` 和 `CreateFromUploadPrompt` 添加 `role="dialog"`、`aria-modal="true"`、`aria-label`
+
+### 国际化
+- **统一元数据语言** — 根布局 `title`、`description`、`openGraph` 全部改为英文，与 Twitter 卡片一致
+- **硬编码英文字符串 i18n** — AgentSkillCard 的 "Popular" 改用 `t.agentSkills.trending`；Settings 删除确认支持输入"删除"（中文）或"DELETE"（英文）；Footer "Coming soon"、Login "Coming soon" 改用 i18n 键
+- **Footer 键名改用稳定标识** — `footerLinks` 从 `Record<translatedKey, links>` 改为 `Array<{id, title, links}>`，避免语言切换时 `key` 变化导致 DOM 重建
+- **Tags 变量名修复** — `filteredTags.map((t) => ...)` 改为 `(tagItem)`，避免遮蔽 `useI18n()` 的 `t`
+- **新增 i18n 键** — `common.popular`、`agentSkills.trending`、`footer.comingSoon`、`auth.comingSoon`
+
+### 性能优化
+- **MarkdownRenderer 添加 `React.memo`** — 重型 Markdown 解析组件现在用 `memo()` 包裹，避免父组件重渲染时重复解析
+- **动态导入添加 loading fallback** — `CreateFromGithub`、`CreateFromUpload`、`CreateFromUploadPrompt` 的 `dynamic()` 调用添加 spinner loading 回退
+- **glass-card-hover 优化** — `transition: all` 改为 `transition: transform, border-color, box-shadow`，避免对所有属性做过渡
+
+### 用户体验
+- **OG 图片** — 根布局添加 `openGraph.images` 和 `twitter.images`（`/og.png`），社交分享不再空白
+- **统一骨架屏主题令牌** — Prompt 详情 loading 页面的 `bg-white/5` 改为 `bg-secondary`，亮色模式下不再不可见
+- **ScrollToTop 不再从 DOM 移除** — 改用 `opacity-0 pointer-events-none` + CSS 过渡，避免布局跳动和屏幕阅读器找不到按钮
+- **Submit 表单 loading 状态** — 提交按钮在提交中显示 `disabled` + "..."，防止重复提交
+- **AgentSkillCard 标签可交互** — 标签从 `<span>` 改为 `<Link href="/tags/...">`，与 SkillCard 行为一致
+- **Forgot Password tooltip i18n** — title 属性从硬编码 "Coming soon" 改用 i18n 键
+- **Profile Stats 读取修复** — `StatsDashboard` 从 render body 直读 localStorage 改为 `useEffect` + `useState`，避免数据过期
+
+### 性能
+- **glass-card-hover 专项过渡** — 从 `transition: all` 改为仅过渡 `transform, border-color, box-shadow`，减少不必要的重绘
+
+### 修改文件
+- `src/app/skills/page.tsx` — 添加 Suspense 边界 + 骨架屏
+- `src/app/layout.tsx` — Skip nav link、id="main-content"、统一英文元数据、OG 图片
+- `src/app/prompts/client.tsx` — 动态导入 loading fallback、筛选按钮 role=radiogroup
+- `src/app/prompts/[id]/loading.tsx` — 骨架屏令牌统一为 bg-secondary
+- `src/app/skills/client.tsx` — 动态导入 loading fallback
+- `src/app/submit/client.tsx` — 提交按钮 loading 状态
+- `src/app/login/client.tsx` — Forgot password tooltip i18n
+- `src/app/tags/client.tsx` — 变量名 t → tagItem
+- `src/app/globals.css` — glass-card-hover 专项过渡
+- `src/components/skills/create-dropdown.tsx` — ARIA 属性
+- `src/components/skills/create-from-upload.tsx` — modal ARIA
+- `src/components/skills/create-from-upload-prompt.tsx` — modal ARIA
+- `src/components/skill/comment-section.tsx` — 按钮 aria-label + aria-pressed
+- `src/components/agent-skill/agent-skill-card.tsx` — 移除 overlay、标签可交互、i18n
+- `src/components/layout/footer.tsx` — 稳定键名、comingSoon i18n
+- `src/components/shared/scroll-to-top.tsx` — CSS 过渡替代条件渲染
+- `src/components/shared/markdown-renderer.tsx` — React.memo
+- `src/components/profile/settings-tab.tsx` — 删除确认支持"删除"
+- `src/components/profile/stats-dashboard.tsx` — useEffect 读取 localStorage
+- `src/lib/i18n/types.ts` — 新增 popular、trending、comingSoon 键
+- `src/lib/i18n/zh.ts` — 新增中文翻译
+- `src/lib/i18n/en.ts` — 新增英文翻译
+
 ## [v2.0.3] — 2026-05-07
 
 ### 国际化

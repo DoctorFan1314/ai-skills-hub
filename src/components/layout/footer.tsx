@@ -13,28 +13,28 @@ interface FooterLink {
 export function Footer() {
   const { t } = useI18n();
 
-  const footerLinks: Record<string, FooterLink[]> = {
-    [t.common.skills]: [
+  const footerSections = [
+    { id: "skills", title: t.common.skills, links: [
       { label: t.common.skills, href: "/skills" },
       { label: t.common.prompts, href: "/prompts" },
-    ],
-    [t.footer.browse || "Browse"]: [
+    ]},
+    { id: "browse", title: t.footer.browse, links: [
       { label: t.common.categories, href: "/categories" },
       { label: t.common.trending, href: "/trending" },
       { label: t.common.tags, href: "/tags" },
-    ],
-    [t.footer.resources]: [
+    ]},
+    { id: "resources", title: t.footer.resources, links: [
       { label: t.common.guide, href: "/guide" },
       { label: t.common.submit, href: "/submit" },
       { label: t.footer.changelog, href: "#", disabled: true },
       { label: t.footer.api, href: "#", disabled: true },
-    ],
-    [t.footer.community]: [
+    ]},
+    { id: "community", title: t.footer.community, links: [
       { label: t.footer.github, href: "#", disabled: true },
       { label: t.footer.discord, href: "#", disabled: true },
       { label: t.footer.twitter, href: "#", disabled: true },
-    ],
-  };
+    ]},
+  ];
 
   return (
     <footer className="border-t border-border bg-background/60 mt-auto">
@@ -55,14 +55,14 @@ export function Footer() {
               <NewsletterForm />
             </div>
           </div>
-          {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
-              <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
+          {footerSections.map((section) => (
+            <div key={section.id}>
+              <h3 className="text-sm font-medium text-foreground mb-4">{section.title}</h3>
               <ul className="space-y-2.5">
-                {links.map((link) => (
+                {section.links.map((link) => (
                   <li key={link.label}>
                     {link.disabled ? (
-                      <span className="text-sm text-muted-foreground/40 cursor-default" title="Coming soon">{link.label}</span>
+                      <span className="text-sm text-muted-foreground/40 cursor-default" title={t.footer.comingSoon || "Coming soon"}>{link.label}</span>
                     ) : (
                       <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                         {link.label}

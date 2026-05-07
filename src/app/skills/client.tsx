@@ -12,8 +12,8 @@ import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { CreateDropdown } from "@/components/skills/create-dropdown";
 import { useI18n } from "@/contexts/i18n-context";
 
-const CreateFromGithub = dynamic(() => import("@/components/skills/create-from-github").then(m => ({ default: m.CreateFromGithub })), { ssr: false });
-const CreateFromUpload = dynamic(() => import("@/components/skills/create-from-upload").then(m => ({ default: m.CreateFromUpload })), { ssr: false });
+const CreateFromGithub = dynamic(() => import("@/components/skills/create-from-github").then(m => ({ default: m.CreateFromGithub })), { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> });
+const CreateFromUpload = dynamic(() => import("@/components/skills/create-from-upload").then(m => ({ default: m.CreateFromUpload })), { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> });
 
 const PAGE_SIZE = 12;
 

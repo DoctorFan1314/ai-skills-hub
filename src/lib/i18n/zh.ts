@@ -39,6 +39,7 @@ export const zh: Dictionary = {
     navigationMenu: "导航菜单",
     close: "关闭",
     backToTop: "回到顶部",
+    popular: "热门",
   },
   home: {
     heroTitle: "探索强大的 Agent 技能",
@@ -174,6 +175,7 @@ export const zh: Dictionary = {
     collectionDevTools: "开发者工具",
     collectionProductivity: "效率工具",
     collectionDataTools: "数据工具",
+    trending: "热门",
   },
   categories: {
     title: "分类浏览",
@@ -477,6 +479,7 @@ export const zh: Dictionary = {
     oauthComingSoon: "OAuth 登录即将推出，敬请期待！",
     loginWithGoogle: "使用 Google 登录",
     loginWithGithub: "使用 GitHub 登录",
+    comingSoon: "即将推出",
     passwordMinLength: "密码至少需要 8 位字符",
     emailInvalid: "请输入有效的邮箱地址",
     emailExists: "该邮箱已被注册",
@@ -537,6 +540,7 @@ export const zh: Dictionary = {
     emailInvalid: "请输入有效的邮箱地址",
     alreadySubscribed: "该邮箱已订阅",
     subscribeSuccess: "订阅成功！感谢关注",
+    comingSoon: "即将推出",
   },
   create: {
     newSkill: "新建 Skill",

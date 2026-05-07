@@ -8,6 +8,7 @@ export interface Dictionary {
     more: string; all: string; viewAll: string;
     or: string; closeSearch: string; toggleTheme: string; switchLanguage: string;
     openNavigation: string; navigationMenu: string; close: string; backToTop: string;
+    popular: string;
   };
   home: {
     featuredTitle: string; featuredSubtitle: string;
@@ -61,6 +62,7 @@ export interface Dictionary {
     collectionAll: string; collectionCommunity: string;
     collectionDevTools: string; collectionProductivity: string;
     collectionDataTools: string;
+    trending: string;
   };
   categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string;
     nameContent: string; descContent: string;
@@ -180,6 +182,7 @@ export interface Dictionary {
     fillAllFields: string; emailOrPasswordError: string; loginSuccess: string;
     welcomeBack: string; forgotPassword: string;
     oauthComingSoon: string; loginWithGoogle: string; loginWithGithub: string;
+    comingSoon: string;
     passwordMinLength: string; emailInvalid: string; emailExists: string;
     registerSuccess: string; createAccountDesc: string;
     usernamePlaceholder: string; passwordPlaceholder: string;
@@ -206,6 +209,7 @@ export interface Dictionary {
     trademarkDisclaimer: string;
     copyright: string; platforms: string;
     emailRequired: string; emailInvalid: string; alreadySubscribed: string; subscribeSuccess: string;
+    comingSoon: string;
   };
   create: {
     newSkill: string; newPrompt: string;

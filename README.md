@@ -236,6 +236,26 @@ ai-skills-hub/
 | Comment edit/delete | ✅ | Authors can edit and delete their own comments on skill pages |
 | Avatar auto-compression | ✅ | Auto-compresses images >500KB to 128×128 at 60% JPEG in crop dialog |
 | Guide TOC | ✅ | Table of contents with anchor links to all guide sections |
+| Skip navigation link | ✅ | WCAG 2.4.1 Level A — "Skip to main content" link in root layout |
+| OG images | ✅ | `openGraph.images` and `twitter.images` on all pages for social sharing |
+| Unified metadata language | ✅ | Root layout title, description, OG all in English; consistent across all pages |
+| Theme-consistent skeletons | ✅ | All loading skeletons use `bg-secondary` token (works in light and dark mode) |
+| Dynamic import loading spinners | ✅ | Create modals show spinner while loading via `dynamic()` fallback |
+| i18n hardcoded strings fixed | ✅ | AgentSkillCard "Popular", delete confirmation, footer "Coming soon" all i18n |
+| CreateDropdown ARIA | ✅ | `aria-expanded`, `aria-haspopup`, `role="menu"`, `role="menuitem"` |
+| Comment buttons a11y | ✅ | Like button has `aria-label` + `aria-pressed`; edit/delete have `aria-label` |
+| Prompts filter radiogroup | ✅ | Category, difficulty, sort filters wrapped in `role="radiogroup"` containers |
+| AgentSkillCard a11y fix | ✅ | Removed full-card overlay `<Link>`; title, avatar, description are individual `<Link>` elements |
+| Create modal ARIA | ✅ | `CreateFromUpload` and `CreateFromUploadPrompt` have `role="dialog"`, `aria-modal`, `aria-label` |
+| MarkdownRenderer memo | ✅ | `React.memo` wrapper prevents re-parsing on parent re-renders |
+| Submit form loading state | ✅ | Submit button shows disabled + "..." during submission |
+| AgentSkillCard tags interactive | ✅ | Tags are `<Link>` to `/tags/[tag]`, consistent with SkillCard |
+| Footer stable keys | ✅ | Uses stable `id` keys instead of translated strings; no DOM rebuild on language switch |
+| ScrollToTop CSS transition | ✅ | Uses `opacity-0 pointer-events-none` instead of removing from DOM |
+| Profile stats reactive | ✅ | `StatsDashboard` uses `useEffect` + `useState` instead of reading localStorage in render body |
+| Glass card hover optimization | ✅ | `transition: all` changed to specific `transform, border-color, box-shadow` properties |
+| Delete confirmation i18n | ✅ | Accepts both "DELETE" (English) and "删除" (Chinese) for account deletion |
+| Profile page Suspense | ✅ | `ProfileClient` wrapped in `<Suspense>` with skeleton fallback |
 
 ---
 

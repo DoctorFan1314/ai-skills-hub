@@ -6,6 +6,64 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.0.4] — 2026-05-07
+
+### Accessibility
+- **Skills page added Suspense boundary** — `SkillsClient` uses `useSearchParams()` and must be wrapped in `<Suspense>` in Next.js 16; added boundary with skeleton fallback
+- **Skip Navigation Link** — Root layout now includes a “Skip to main content” link (WCAG 2.4.1 Level A); `<main>` now has `id="main-content"`
+- **CreateDropdown ARIA** — Trigger now includes `aria-expanded`, `aria-haspopup="menu"`, and `aria-label`; dropdown menu uses `role="menu"` with `role="menuitem"` items
+- **CommentSection button a11y** — Like button now has `aria-label` and `aria-pressed`; edit/delete buttons now have `aria-label`
+- **Prompts filters radiogroup** — Category, difficulty, and sort groups wrapped in `role="radiogroup"` containers
+- **AgentSkillCard nested interaction fix** — Removed full-card overlay `<Link>` so copy button is keyboard-reachable; title, avatar, and description are now individual `<Link>` elements
+- **Custom modals ARIA** — `CreateFromUpload` and `CreateFromUploadPrompt` now include `role="dialog"`, `aria-modal="true"`, and `aria-label`
+
+### Internationalization
+- **Unified metadata language** — Root layout title, description, and OG metadata now in English, consistent with Twitter card
+- **Hardcoded English strings i18n** — AgentSkillCard “Popular” now uses `t.agentSkills.trending`; settings delete confirmation now accepts “删除” (zh) in addition to “DELETE”; footer/login “Coming soon” now use i18n keys
+- **Footer stable keys** — Footer section keys changed from translated strings to stable `id` values to prevent DOM remounts on language switch
+- **Tags page variable rename** — Loop variable `t` renamed to `tagItem` to avoid shadowing `useI18n()` `t`
+- **New i18n keys** — `common.popular`, `agentSkills.trending`, `footer.comingSoon`, `auth.comingSoon`
+
+### Performance
+- **MarkdownRenderer memoized** — Heavy markdown parser now wrapped with `React.memo` to avoid unnecessary re-parsing
+- **Dynamic import loading fallbacks** — `CreateFromGithub`, `CreateFromUpload`, `CreateFromUploadPrompt` now show spinner placeholders while loading
+- **glass-card-hover transition optimized** — Changed from `transition: all` to explicit `transform, border-color, box-shadow` transitions to reduce repaints
+
+### UX
+- **OG images added** — Root layout now includes `openGraph.images` and `twitter.images` using `/og.png`
+- **Consistent skeleton tokens** — Prompt detail loading skeleton tokens changed from `bg-white/5` to `bg-secondary`
+- **ScrollToTop no longer removed from DOM** — Now uses `opacity-0 pointer-events-none` with CSS transition to avoid layout jump and screen reader issues
+- **Submit form loading state** — Submit button now disabled with “...” while submitting to prevent duplicate submissions
+- **AgentSkillCard tags interactive** — Tags changed from `<span>` to `<Link href="/tags/[tag]">` consistent with SkillCard
+- **Forgot Password tooltip i18n** — Tooltip now uses i18n key instead of hardcoded “Coming soon”
+- **Profile stats reactive** — `StatsDashboard` now reads localStorage in `useEffect` with `useState` to avoid stale render-time reads
+- **Profile page Suspense** — `ProfileClient` now wrapped in `<Suspense>` with skeleton fallback
+
+### Files Modified
+- `src/app/skills/page.tsx` — added `<Suspense>` boundary and skeleton fallback
+- `src/app/layout.tsx` — skip nav link, main-content id, unified English metadata, OG images
+- `src/app/profile/page.tsx` — metadata language updated; wrapped in `<Suspense>` with skeleton fallback
+- `src/app/prompts/client.tsx` — dynamic import loading fallback; filter groups wrapped in `role="radiogroup"`
+- `src/app/prompts/[id]/loading.tsx` — skeleton tokens updated to `bg-secondary`
+- `src/app/skills/client.tsx` — dynamic import loading fallback
+- `src/app/submit/client.tsx` — submit button loading/disabled state
+- `src/app/login/client.tsx` — forgot password tooltip i18n
+- `src/app/tags/client.tsx` — variable renamed to avoid shadowing
+- `src/app/globals.css` — explicit transition properties for glass-card-hover
+- `src/components/skills/create-dropdown.tsx` — ARIA attributes added
+- `src/components/skills/create-from-upload.tsx` — modal ARIA added
+- `src/components/skills/create-from-upload-prompt.tsx` — modal ARIA added
+- `src/components/skill/comment-section.tsx` — button a11y attributes added
+- `src/components/agent-skill/agent-skill-card.tsx` — removed overlay; tags now links; i18n added
+- `src/components/layout/footer.tsx` — stable section keys; comingSoon i18n
+- `src/components/shared/scroll-to-top.tsx` — CSS transition instead of conditional render
+- `src/components/shared/markdown-renderer.tsx` — wrapped in `React.memo`
+- `src/components/profile/settings-tab.tsx` — delete confirmation accepts zh “删除”
+- `src/components/profile/stats-dashboard.tsx` — reactive effect-based localStorage read
+- `src/lib/i18n/types.ts` — added `popular`, `trending`, and `comingSoon` keys
+- `src/lib/i18n/zh.ts` — added corresponding translations
+- `src/lib/i18n/en.ts` — added corresponding translations
+
 ## [v2.0.3] — 2026-05-07
 
 ### Internationalization

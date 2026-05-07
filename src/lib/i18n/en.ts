@@ -39,6 +39,7 @@ export const en: Dictionary = {
     navigationMenu: "Navigation Menu",
     close: "Close",
     backToTop: "Back to top",
+    popular: "Popular",
   },
   home: {
     heroTitle: "Discover Powerful Agent Skills",
@@ -174,6 +175,7 @@ export const en: Dictionary = {
     collectionDevTools: "Dev Tools",
     collectionProductivity: "Productivity",
     collectionDataTools: "Data Tools",
+    trending: "Popular",
   },
   categories: {
     title: "Categories",
@@ -477,6 +479,7 @@ export const en: Dictionary = {
     oauthComingSoon: "OAuth login coming soon!",
     loginWithGoogle: "Sign in with Google",
     loginWithGithub: "Sign in with GitHub",
+    comingSoon: "Coming soon",
     passwordMinLength: "Password must be at least 8 characters",
     emailInvalid: "Please enter a valid email address",
     emailExists: "This email is already registered",
@@ -537,6 +540,7 @@ export const en: Dictionary = {
     emailInvalid: "Please enter a valid email address",
     alreadySubscribed: "This email is already subscribed",
     subscribeSuccess: "Subscribed! Thank you!",
+    comingSoon: "Coming soon",
   },
   create: {
     newSkill: "New Skill",

@@ -255,6 +255,8 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
               <div className="ml-11 flex items-center gap-3">
                 <button
                   onClick={() => handleLike(c.id)}
+                  aria-label={user && c.likedBy?.includes(user.email) ? t.comments.likes : t.common.like}
+                  aria-pressed={!!(user && c.likedBy?.includes(user.email))}
                   className={`flex items-center gap-1 text-xs transition-colors ${
                     user && c.likedBy?.includes(user.email) ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
@@ -266,12 +268,14 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
                   <>
                     <button
                       onClick={() => handleEdit(c.id)}
+                      aria-label={t.common.edit}
                       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Pencil className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(c.id)}
+                      aria-label={t.common.delete}
                       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors"
                     >
                       <Trash2 className="h-3 w-3" />

@@ -235,6 +235,26 @@ ai-skills-hub/
 | 评论编辑/删除 | ✅ | 作者可在技能详情页编辑和删除自己的评论 |
 | 头像自动压缩 | ✅ | 裁剪对话框自动压缩超过 500KB 的图片为 128×128、60% JPEG |
 | 新手指南目录 | ✅ | 目录导航区带锚点链接，可快速跳转到任意章节 |
+| Skip 导航链接 | ✅ | WCAG 2.4.1 Level A — 根布局中"跳转到主内容"链接 |
+| OG 图片 | ✅ | 所有页面添加 `openGraph.images` 和 `twitter.images` 社交分享图片 |
+| 统一元数据语言 | ✅ | 根布局 title、description、OG 全部改为英文，全站一致 |
+| 骨架屏主题一致 | ✅ | 所有 loading 骨架屏统一使用 `bg-secondary` 令牌，亮暗色均可用 |
+| 动态导入加载指示器 | ✅ | 创建模态框 `dynamic()` 加载中显示 spinner |
+| 硬编码字符串 i18n | ✅ | AgentSkillCard "热门"、删除确认、Footer "即将推出" 全部 i18n |
+| CreateDropdown 无障碍 | ✅ | `aria-expanded`、`aria-haspopup`、`role="menu"`、`role="menuitem"` |
+| 评论按钮无障碍 | ✅ | 点赞按钮有 `aria-label` + `aria-pressed`；编辑/删除有 `aria-label` |
+| Prompts 筛选 radiogroup | ✅ | 分类、难度、排序筛选按钮包裹在 `role="radiogroup"` 容器中 |
+| AgentSkillCard 无障碍修复 | ✅ | 移除全卡片 overlay Link；标题、头像、描述各自独立 `<Link>` |
+| 创建模态框 ARIA | ✅ | `CreateFromUpload` 和 `CreateFromUploadPrompt` 有 `role="dialog"`、`aria-modal`、`aria-label` |
+| MarkdownRenderer memo | ✅ | `React.memo` 包裹，避免父组件重渲染时重复解析 |
+| 提交表单 loading 状态 | ✅ | 提交按钮在提交中显示 disabled + "..."，防止重复提交 |
+| 技能卡片标签可交互 | ✅ | 标签改为 `<Link href="/tags/...">`，与 SkillCard 行为一致 |
+| Footer 稳定键名 | ✅ | 使用稳定 `id` 键替代翻译字符串，语言切换不重建 DOM |
+| ScrollToTop CSS 过渡 | ✅ | 使用 `opacity-0 pointer-events-none` 替代从 DOM 移除 |
+| Profile Stats 响应式 | ✅ | `StatsDashboard` 使用 `useEffect` + `useState` 替代 render 中直接读取 |
+| glass-card-hover 优化 | ✅ | `transition: all` 改为仅过渡 `transform, border-color, box-shadow` |
+| 删除确认 i18n | ✅ | 支持输入 "DELETE"（英文）或 "删除"（中文）确认删除 |
+| Profile 页面 Suspense | ✅ | `ProfileClient` 包裹在 `<Suspense>` + 骨架屏 fallback 中 |
 
 ---
 
