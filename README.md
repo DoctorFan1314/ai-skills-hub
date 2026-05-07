@@ -193,6 +193,8 @@ ai-skills-hub/
 | Dark/Light theme | ✅ | System default + manual toggle |
 | SEO | ✅ | Per-page metadata, OG, canonical URLs, sitemap, robots.txt, JSON-LD |
 | Responsive design | ✅ | Mobile-first, Sheet drawer nav |
+| Skill comments | ✅ | Per-skill comments persisted to localStorage |
+| Dynamic LAN access | ✅ | Dev server accessible from any private IP via wildcard `allowedDevOrigins` |
 | Loading skeletons | ✅ | Skeleton screens for skills, detail, categories, trending, tags, profile |
 | Breadcrumb navigation | ✅ | Reusable breadcrumb on detail pages |
 | Native share | ✅ | navigator.share() on mobile, clipboard fallback on desktop |

@@ -68,20 +68,21 @@ export default function AdminClient() {
   }
 
   function handleReview(id: string, status: "approved" | "rejected") {
+    const note = reviewNote[id] || "";
+    // Update localStorage first (read from source, not from state)
+    try {
+      const key = STORAGE_KEYS.submissions(
+        submissions.find((s) => s.id === id)?.authorEmail || ""
+      );
+      const raw = localStorage.getItem(key);
+      const list: Submission[] = raw ? JSON.parse(raw) : [];
+      const updated = list.map((s) => (s.id === id ? { ...s, status, reviewNote: note } : s));
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch { /* ignore */ }
+    // Then update state
     setSubmissions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status, reviewNote: reviewNote[id] || "" } : s))
+      prev.map((s) => (s.id === id ? { ...s, status, reviewNote: note } : s))
     );
-    // Update localStorage
-    const sub = submissions.find((s) => s.id === id);
-    if (sub) {
-      const key = STORAGE_KEYS.submissions(sub.authorEmail);
-      try {
-        const raw = localStorage.getItem(key);
-        const list: Submission[] = raw ? JSON.parse(raw) : [];
-        const updated = list.map((s) => (s.id === id ? { ...s, status, reviewNote: reviewNote[id] || "" } : s));
-        localStorage.setItem(key, JSON.stringify(updated));
-      } catch { /* ignore */ }
-    }
   }
 
   function handleDeleteComment(id: string) {

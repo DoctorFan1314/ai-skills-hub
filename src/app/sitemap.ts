@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { skills } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
 import { categories } from "@/lib/categories";
+import { getAllTags } from "@/lib/tag-utils";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://ai-skills-hub.vercel.app";
@@ -38,5 +39,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...promptPages, ...agentSkillPages, ...categoryPages];
+  const tags = getAllTags();
+  const tagPages = tags.map((t) => ({
+    url: `${base}/tags/${encodeURIComponent(t.tag)}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...promptPages, ...agentSkillPages, ...categoryPages, ...tagPages];
 }

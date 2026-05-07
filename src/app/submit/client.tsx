@@ -61,7 +61,7 @@ export default function SubmitClient() {
       usage: (fd.get("usage") as string).trim(),
       submittedAt: new Date().toISOString(),
       authorEmail: user?.email || "",
-      authorName: user?.username || "匿名用户",
+      authorName: user?.username || t.submit.anonymousUser,
       status: "pending",
       version: "v1.0",
     };

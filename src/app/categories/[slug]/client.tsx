@@ -8,6 +8,7 @@ import { SkillCard } from "@/components/skill/skill-card";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { useI18n } from "@/contexts/i18n-context";
+import type { Dictionary } from "@/lib/i18n/types";
 
 const categoryToAgentCategory: Record<string, string[]> = {
   content: ["通讯协作", "文件处理"],
@@ -29,15 +30,15 @@ export default function CategoryDetailClient({ slug }: { slug: string }) {
   if (!category) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-        <p className="text-muted-foreground text-lg">分类未找到</p>
-        <Link href="/categories" className="text-primary mt-4 inline-block hover:underline">返回分类浏览</Link>
+        <p className="text-muted-foreground text-lg">{t.categories.catNotFound}</p>
+        <Link href="/categories" className="text-primary mt-4 inline-block hover:underline">{t.categories.catBackToBrowse}</Link>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-      <Breadcrumb items={[{ label: "Categories", href: "/categories" }, { label: category.name }]} />
+      <Breadcrumb items={[{ label: t.common.categories, href: "/categories" }, { label: category.name }]} />
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-3">
           <span className="text-4xl">{category.icon}</span>
@@ -46,7 +47,7 @@ export default function CategoryDetailClient({ slug }: { slug: string }) {
             <p className="text-muted-foreground">{category.description}</p>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground/60">{catSkills.length} Prompt 模板 · {catAgentSkills.length} Agent 技能</p>
+        <p className="text-sm text-muted-foreground/60">{catSkills.length} {t.categories.catPromptTemplates} · {catAgentSkills.length} {t.categories.catAgentSkills}</p>
       </div>
 
       {catAgentSkills.length > 0 && (
@@ -59,7 +60,7 @@ export default function CategoryDetailClient({ slug }: { slug: string }) {
       )}
 
       {catSkills.length === 0 && catAgentSkills.length === 0 ? (
-        <div className="text-center py-20"><p className="text-muted-foreground">该分类暂无内容</p></div>
+        <div className="text-center py-20"><p className="text-muted-foreground">{t.categories.catNoContent}</p></div>
       ) : catSkills.length > 0 ? (
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-4">{t.home.tabPrompt}</h2>

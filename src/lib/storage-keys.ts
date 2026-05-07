@@ -12,6 +12,8 @@ export const STORAGE_KEYS = {
   submissions: (email: string) => `ai-skills-hub-submissions-${email}`,
   comments: (email: string) => `ai-skills-hub-comments-${email}`,
   activity: (email: string) => `ai-skills-hub-activity-${email}`,
+  // Agent skill comments (per-skill)
+  skillComments: (skillId: string) => `ai-skills-hub-skill-comments-${skillId}`,
   // Published agent skills
   publishedSkills: "ai-skills-hub-published-skills",
   // Published prompt templates

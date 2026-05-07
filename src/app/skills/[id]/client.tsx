@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getAgentSkillById } from "@/lib/mock-agent-skills";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { useI18n } from "@/contexts/i18n-context";
 import { useToast } from "@/contexts/toast-context";
+import { useAuth } from "@/contexts/auth-context";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import ts from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
 import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
@@ -236,44 +238,69 @@ function MarkdownRenderer({ content }: { content: string }) {
   return <div>{elements}</div>;
 }
 
-// Mock comments
-const mockComments = [
+// Mock default comments
+const defaultComments = [
   { id: "1", user: "Alice", avatar: "A", content: "非常好用的技能！帮我解决了搜索多个平台的需求，安装也很简单。", rating: 5, date: "2026-04-28", likes: 12, replyTo: null as string | null },
   { id: "2", user: "Bob", avatar: "B", content: "帮我解决了大问题，搜索功能很强，推荐给所有需要多平台数据的开发者。", rating: 4, date: "2026-04-25", likes: 8, replyTo: null as string | null },
   { id: "3", user: "Charlie", avatar: "C", content: "安装简单，文档清晰，社区维护活跃。期待更多平台的支持。", rating: 5, date: "2026-04-20", likes: 5, replyTo: null as string | null },
 ];
 
+type LocalComment = typeof defaultComments[number];
+
 export default function AgentSkillDetailClient({ id }: { id: string }) {
   const skill = getAgentSkillById(id);
   const { t } = useI18n();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"intro" | "files" | "feedback">("intro");
   const [activeFile, setActiveFile] = useState<string>("");
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentRating, setCommentRating] = useState(5);
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
-  const [localComments, setLocalComments] = useState(mockComments);
+  const [localComments, setLocalComments] = useState<LocalComment[]>(defaultComments);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToUser, setReplyToUser] = useState<string | null>(null);
 
+  // Load persisted comments from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.skillComments(id));
+      if (raw) {
+        const saved: LocalComment[] = JSON.parse(raw);
+        setLocalComments([...saved, ...defaultComments]);
+      }
+    } catch { /* ignore */ }
+  }, [id]);
+
   function handleSubmitComment() {
     if (!commentText.trim()) return;
-    const newComment = {
+    const newComment: LocalComment = {
       id: `local-${Date.now()}`,
-      user: "User",
-      avatar: "U",
+      user: user?.username || "User",
+      avatar: user ? user.username.charAt(0).toUpperCase() : "U",
       content: commentText.trim(),
       rating: commentRating,
       date: new Date().toISOString().slice(0, 10),
       likes: 0,
       replyTo: replyToUser,
     };
-    setLocalComments((prev) => [newComment, ...prev]);
+
+    const updated = [newComment, ...localComments];
+    setLocalComments(updated);
     setCommentText("");
     setCommentRating(5);
     setReplyTo(null);
     setReplyToUser(null);
+
+    // Persist user-submitted comments to localStorage
+    try {
+      const existing = localStorage.getItem(STORAGE_KEYS.skillComments(id));
+      const saved: LocalComment[] = existing ? JSON.parse(existing) : [];
+      saved.unshift(newComment);
+      localStorage.setItem(STORAGE_KEYS.skillComments(id), JSON.stringify(saved));
+    } catch { /* ignore */ }
+
     toast(t.comments.title, "success");
   }
 

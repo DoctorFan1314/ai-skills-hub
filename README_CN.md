@@ -192,6 +192,8 @@ ai-skills-hub/
 | 暗色/亮色主题 | ✅ | 系统默认 + 手动切换 |
 | SEO | ✅ | 页面级 metadata、OG、canonical URL、sitemap、robots.txt、JSON-LD |
 | 响应式设计 | ✅ | 移动端优先、Sheet 抽屉导航 |
+| 技能评论持久化 | ✅ | 每个技能的评论独立持久化到 localStorage |
+| 动态局域网访问 | ✅ | 开发服务器通过通配符 `allowedDevOrigins` 自动支持任意私有 IP |
 | 加载骨架屏 | ✅ | 技能列表、详情、分类、排行榜、标签、个人中心骨架屏 |
 | 面包屑导航 | ✅ | 可复用面包屑组件，详情页使用 |
 | 移动端原生分享 | ✅ | 移动端 navigator.share()，桌面端剪贴板回退 |

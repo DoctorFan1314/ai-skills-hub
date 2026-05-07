@@ -255,14 +255,14 @@ export default function SkillDetailClient({ id }: { id: string }) {
       <div className="glass-card p-6 mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4">{t.promptDetail.models}（{t.promptDetail.modelsYear}）</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[600px]" aria-label="推荐模型列表">
-            <caption className="sr-only">推荐使用的 AI 模型及其适用场景</caption>
+          <table className="w-full text-sm min-w-[600px]" aria-label={t.promptDetail.modelsTableLabel}>
+            <caption className="sr-only">{t.promptDetail.modelsTableCaption}</caption>
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 pr-4 text-muted-foreground font-medium">模型</th>
-                <th className="text-left py-3 pr-4 text-muted-foreground font-medium">优势</th>
-                <th className="text-left py-3 pr-4 text-muted-foreground font-medium">适用场景</th>
-                <th className="text-left py-3 text-muted-foreground font-medium">适用人群</th>
+                <th className="text-left py-3 pr-4 text-muted-foreground font-medium">{t.promptDetail.modelName}</th>
+                <th className="text-left py-3 pr-4 text-muted-foreground font-medium">{t.promptDetail.modelStrengths}</th>
+                <th className="text-left py-3 pr-4 text-muted-foreground font-medium">{t.promptDetail.modelUseCase}</th>
+                <th className="text-left py-3 text-muted-foreground font-medium">{t.promptDetail.modelAudience}</th>
               </tr>
             </thead>
             <tbody>

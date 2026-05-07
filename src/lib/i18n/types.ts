@@ -36,6 +36,8 @@ export interface Dictionary {
     output: string; usage: string; onlinePlatform: string; localModel: string;
     models: string; modelsYear: string; advancedTips: string; versionHistory: string;
     relatedSkills: string; notFound: string; temperature: string; effectNote: string;
+    modelsTableLabel: string; modelsTableCaption: string;
+    modelName: string; modelStrengths: string; modelUseCase: string; modelAudience: string;
   };
   agentSkills: {
     title: string; subtitle: string; filterAll: string; sortBy: string;
@@ -75,6 +77,7 @@ export interface Dictionary {
     agentNameFileProc: string; agentDescFileProc: string;
     agentNameComm: string; agentDescComm: string;
     agentNameDataAnalysis: string; agentDescDataAnalysis: string;
+    catNotFound: string; catBackToBrowse: string; catPromptTemplates: string; catAgentSkills: string; catNoContent: string;
   };
   trending: {
     title: string; subtitle: string; hot: string; newest: string;
@@ -129,6 +132,7 @@ export interface Dictionary {
     recordDeleted: string; loginToView: string; backToSubmit: string;
     viewHistoryDesc: string; noSubmissionsYet: string; goToSubmit: string;
     reviewNoteLabel: string;
+    anonymousUser: string;
   };
   guide: {
     title: string; subtitle: string;
@@ -240,6 +244,8 @@ export interface Dictionary {
     skillTypeWebDev: string; skillTypeCodeExec: string; skillTypeFileProc: string;
     skillTypeDataAnalysis: string; skillTypeMultiPlatform: string;
     skillTypeCommunication: string; skillTypeOther: string;
+    premiumSkill: string; premiumDesc: string; premiumUnlock: string;
+    unlockView: string; loginUnlock: string; registerFree: string;
   };
   admin: {
     title: string; pendingSubmissions: string; userManage: string; skillAnalytics: string;

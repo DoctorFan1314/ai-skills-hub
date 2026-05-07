@@ -6,6 +6,37 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.6.7] — 2026-05-07
+
+### Changed
+- **Dynamic `allowedDevOrigins`** — Replaced hardcoded `192.168.31.125` with wildcard patterns (`http://192.168.*`, `http://10.*`, `http://172.*`) covering all RFC 1918 private IP ranges; any LAN IP works automatically
+- **Agent skill comments persisted** — Comments on skill detail pages now persist to `localStorage` (`skillComments` key); reload no longer loses user comments
+- **MyCommentsTab link fix** — Comment links now correctly detect whether the item is an Agent Skill or Prompt Template and link to the appropriate detail page
+- **Sitemap tags added** — `/tags/[tag]` routes now included in sitemap generation via `getAllTags()`
+- **Admin stale closure fix** — `handleReview` reads from `localStorage` before updating state to avoid stale closure referencing old submissions
+- **Premium gate i18n** — `premium-gate.tsx` fully i18n'd (premium skill label, description, unlock/register buttons)
+- **Category detail i18n** — `categories/[slug]/client.tsx` all hardcoded Chinese strings replaced with i18n keys
+- **Prompt model table i18n** — Model table headers (name, strengths, use case, audience) and ARIA labels now localized
+- **Submit anonymous user i18n** — Fallback "匿名用户" replaced with `t.submit.anonymousUser`
+- **Sitemap updated** — `v1.6.7` entry added to changelog
+
+### Files Modified
+- `next.config.ts` — Wildcard `allowedDevOrigins` for all private IP ranges
+- `src/lib/storage-keys.ts` — Added `skillComments` key for per-skill comment persistence
+- `src/app/skills/[id]/client.tsx` — Comments load from and persist to `localStorage`; uses `useAuth` for user info
+- `src/components/profile/my-comments-tab.tsx` — Links detect Agent vs Prompt; imports `getAgentSkillById`
+- `src/app/sitemap.ts` — Imports `getAllTags()`; generates tag page entries
+- `src/app/admin/client.tsx` — `handleReview` reads localStorage before state update
+- `src/components/shared/premium-gate.tsx` — Full i18n via `useI18n()`
+- `src/app/categories/[slug]/client.tsx` — All UI strings use i18n keys
+- `src/app/prompts/[id]/client.tsx` — Model table headers and ARIA labels i18n'd
+- `src/app/submit/client.tsx` — Anonymous user fallback i18n'd
+- `src/lib/i18n/types.ts` — Added 12 new keys (`premiumSkill`, `premiumDesc`, `catNotFound`, `modelsTableLabel`, etc.)
+- `src/lib/i18n/zh.ts` — Added 12 new Chinese translations
+- `src/lib/i18n/en.ts` — Added 12 new English translations
+
+---
+
 ## [v1.6.6] — 2026-05-07
 
 ### Changed

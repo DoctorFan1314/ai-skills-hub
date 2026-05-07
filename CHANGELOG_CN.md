@@ -6,6 +6,36 @@
 
 ---
 
+## [v1.6.7] — 2026-05-07
+
+### 变更
+- **allowedDevOrigins 动态化** — 硬编码 `192.168.31.125` 替换为通配符模式（`http://192.168.*`、`http://10.*`、`http://172.*`），覆盖所有 RFC 1918 私有网段；任意局域网 IP 自动生效
+- **Agent 技能评论持久化** — 技能详情页评论写入 `localStorage`（`skillComments` 键），刷新不再丢失
+- **我的评论链接修复** — 评论链接现在正确区分 Agent 技能和 Prompt 模板，链接到对应详情页
+- **Sitemap 补全标签页** — `/tags/[tag]` 路由现在纳入 sitemap 生成
+- **Admin stale closure 修复** — `handleReview` 先读 localStorage 再更新 state，避免引用过期数据
+- **Premium Gate i18n** — `premium-gate.tsx` 全面 i18n（高级技能标签、描述、解锁/注册按钮）
+- **分类详情页 i18n** — `categories/[slug]/client.tsx` 所有硬编码中文替换为 i18n 键
+- **Prompt 模型表格 i18n** — 表头（模型、优势、适用场景、适用人群）和 ARIA 标签本地化
+- **提交页匿名用户 i18n** — 回退值 "匿名用户" 替换为 `t.submit.anonymousUser`
+
+### 修改文件
+- `next.config.ts` — 通配符 `allowedDevOrigins` 覆盖所有私有网段
+- `src/lib/storage-keys.ts` — 新增 `skillComments` 键用于评论持久化
+- `src/app/skills/[id]/client.tsx` — 评论从 localStorage 读取和保存；使用 `useAuth` 获取用户信息
+- `src/components/profile/my-comments-tab.tsx` — 链接正确区分 Agent 和 Prompt
+- `src/app/sitemap.ts` — 导入 `getAllTags()`；生成标签页条目
+- `src/app/admin/client.tsx` — `handleReview` 先读 localStorage 再更新 state
+- `src/components/shared/premium-gate.tsx` — 通过 `useI18n()` 实现完整 i18n
+- `src/app/categories/[slug]/client.tsx` — 所有 UI 字符串改用 i18n 键
+- `src/app/prompts/[id]/client.tsx` — 模型表头和 ARIA 标签 i18n
+- `src/app/submit/client.tsx` — 匿名用户回退值 i18n
+- `src/lib/i18n/types.ts` — 新增 12 个键（`premiumSkill`、`premiumDesc`、`catNotFound`、`modelsTableLabel` 等）
+- `src/lib/i18n/zh.ts` — 新增 12 个中文翻译
+- `src/lib/i18n/en.ts` — 新增 12 个英文翻译
+
+---
+
 ## [v1.6.6] — 2026-05-07
 
 ### 变更
