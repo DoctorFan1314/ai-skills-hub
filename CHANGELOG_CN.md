@@ -6,7 +6,7 @@
 
 ---
 
-## [v2.0.0] — 2026-05-07
+## [v2.0.1] — 2026-05-07
 
 ### 性能优化
 - **粒子背景仅在首页运行** — `ParticleBackground` 从根布局移至 `page.tsx`；其他页面不再运行 canvas 动画，节省 CPU/GPU
@@ -20,14 +20,21 @@
 - **搜索输入框标签** — 技能和模板搜索输入框现在有 `aria-label` 匹配 placeholder 文本
 - **创建模态框 Dialog 模式** — GitHub 导入和上传模态框现在有 `role="dialog"`、`aria-modal="true"`、`aria-label`
 - **创建模态框 Escape 关闭** — 两个模态框现在都支持按 Escape 键关闭
+- **技能排序按钮 radiogroup** — 排序按钮现在包裹在 `role="radiogroup"` 中，带 `aria-label`
 
 ### 国际化
 - **动态 `<html lang>` 属性** — 新增 `HtmlLangUpdater` 组件，在语言切换时更新 `document.documentElement.lang`；不再固定为 `zh-CN`
 - **分类详情页 i18n 修复** — `categoryToAgentCategory` 映射现在使用英文 `categorySlug` 而非硬编码中文分类名
 - **排行榜"加载更多"括号修复** — 中文 `（）` 在三个列表页统一替换为 ASCII `()`，跨语言显示更一致
+- **GitHub 导入分类修复** — 默认分类从硬编码中文 "Skills 管理" 改为 `t.create.skillTypeOther`
+
+### 新功能
+- **评论编辑/删除** — 作者现在可以在技能详情页编辑和删除自己的评论
+- **头像自动压缩** — 头像裁剪对话框现在对超过 500KB 的图片自动压缩为 128x128、60% JPEG 质量，避免超出 localStorage 限制
+- **新手指南目录** — 新增目录导航区，包含 7 个章节的锚点链接；每个章节带 `id` 和 `scroll-mt-20` 实现平滑滚动
 
 ### 修复
-- **ID 生成改用 `crypto.randomUUID()`** — 评论、提交和 Toast 现在使用 UUID 而非 `Date.now().toString(36)`，消除碰撞风险
+- **ID 生成改用 `crypto.randomUUID()`** — 评论、提交、Toast 和自定义技能现在使用 UUID 而非 `Date.now().toString(36)`，消除碰撞风险
 
 ### 修改文件
 - `src/app/layout.tsx` — 移除 `ParticleBackground`；新增 `HtmlLangUpdater`
@@ -37,12 +44,15 @@
 - `src/app/skills/client.tsx` — `filtered` 用 `useMemo` 包裹；搜索框添加 `aria-label`；括号修复
 - `src/app/prompts/client.tsx` — `filtered` 用 `useMemo` 包裹；搜索框添加 `aria-label`；括号修复
 - `src/app/trending/client.tsx` — `allItems`、`filtered`、`sorted`、`list` 全部添加 `useMemo`；括号修复
-- `src/components/skill/comment-section.tsx` — 星级评分添加 `role="radio"`、`aria-checked`、`aria-label`；ID 改用 `crypto.randomUUID()`
-- `src/components/skills/create-from-github.tsx` — 添加 `role="dialog"`、`aria-modal`、`aria-label`；Escape 键关闭
-- `src/components/skills/create-from-upload.tsx` — Escape 键关闭
+- `src/components/skill/comment-section.tsx` — 星级评分添加 `role="radio"`、`aria-checked`、`aria-label`；ID 改用 `crypto.randomUUID()`；作者可编辑/删除评论
+- `src/components/skills/create-from-github.tsx` — 添加 `role="dialog"`、`aria-modal`、`aria-label`；Escape 键关闭；默认分类使用 i18n 键
+- `src/components/skills/create-from-upload.tsx` — Escape 键关闭；ID 改用 `crypto.randomUUID()`
 - `src/app/categories/[slug]/client.tsx` — `categoryToAgentCategory` 映射改为英文 `categorySlug`
 - `src/contexts/toast-context.tsx` — Toast ID 改用 `crypto.randomUUID()`
 - `src/app/submit/client.tsx` — 提交 ID 改用 `crypto.randomUUID()`
+- `src/app/guide/client.tsx` — 新增目录导航带锚点链接；所有章节添加 `id` + `scroll-mt-20`
+- `src/components/profile/avatar-crop-dialog.tsx` — 超过 500KB 的头像自动压缩为 128x128、60% JPEG 质量
+- `src/app/skills/client.tsx` — 排序按钮包裹 `role="radiogroup"` 加 `aria-label`
 
 ## [v1.9.0] — 2026-05-07
 

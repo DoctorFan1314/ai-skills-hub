@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [v2.0.0] — 2026-05-07
+## [v2.0.1] — 2026-05-07
 
 ### Performance
 - **Particle background scoped to homepage only** — `ParticleBackground` moved from root layout to `page.tsx`; other pages no longer run the canvas animation, saving CPU/GPU
@@ -20,14 +20,21 @@ All notable changes to this project will be documented in this file.
 - **Search input labels** — Skills and Prompts search inputs now have `aria-label` matching their placeholder text
 - **Create modals dialog pattern** — GitHub import and Upload modals now have `role="dialog"`, `aria-modal="true"`, `aria-label`
 - **Create modals Escape key** — Both modals now close on Escape key press via `useEffect` keydown listener
+- **Skills sort buttons radiogroup** — Sort buttons now wrapped in `role="radiogroup"` with `aria-label`
 
 ### Internationalization
 - **Dynamic `<html lang>` attribute** — New `HtmlLangUpdater` component updates `document.documentElement.lang` when language switches; no longer stuck on `zh-CN`
 - **Category detail page i18n fix** — `categoryToAgentCategory` mapping now uses `categorySlug` (English) instead of hardcoded Chinese category names
 - **Trending "load more" parentheses** — Chinese `（）` replaced with ASCII `()` in all three list pages for consistent cross-locale display
+- **GitHub import category fix** — Default category changed from hardcoded Chinese "Skills 管理" to `t.create.skillTypeOther`
+
+### Features
+- **Comment edit/delete** — Authors can now edit and delete their own comments on skill detail pages
+- **Avatar auto-compression** — Avatar crop dialog now auto-compresses images >500KB to 128x128 at 60% JPEG quality to stay within localStorage limits
+- **Guide page table of contents** — New TOC nav section with anchor links to all 7 guide sections; each section has `id` and `scroll-mt-20` for smooth scrolling
 
 ### Bug Fixes
-- **ID generation uses `crypto.randomUUID()`** — Comments, submissions, and toasts now use UUID instead of `Date.now().toString(36)`, eliminating collision risk
+- **ID generation uses `crypto.randomUUID()`** — Comments, submissions, toasts, and custom skills now use UUID instead of `Date.now().toString(36)`, eliminating collision risk
 
 ### Files Modified
 - `src/app/layout.tsx` — Removed `ParticleBackground` import; added `HtmlLangUpdater`
@@ -37,12 +44,15 @@ All notable changes to this project will be documented in this file.
 - `src/app/skills/client.tsx` — `filtered` now wrapped in `useMemo`; search input has `aria-label`; parentheses fix
 - `src/app/prompts/client.tsx` — `filtered` now wrapped in `useMemo`; search input has `aria-label`; parentheses fix
 - `src/app/trending/client.tsx` — Added `useMemo` for `allItems`, `filtered`, `sorted`, `list`; parentheses fix
-- `src/components/skill/comment-section.tsx` — Star rating has `role="radio"`, `aria-checked`, `aria-label`; ID uses `crypto.randomUUID()`
-- `src/components/skills/create-from-github.tsx` — Added `role="dialog"`, `aria-modal`, `aria-label`; Escape key closes modal
-- `src/components/skills/create-from-upload.tsx` — Escape key closes modal
+- `src/components/skill/comment-section.tsx` — Star rating has `role="radio"`, `aria-checked`, `aria-label`; ID uses `crypto.randomUUID()`; added edit/delete for comment authors
+- `src/components/skills/create-from-github.tsx` — Added `role="dialog"`, `aria-modal`, `aria-label`; Escape key closes modal; default category uses i18n key
+- `src/components/skills/create-from-upload.tsx` — Escape key closes modal; ID uses `crypto.randomUUID()`
 - `src/app/categories/[slug]/client.tsx` — `categoryToAgentCategory` now maps to English `categorySlug` values
 - `src/contexts/toast-context.tsx` — Toast ID uses `crypto.randomUUID()`
 - `src/app/submit/client.tsx` — Submission ID uses `crypto.randomUUID()`
+- `src/app/guide/client.tsx` — Added table of contents with anchor links; all sections have `id` + `scroll-mt-20`
+- `src/components/profile/avatar-crop-dialog.tsx` — Auto-compresses avatars >500KB to 128x128 at 60% JPEG quality
+- `src/app/skills/client.tsx` — Sort buttons wrapped in `role="radiogroup"` with `aria-label`
 
 ## [v1.9.0] — 2026-05-07
 
