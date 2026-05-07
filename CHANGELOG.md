@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.6.6] — 2026-05-07
+
+### Changed
+- **Dev cross-origin fix** — Added `allowedDevOrigins: ['192.168.31.125']` to `next.config.ts` to allow LAN access in development
+- **Icon picker layout fix** — Custom skill creation icon picker no longer overlaps; changed from `absolute` to normal flow positioning
+- **Command palette ARIA** — Added `role="listbox"`, `role="option"`, `aria-selected`, `aria-activedescendant`, `role="combobox"`, `aria-expanded` for full screen reader support
+- **Category i18n** — Category names and descriptions (6 Prompt categories + 8 Agent Skill categories) moved from hardcoded Chinese in data files to i18n translation keys
+
+### Files Modified
+- `next.config.ts` — Added `allowedDevOrigins`
+- `src/components/skills/create-from-upload.tsx` — Icon picker changed from absolute to flow layout
+- `src/components/shared/command-palette.tsx` — Full ARIA attributes for listbox/option/combobox
+- `src/components/home/category-cards.tsx` — Uses `getPromptCategoryI18n()` and `getAgentCategoryI18n()` factory functions
+- `src/lib/i18n/types.ts` — Added 22 category i18n keys
+- `src/lib/i18n/zh.ts` — Added 22 category translations
+- `src/lib/i18n/en.ts` — Added 22 category translations
+
+---
+
 ## [v1.6.5] — 2026-05-07
 
 ### Changed

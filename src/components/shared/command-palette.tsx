@@ -86,24 +86,31 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.commandPalette.searchPlaceholder}
+            role="combobox"
+            aria-expanded={true}
+            aria-controls="cmd-listbox"
+            aria-activedescendant={flatFiltered.length > 0 ? `cmd-${selectedIdx}` : undefined}
             className="flex-1 h-12 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-sm"
           />
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] text-muted-foreground bg-secondary border border-border rounded">
             ESC
           </kbd>
         </div>
-        <div className="max-h-72 overflow-y-auto p-2">
+        <div id="cmd-listbox" role="listbox" aria-label={t.commandPalette.searchPlaceholder} className="max-h-72 overflow-y-auto p-2">
           {flatFiltered.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">{t.commandPalette.noResults}</p>
           ) : (
             Object.entries(grouped).map(([category, items]) => (
-              <div key={category}>
+              <div key={category} role="group" aria-label={category}>
                 <p className="text-xs text-muted-foreground/60 px-3 py-1.5 uppercase tracking-wider">{category}</p>
                 {items.map((item) => {
                   const idx = flatFiltered.indexOf(item);
                   return (
                     <button
                       key={`${category}-${item.label}`}
+                      id={`cmd-${idx}`}
+                      role="option"
+                      aria-selected={idx === selectedIdx}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors text-left ${
                         idx === selectedIdx ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
                       }`}

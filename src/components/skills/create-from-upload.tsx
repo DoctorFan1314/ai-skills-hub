@@ -209,7 +209,7 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
 
             <div>
               <label className="text-sm text-foreground mb-1.5 block">{t.create.icon}</label>
-              <div className="relative inline-block">
+              <div>
                 <button
                   type="button"
                   onClick={() => setShowIconPicker(!showIconPicker)}
@@ -219,7 +219,7 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
                   <span className="text-xs text-muted-foreground">{t.create.changeIcon}</span>
                 </button>
                 {showIconPicker && (
-                  <div className="absolute top-full left-0 mt-2 p-3 rounded-lg border border-border bg-card shadow-xl z-10 grid grid-cols-6 gap-2">
+                  <div className="mt-2 p-3 rounded-lg border border-border bg-card shadow-xl grid grid-cols-6 gap-2">
                     {ICONS.map((ic) => (
                       <button
                         key={ic}

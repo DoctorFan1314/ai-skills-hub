@@ -6,6 +6,25 @@
 
 ---
 
+## [v1.6.6] — 2026-05-07
+
+### 变更
+- **开发跨域修复** — `next.config.ts` 添加 `allowedDevOrigins: ['192.168.31.125']`，允许局域网访问开发服务器
+- **图标选择器布局修复** — 自定义创建技能的图标选择器不再重叠，从 `absolute` 定位改为正常文档流
+- **命令面板 ARIA** — 添加 `role="listbox"`、`role="option"`、`aria-selected`、`aria-activedescendant`、`role="combobox"`、`aria-expanded`，完整屏幕阅读器支持
+- **分类数据 i18n** — 分类名称和描述（6 个 Prompt 分类 + 8 个 Agent 技能分类）从数据文件硬编码中文移至 i18n 翻译键
+
+### 修改文件
+- `next.config.ts` — 添加 `allowedDevOrigins`
+- `src/components/skills/create-from-upload.tsx` — 图标选择器从 absolute 改为文档流布局
+- `src/components/shared/command-palette.tsx` — listbox/option/combobox 完整 ARIA 属性
+- `src/components/home/category-cards.tsx` — 使用 `getPromptCategoryI18n()` 和 `getAgentCategoryI18n()` 工厂函数
+- `src/lib/i18n/types.ts` — 新增 22 个分类 i18n 键
+- `src/lib/i18n/zh.ts` — 新增 22 个分类翻译
+- `src/lib/i18n/en.ts` — 新增 22 个分类翻译
+
+---
+
 ## [v1.6.5] — 2026-05-07
 
 ### 变更

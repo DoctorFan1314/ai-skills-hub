@@ -60,7 +60,22 @@ export interface Dictionary {
     collectionDevTools: string; collectionProductivity: string;
     collectionDataTools: string;
   };
-  categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string; };
+  categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string;
+    nameContent: string; descContent: string;
+    nameCoding: string; descCoding: string;
+    nameThinking: string; descThinking: string;
+    nameData: string; descData: string;
+    nameProductivity: string; descProductivity: string;
+    nameCreative: string; descCreative: string;
+    agentNameSkillsMgmt: string; agentDescSkillsMgmt: string;
+    agentNameWebDev: string; agentDescWebDev: string;
+    agentNameWebSearch: string; agentDescWebSearch: string;
+    agentNameMultiPlatform: string; agentDescMultiPlatform: string;
+    agentNameCodeExec: string; agentDescCodeExec: string;
+    agentNameFileProc: string; agentDescFileProc: string;
+    agentNameComm: string; agentDescComm: string;
+    agentNameDataAnalysis: string; agentDescDataAnalysis: string;
+  };
   trending: {
     title: string; subtitle: string; hot: string; newest: string;
     featured: string; mostLiked: string; gold: string; silver: string; bronze: string;
