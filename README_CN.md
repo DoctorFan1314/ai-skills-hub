@@ -344,6 +344,30 @@ ai-skills-hub/
 | 用户头像优化 | ✅ | `<img>` → Next.js `<Image>` 组件 |
 | 下拉菜单焦点样式 | ✅ | 移除 `outline-none`，恢复 focus-visible |
 | 星级评分键盘焦点 | ✅ | `.star-rating-btn:focus-visible` CSS 规则 |
+| 登录/注册返回 URL | ✅ | 登录/注册后自动跳转回原始页面 |
+| 技能详情 Tab 键盘导航 | ✅ | ArrowLeft/Right/Home/End 键切换 Tab |
+| 管理面板 ARIA Tab | ✅ | 完整 ARIA tab 模式 + 键盘导航 |
+| 提交分类 radio 语义 | ✅ | `role="radiogroup"` + `role="radio"` + 方向键 |
+| 可复用 StarRating 组件 | ✅ | 交互/只读模式，评论区共用 |
+| 可复用 TagChip 组件 | ✅ | 统一标签渲染 |
+| useCopyToClipboard Hook | ✅ | 合并剪贴板+Toast+已复制状态 |
+| AgentSkill 难度徽章 | ✅ | 初级/中级/高级，颜色编码 |
+| 上传表单分类下拉 | ✅ | 预定义分类替代自由文本 |
+| 收藏集视觉标识 | ✅ | `coverImage` 和 `color` 字段 |
+| 登录会话过期 | ✅ | 30 天自动过期清除 |
+| 未保存更改守卫 | ✅ | 设置页离开前警告 |
+| 分类页 SEO | ✅ | 完整元数据、OG、canonical URL |
+| 对比页 SEO | ✅ | metadata 导出 |
+| 标签详情 OG + canonical | ✅ | openGraph、twitter、canonical |
+| 分类详情 JSON-LD | ✅ | BreadcrumbList 结构化数据 |
+| 统一英文元数据 | ✅ | 全站 8 个中文页面改为英文标题 |
+| 通知偏好用户隔离 | ✅ | 用户级存储键 |
+| useLocalStorage 跨标签页同步 | ✅ | storage 事件监听 |
+| 焦点环溢出修复 | ✅ | box-shadow 回退 |
+| 主题切换平滑过渡 | ✅ | 0.3s 颜色过渡动画 |
+| Prose 暗色模式覆写 | ✅ | Markdown 使用设计令牌 |
+| 7 个新错误边界 | ✅ | 分类、排行、标签、搜索、个人中心、指南、用户 |
+| 3 个新加载骨架屏 | ✅ | 模板、分类、标签/[tag] |
 
 ---
 

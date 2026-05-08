@@ -6,6 +6,64 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.4.0] — 2026-05-08
+
+### Features
+- **Login/Register return URL** — After login or registration, redirects back to the original page via `returnUrl` query param (falls back to `/`)
+- **Tab keyboard navigation** — Skill detail page tabs now support ArrowLeft/Right/Home/End keys (matching Profile page behavior)
+- **Admin panel ARIA tabs** — Admin page tabs now have `role="tablist"`, `role="tab"`, `aria-selected`, and full keyboard navigation
+- **Submit category radio semantics** — Category selection buttons now use `role="radiogroup"` + `role="radio"` + `aria-checked` + arrow key support
+- **Reusable StarRating component** — Extracted `<StarRating>` with interactive and readonly modes, used in comment section
+- **Reusable TagChip component** — Unified `<TagChip>` for tag rendering across skill cards and agent skill cards
+- **Reusable useCopyToClipboard hook** — Consolidated clipboard+toast+copied-state pattern into a single hook
+- **AgentSkill difficulty badge** — All 8 skills now have difficulty levels (beginner/intermediate/advanced) with color-coded badges
+- **Category dropdown in upload form** — Skill creation now uses a proper `<select>` from predefined categories instead of free text
+- **Collection visual identifiers** — `UserCollection` type now supports `coverImage` and `color` fields
+- **Auth session expiry** — Login sessions expire after 30 days; expired sessions are cleared automatically
+- **Unsaved changes guard** — Settings form tracks dirty state and warns before navigating away
+
+### SEO
+- **Categories page metadata** — Added `generateMetadata` with title, description, OG, Twitter card, and canonical URL
+- **Compare page metadata** — Added metadata export with title and description
+- **Tags detail OG tags** — Added `openGraph`, `twitter`, and `alternates.canonical` to tag detail pages
+- **Categories detail JSON-LD** — Added BreadcrumbList structured data to category detail pages
+- **Unified English metadata** — All 8 pages with Chinese-only metadata (login, register, submit, admin, tags, trending, guide, etc.) now use English titles
+
+### Bug Fixes
+- **Stale memo in trending** — `allItems` dependency array now includes `agentSkills.length` and `skills.length`
+- **Stale memo in search** — `allAgentSkills` and `allPrompts` dependency arrays now include data length
+- **Nested interactive ARIA** — Recent search items no longer nest `<button>` inside `role="option"` (changed to `role="listitem"`)
+- **Dead code removal** — Removed unreachable client-side not-found branches in skill detail and prompt detail pages
+- **Comment.editedAt type** — Added `editedAt?: string` to Comment interface; removed type casts in comment-section
+- **categorySlug matching** — Upload form now uses predefined slugs from `agent-skill-categories.ts` instead of generating from free text
+- **Notification prefs user-scoped** — Preferences now stored per-user key instead of global key
+- **useLocalStorage cross-tab sync** — Added `storage` event listener so changes in other tabs are reflected
+- **useFollows stale closure** — `isFollowing` now reads from localStorage directly instead of depending on state
+- **useFilteredList stale on items change** — Resets when source data identity changes
+- **Focus ring overflow fix** — Added `box-shadow` fallback alongside `outline` for `overflow-hidden` containers
+- **Toast dedup too aggressive** — Allows duplicate messages after 500ms instead of suppressing permanently
+- **CollectionPicker empty state** — Shows FolderOpen icon and "Create your first collection" CTA when no collections exist
+
+### Accessibility
+- **Login forgot-password error** — Added `role="alert"` to forgot-password error message
+- **prefers-reduced-motion: page transitions** — `animate-page-fade-in` respects reduced-motion preference
+- **prefers-reduced-motion: command palette** — `slideDown` and `fadeIn` animations respect reduced-motion
+- **prefers-reduced-motion: scrollTo** — Route change scroll respects reduced-motion (instant vs smooth)
+
+### UI Improvements
+- **Theme switch smooth transition** — Background and text colors now transition smoothly (0.3s) when toggling themes
+- **Prose dark mode overrides** — Markdown in comments uses project design tokens (`--foreground`, `--primary`, etc.)
+- **Prompt page better skeleton** — Prompts listing Suspense fallback now shows full card grid skeleton (matching skills page)
+- **Dead code cleanup** — Removed unused `Search` imports from detail pages
+
+### Infrastructure
+- **7 new error.tsx routes** — categories, trending, tags, search, profile, guide, users now have error boundaries
+- **3 new loading.tsx routes** — prompts, categories, tags/[tag] now have loading skeletons
+- **16 new i18n keys** — loading, copy, copied, noResults, install, unsavedChanges, loginRedirect, sessionExpired, collection management, notification preferences
+- **Metadata language standardization** — All pages now use consistent English metadata
+
+---
+
 ## [v2.3.0] — 2026-05-08
 
 ### Features

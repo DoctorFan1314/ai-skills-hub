@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft, ChevronDown, ChevronUp, History, RotateCcw, Play, Crown, Lock, Search } from "lucide-react";
+import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft, ChevronDown, ChevronUp, History, RotateCcw, Play, Crown, Lock } from "lucide-react";
 import { useUserStorage } from "@/hooks/use-user-storage";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { useAuth } from "@/contexts/auth-context";
@@ -44,7 +44,7 @@ function CopyButton({ text, label, copiedLabel, failedLabel }: { text: string; l
 }
 
 export default function SkillDetailClient({ id }: { id: string }) {
-  const skill = getSkillById(id);
+  const skill = getSkillById(id)!;
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [likedIds, setLikedIds] = useUserStorage<string[]>(STORAGE_KEYS.likes, []);
   const [bookmarkedIds, setBookmarkedIds] = useUserStorage<string[]>(STORAGE_KEYS.bookmarks, []);
@@ -93,36 +93,6 @@ export default function SkillDetailClient({ id }: { id: string }) {
     initVersionForSkill(skill);
     setVersions(getVersions(skill.id));
   }, [skill]);
-
-  if (!skill) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-20">
-        <div className="text-center mb-12">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-secondary/50">
-            <Search className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">{t.promptDetail.notFound}</h2>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            {t.notFound.description}
-          </p>
-        </div>
-        <div className="flex items-center justify-center gap-3">
-          <Link href="/prompts">
-            <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t.promptDetail.backToList}
-            </Button>
-          </Link>
-          <Link href="/search">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Search className="h-4 w-4 mr-2" />
-              {t.search.title}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   const color = COLORS.category[skill.categorySlug] || COLORS.primary;
   const relatedSkills = getRelatedSkills(skill);

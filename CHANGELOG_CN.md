@@ -6,6 +6,63 @@
 
 ---
 
+## [v2.4.0] — 2026-05-08
+
+### 新功能
+- **登录/注册返回 URL** — 登录或注册后自动跳转回原始页面（通过 `returnUrl` 查询参数），无参数时回退到首页
+- **Tab 键盘导航** — 技能详情页 Tab 支持 ArrowLeft/Right/Home/End 键（与个人中心一致）
+- **管理面板 ARIA Tab** — 管理面板 Tab 添加 `role="tablist"`、`role="tab"`、`aria-selected` 和完整键盘导航
+- **提交分类 radio 语义** — 分类选择按钮添加 `role="radiogroup"` + `role="radio"` + `aria-checked` + 方向键支持
+- **可复用 StarRating 组件** — 提取 `<StarRating>` 组件，支持交互和只读模式，评论区使用
+- **可复用 TagChip 组件** — 统一技能卡片和 Agent 技能卡片的标签渲染
+- **可复用 useCopyToClipboard Hook** — 合并剪贴板+Toast+已复制状态为单一 Hook
+- **AgentSkill 难度徽章** — 8 个技能全部添加难度级别（初级/中级/高级），带颜色编码徽章
+- **上传表单分类下拉** — 技能创建使用预定义分类 `<select>` 替代自由文本输入
+- **收藏集视觉标识** — `UserCollection` 类型新增 `coverImage` 和 `color` 字段
+- **登录会话过期** — 登录会话 30 天后自动过期清除
+- **未保存更改守卫** — 设置表单跟踪修改状态，离开前警告用户
+
+### SEO
+- **分类页元数据** — 添加 `generateMetadata`，包含标题、描述、OG、Twitter 卡片和 canonical URL
+- **对比页元数据** — 添加 metadata 导出，包含标题和描述
+- **标签详情 OG** — 标签详情页添加 `openGraph`、`twitter` 和 `alternates.canonical`
+- **分类详情 JSON-LD** — 分类详情页添加 BreadcrumbList 结构化数据
+- **统一英文元数据** — 8 个中文元数据页面（登录、注册、提交、管理、标签、排行、指南等）全部改为英文标题
+
+### Bug 修复
+- **排行榜数据过期** — `allItems` 依赖数组添加 `agentSkills.length` 和 `skills.length`
+- **搜索数据过期** — `allAgentSkills` 和 `allPrompts` 依赖数组添加数据长度
+- **嵌套交互 ARIA** — 最近搜索项不再在 `role="option"` 内嵌套 `<button>`（改为 `role="listitem"`）
+- **死代码清理** — 移除技能详情和模板详情中不可达的客户端 not-found 分支
+- **Comment.editedAt 类型** — Comment 接口添加 `editedAt?: string`，移除 comment-section 中的类型断言
+- **categorySlug 匹配** — 上传表单使用预定义 slug 替代从自由文本生成
+- **通知偏好用户隔离** — 偏好设置改为用户级存储键
+- **useLocalStorage 跨标签页同步** — 添加 `storage` 事件监听
+- **useFollows 闭包过期** — `isFollowing` 直接读取 localStorage 替代依赖 state
+- **useFilteredList 数据变化重置** — 源数据变化时重置筛选状态
+- **焦点环溢出修复** — `overflow-hidden` 容器添加 `box-shadow` 回退
+- **Toast 去重过严** — 允许 500ms 后的重复消息
+- **CollectionPicker 空状态** — 无收藏集时显示 FolderOpen 图标和"创建第一个收藏集"操作引导
+
+### 无障碍
+- **忘记密码错误 role="alert"** — 忘记密码错误消息添加 `role="alert"`
+- **页面过渡 reduced-motion** — `animate-page-fade-in` 尊重减弱动画偏好
+- **命令面板 reduced-motion** — `slideDown` 和 `fadeIn` 动画尊重减弱动画
+- **路由切换 scrollTo** — 路由切换滚动尊重减弱动画（平滑 vs 即时）
+
+### UI 改进
+- **主题切换平滑过渡** — 切换主题时背景色和文字颜色平滑过渡（0.3s）
+- **Prose 暗色模式覆写** — 评论 Markdown 使用项目设计令牌（`--foreground`、`--primary` 等）
+- **模板页骨架屏增强** — 模板列表 Suspense fallback 改为完整卡片网格骨架屏（与技能页一致）
+
+### 基础设施
+- **7 个新 error.tsx** — 分类、排行、标签、搜索、个人中心、指南、用户页添加错误边界
+- **3 个新 loading.tsx** — 模板、分类、标签/[tag] 添加加载骨架屏
+- **16 个新 i18n 键** — loading、copy、copied、noResults、install、未保存更改、登录重定向、会话过期、收藏集管理、通知偏好
+- **元数据语言标准化** — 全站使用统一英文元数据
+
+---
+
 ## [v2.3.0] — 2026-05-08
 
 ### 新功能

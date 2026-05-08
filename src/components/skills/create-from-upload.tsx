@@ -9,6 +9,7 @@ import { useI18n } from "@/contexts/i18n-context";
 import { useToast } from "@/contexts/toast-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { AgentSkill } from "@/lib/types";
+import { agentSkillCategories } from "@/lib/agent-skill-categories";
 
 const ICONS = ["📦", "🔧", "🌐", "📊", "⚡", "🤖", "📧", "🔍", "🛠️", "💡", "🎯", "🚀"];
 
@@ -23,22 +24,13 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const SKILL_TYPES = [
-    t.create.skillTypeWebDev,
-    t.create.skillTypeCodeExec,
-    t.create.skillTypeFileProc,
-    t.create.skillTypeDataAnalysis,
-    t.create.skillTypeMultiPlatform,
-    t.create.skillTypeCommunication,
-    t.create.skillTypeOther,
-  ];
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [owner, setOwner] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [description, setDescription] = useState("");
-  const [skillType, setSkillType] = useState(SKILL_TYPES[0]);
+  const [categorySlug, setCategorySlug] = useState(agentSkillCategories[0]?.slug || "");
   const [tags, setTags] = useState("");
   const [icon, setIcon] = useState("📦");
   const [showIconPicker, setShowIconPicker] = useState(false);
@@ -88,6 +80,7 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
     if (Object.keys(errs).length > 0) return;
 
     const tagsList = tags ? tags.split(",").map((s) => s.trim()).filter(Boolean) : [];
+    const selectedCategory = agentSkillCategories.find((c) => c.slug === categorySlug);
     const skill: AgentSkill = {
       id: `custom-${crypto.randomUUID()}`,
       name: name.trim(),
@@ -100,8 +93,8 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
       stars: 0,
       lastUpdated: new Date().toISOString().slice(0, 10),
       collection: "Community",
-      category: skillType,
-      categorySlug: skillType.toLowerCase().replace(/\s+/g, "-"),
+      category: selectedCategory ? selectedCategory.name : categorySlug,
+      categorySlug: categorySlug,
       installCommand: `npx skills add @${owner.trim()}/${name.trim()}`,
       readme: fileContent || `# ${name.trim()}\n\n${description.trim()}`,
       license: "MIT",
@@ -127,7 +120,7 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
 
   function reset() {
     setName(""); setDisplayName(""); setSourceUrl(""); setOwner("");
-    setIsPublic(true); setDescription(""); setSkillType(SKILL_TYPES[0]);
+    setIsPublic(true); setDescription(""); setCategorySlug(agentSkillCategories[0]?.slug || "");
     setTags(""); setIcon("📦"); setFileName(""); setFileContent("");
     setErrors({}); setDone(false);
     onClose();
@@ -208,8 +201,8 @@ export function CreateFromUpload({ open, onClose, onCreated }: Props) {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-foreground mb-1.5 block">{t.create.skillType}</label>
-                <select value={skillType} onChange={(e) => setSkillType(e.target.value)} className="w-full h-9 rounded-md border border-border bg-secondary px-3 text-sm text-foreground">
-                  {SKILL_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+                <select value={categorySlug} onChange={(e) => setCategorySlug(e.target.value)} className="w-full h-9 rounded-md border border-border bg-secondary px-3 text-sm text-foreground">
+                  {agentSkillCategories.map((c) => <option key={c.slug} value={c.slug}>{c.icon} {c.name}</option>)}
                 </select>
               </div>
               <div>

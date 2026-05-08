@@ -28,6 +28,8 @@ export const STORAGE_KEYS = {
   reports: "ai-skills-hub-reports",
   // Recent searches
   recentSearches: "ai-skills-hub-recent-searches",
+  // Notification preferences (user-scoped)
+  notificationPrefs: (email: string) => `ai-skills-hub-notification-prefs-${email}`,
   // Onboarding
   onboardingCompleted: "ai-skills-hub-onboarding-completed",
   // Legacy global keys (for migration)

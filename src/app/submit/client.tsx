@@ -124,11 +124,23 @@ export default function SubmitClient() {
           </div>
           <div>
             <span className="text-sm text-foreground mb-2 block">{t.submit.category} <span className="text-red-400">*</span></span>
-            <div className="flex flex-wrap gap-2">
+            <div role="radiogroup" aria-label={t.submit.category} className="flex flex-wrap gap-2" onKeyDown={(e) => {
+              if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                const currentIndex = categoryOptions.findIndex((c) => c.name === selectedCategory);
+                let newIndex = currentIndex;
+                if (e.key === "ArrowRight") newIndex = (currentIndex + 1) % categoryOptions.length;
+                else newIndex = (currentIndex - 1 + categoryOptions.length) % categoryOptions.length;
+                setSelectedCategory(categoryOptions[newIndex].name);
+                setSelectedSlug(categoryOptions[newIndex].slug);
+              }
+            }}>
               {categoryOptions.map((cat) => (
                 <button
                   key={cat.slug}
                   type="button"
+                  role="radio"
+                  aria-checked={selectedCategory === cat.name}
                   onClick={() => { setSelectedCategory(cat.name); setSelectedSlug(cat.slug); }}
                   className={`px-4 py-1.5 text-sm rounded-md border transition-colors cursor-pointer ${
                     selectedCategory === cat.name

@@ -2,14 +2,13 @@
 
 import { useState, useEffect, lazy, Suspense } from "react";
 import Link from "next/link";
-import { getAgentSkillById, agentSkills } from "@/lib/mock-agent-skills";
+import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Download, Star, Copy, Check,
   Terminal, FileCode, Clock,
-  Search, ArrowLeft,
   Share2, BadgeCheck, UserPlus, UserCheck, AlertTriangle, Image as ImageIcon,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
@@ -71,7 +70,7 @@ async function downloadAll(skill: NonNullable<ReturnType<typeof getAgentSkillByI
 }
 
 export default function AgentSkillDetailClient({ id }: { id: string }) {
-  const skill = getAgentSkillById(id);
+  const skill = getAgentSkillById(id)!;
   const { t } = useI18n();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -128,68 +127,6 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
     } catch { /* ignore */ }
     setShowReport(false);
     toast(t.common.reportSubmitted, "success");
-  }
-
-  if (!skill) {
-    const trendingSkills = agentSkills.filter(s => s.trending).slice(0, 4);
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-20">
-        <div className="text-center mb-12">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-secondary/50">
-            <Search className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">{t.agentSkills.notFound}</h2>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            {t.notFound.description}
-          </p>
-        </div>
-
-        {trendingSkills.length > 0 && (
-          <div className="mb-12">
-            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">{t.agentSkills.trending}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {trendingSkills.map((s) => (
-                <Link
-                  key={s.id}
-                  href={`/skills/${s.id}`}
-                  className="glass-card p-5 group hover:border-primary/40 transition-all"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                      {s.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">{s.author}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{s.description}</p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Download className="h-3 w-3" />{formatNumber(s.downloads)}</span>
-                    <span className="flex items-center gap-1"><Star className="h-3 w-3" />{formatNumber(s.stars)}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-center gap-3">
-          <Link href="/skills">
-            <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t.agentSkills.backToList}
-            </Button>
-          </Link>
-          <Link href="/search">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Search className="h-4 w-4 mr-2" />
-              {t.search.title}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
   }
 
   const fileNames = Object.keys(skill.files);
@@ -266,7 +203,18 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
       </div>
 
       {/* Tabs */}
-      <div role="tablist" className="flex items-center gap-0 border-b border-border mb-6">
+      <div role="tablist" className="flex items-center gap-0 border-b border-border mb-6" onKeyDown={(e) => {
+        const tabKeys = tabs.map((tab) => tab.key);
+        const currentIndex = tabKeys.indexOf(activeTab);
+        let newIndex = currentIndex;
+        if (e.key === "ArrowRight") { e.preventDefault(); newIndex = (currentIndex + 1) % tabKeys.length; }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); newIndex = (currentIndex - 1 + tabKeys.length) % tabKeys.length; }
+        else if (e.key === "Home") { e.preventDefault(); newIndex = 0; }
+        else if (e.key === "End") { e.preventDefault(); newIndex = tabKeys.length - 1; }
+        else return;
+        setActiveTab(tabKeys[newIndex]);
+        document.getElementById(`detail-tab-${tabKeys[newIndex]}`)?.focus();
+      }}>
         {tabs.map(({ key, label }) => (
           <button
             key={key}
@@ -328,7 +276,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
 
               {/* Install command */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2">install</p>
+                <p className="text-xs text-muted-foreground mb-2">{t.agentSkills.install}</p>
                 <div
                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border cursor-pointer hover:border-primary/30 transition-colors"
                   onClick={() => {
@@ -527,7 +475,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
                   </div>
                 </div>
                 {currentFile && skill.files[currentFile] && (
-                  <Suspense fallback={<div className="p-4 text-sm text-muted-foreground animate-pulse">Loading...</div>}>
+                  <Suspense fallback={<div className="p-4 text-sm text-muted-foreground animate-pulse">{t.common.loading}</div>}>
                     <SyntaxHighlighter
                       language={getLang(currentFile)}
                       style={codeTheme}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ export default function LoginClient() {
   const { login, resetPassword } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
 
   // Forgot password dialog state
@@ -46,7 +47,8 @@ export default function LoginClient() {
       return;
     }
     toast(t.auth.loginSuccess, "success");
-    router.push("/");
+    const returnUrl = searchParams.get("returnUrl");
+    router.push(returnUrl || "/");
   }
 
   function handleOpenForgot() {

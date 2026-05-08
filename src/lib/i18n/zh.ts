@@ -314,6 +314,7 @@ export const zh: Dictionary = {
       bookmarks: "收藏数",
       comments: "评论数",
     },
+    unsavedChanges: "您有未保存的更改",
   },
   settings: {
     editProfile: "编辑资料",
@@ -524,6 +525,8 @@ export const zh: Dictionary = {
     resetPasswordSuccess: "密码重置成功！请使用新密码登录",
     emailNotFound: "该邮箱未注册",
     setNewPassword: "设置新密码",
+    loginRedirect: "登录成功",
+    sessionExpired: "会话已过期，请重新登录",
   },
   notFound: {
     title: "页面未找到",
@@ -777,5 +780,12 @@ export const zh: Dictionary = {
     followDesc: "当有人关注你时通知你",
     system: "系统通知",
     systemDesc: "接收系统公告和重要更新",
+    preferences: "偏好设置",
+  },
+  collections: {
+    createFirst: "创建您的第一个收藏集",
+    createCollection: "创建收藏集",
+    emptyCollection: "此收藏集中暂无技能",
+    collectionColor: "收藏集颜色",
   },
 };

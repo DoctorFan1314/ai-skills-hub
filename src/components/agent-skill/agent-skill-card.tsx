@@ -3,22 +3,21 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Download, Star, Copy, Check, Terminal, CheckCircle } from "lucide-react";
-import { useState } from "react";
 import type { AgentSkill } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
-import { useToast } from "@/contexts/toast-context";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { TagChip } from "@/components/ui/tag-chip";
 
 export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }: { skill: AgentSkill; compareMode?: boolean; selected?: boolean; onToggleSelect?: (id: string) => void }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const { t } = useI18n();
-  const { toast } = useToast();
 
   const preventLinkNav = compareMode ? (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); } : undefined;
 
   return (
     <div
-      className={`glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden ${selected ? "ring-2 ring-primary" : ""} ${compareMode ? "cursor-pointer" : ""}`}
+      className={`glass-card glass-card-hover p-5 h-full group flex flex-col relative ${selected ? "ring-2 ring-primary" : ""} ${compareMode ? "cursor-pointer" : ""}`}
       onClick={compareMode ? (e) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); } : undefined}
       role={compareMode ? "checkbox" : undefined}
       aria-checked={compareMode ? selected : undefined}
@@ -42,6 +41,17 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
         <div className="absolute top-3 right-3 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
             {t.agentSkills.trending}
+          </span>
+        </div>
+      )}
+      {skill.difficulty && (
+        <div className={`absolute z-10 ${skill.trending ? "top-10 right-3" : "top-3 right-3"}`}>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+            skill.difficulty === "beginner" ? "bg-green-500/10 text-green-400 border-green-500/20" :
+            skill.difficulty === "intermediate" ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" :
+            "bg-red-500/10 text-red-400 border-red-500/20"
+          }`}>
+            {skill.difficulty === "beginner" ? t.prompts.difficultyEasy : skill.difficulty === "intermediate" ? t.prompts.difficultyMedium : t.prompts.difficultyHard}
           </span>
         </div>
       )}
@@ -77,13 +87,7 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
 
       <div className="flex flex-wrap gap-1.5 mb-3">
         {skill.tags.slice(0, 3).map((tag) => (
-          <Link
-            key={tag}
-            href={`/tags/${encodeURIComponent(tag)}`}
-            className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border hover:text-primary hover:border-primary/30 transition-colors"
-          >
-            {tag}
-          </Link>
+          <TagChip key={tag} tag={tag} className="text-[10px] border border-border" />
         ))}
       </div>
 
@@ -107,21 +111,13 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          navigator.clipboard.writeText(skill.installCommand).then(() => {
-            toast(t.agentSkills.installCopied, "success");
-          }).catch(() => {});
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
+          copy(skill.installCommand, t.agentSkills.installCopied);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             e.stopPropagation();
-            navigator.clipboard.writeText(skill.installCommand).then(() => {
-              toast(t.agentSkills.installCopied, "success");
-            }).catch(() => {});
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            copy(skill.installCommand, t.agentSkills.installCopied);
           }
         }}
       >

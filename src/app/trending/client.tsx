@@ -66,7 +66,8 @@ export default function TrendingClient() {
       rating: s.rating, usageCount: s.usageCount, likes: s.likes,
       featured: s.featured, lastUpdated: s.lastUpdated, type: "prompt" as const,
     })),
-  ], []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [agentSkills.length, skills.length]);
 
   const filtered = useMemo(() =>
     contentTab === "all" ? allItems : allItems.filter((s) => s.type === contentTab),

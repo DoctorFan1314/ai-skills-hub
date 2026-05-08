@@ -196,6 +196,7 @@ export default async function findSkills(query: string) {
     tags: ["discovery", "registry", "marketplace", "vercel"],
     featured: true,
     trending: true,
+    difficulty: "beginner",
   },
   {
     id: "frontend-design",
@@ -298,6 +299,7 @@ export default function LoginPage() {
     tags: ["frontend", "design", "ui", "react", "tailwind"],
     featured: true,
     trending: true,
+    difficulty: "intermediate",
   },
   {
     id: "web-search",
@@ -402,6 +404,7 @@ export default async function webSearch(query: string, options?: {
     tags: ["search", "web", "google", "information-retrieval"],
     featured: true,
     trending: true,
+    difficulty: "beginner",
   },
   {
     id: "agent-reach",
@@ -500,6 +503,7 @@ export default async function agentReach(platform: string, action: string, param
     tags: ["social-media", "search", "multi-platform", "scraping"],
     featured: false,
     trending: true,
+    difficulty: "intermediate",
   },
   {
     id: "code-executor",
@@ -590,6 +594,7 @@ Execution time: 0.12s`,
     tags: ["code", "execution", "debugging", "sandbox"],
     featured: false,
     trending: true,
+    difficulty: "advanced",
   },
   {
     id: "file-manager",
@@ -682,6 +687,7 @@ Preview (first 2 records):
     tags: ["files", "conversion", "pdf", "csv", "ocr"],
     featured: false,
     trending: false,
+    difficulty: "beginner",
   },
   {
     id: "email-sender",
@@ -764,6 +770,7 @@ Status: Delivered`,
     tags: ["email", "communication", "notifications"],
     featured: false,
     trending: false,
+    difficulty: "intermediate",
   },
   {
     id: "data-analyst",
@@ -848,6 +855,7 @@ Chart generated: monthly_trend.png`,
     tags: ["data", "analytics", "visualization", "charts"],
     featured: true,
     trending: false,
+    difficulty: "advanced",
   },
 ];
 

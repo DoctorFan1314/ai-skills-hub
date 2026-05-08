@@ -98,6 +98,7 @@ export interface Comment {
   content: string;
   rating?: number;
   createdAt: string;
+  editedAt?: string;
   parentId?: string;
   likes: number;
   likedBy: string[];
@@ -157,6 +158,7 @@ export interface AgentSkill {
   tags: string[];
   featured: boolean;
   trending: boolean;
+  difficulty?: "beginner" | "intermediate" | "advanced";
   // New fields
   screenshots?: string[];
   dependencies?: { name: string; version: string }[];
@@ -191,6 +193,8 @@ export interface UserCollection {
   createdAt: string;
   userId: string;
   isPublic: boolean;
+  coverImage?: string;
+  color?: string; // hex color for collection icon
 }
 
 export interface UserFollow {

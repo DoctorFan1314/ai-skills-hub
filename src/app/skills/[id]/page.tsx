@@ -7,7 +7,7 @@ import { JsonLd, generateSkillJsonLd, generateBreadcrumbJsonLd } from "@/compone
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const skill = getAgentSkillById(id);
-  if (!skill) return { title: "技能未找到 — AI Skills Hub" };
+  if (!skill) return { title: "Skill Not Found — AI Skills Hub" };
   return {
     title: `${skill.name} — AI Skills Hub`,
     description: skill.description.split("\n").find(l => l && !l.startsWith("#") && !l.startsWith("-"))?.slice(0, 160) || "",

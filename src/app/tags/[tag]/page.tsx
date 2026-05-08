@@ -12,7 +12,15 @@ export async function generateMetadata({ params }: { params: Promise<{ tag: stri
   const decoded = decodeURIComponent(tag);
   return {
     title: `#${decoded} — AI Skills Hub`,
-    description: `浏览所有与「${decoded}」相关的 Agent 技能和 Prompt 模板`,
+    description: `Browse all Agent Skills and Prompt Templates related to "${decoded}"`,
+    openGraph: {
+      title: `#${decoded} — AI Skills Hub`,
+      description: `Browse all Agent Skills and Prompt Templates related to "${decoded}"`,
+      url: `https://ai-skills-hub.vercel.app/tags/${encodeURIComponent(tag)}`,
+      type: "website",
+    },
+    twitter: { card: "summary", title: `#${decoded} — AI Skills Hub`, description: `Browse all Agent Skills and Prompt Templates related to "${decoded}"` },
+    alternates: { canonical: `https://ai-skills-hub.vercel.app/tags/${encodeURIComponent(tag)}` },
   };
 }
 

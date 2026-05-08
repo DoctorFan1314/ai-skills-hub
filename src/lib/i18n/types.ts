@@ -126,6 +126,7 @@ export interface Dictionary {
     stats: { submissions: string; likes: string; bookmarks: string; comments: string; };
     noCommentsDesc: string; noLikesDesc: string; noFavoritesDesc: string;
     noSubmissionsDesc: string; noHistoryDesc: string;
+    unsavedChanges: string;
   };
   settings: {
     editProfile: string; username: string; bio: string; bioPlaceholder: string;
@@ -212,6 +213,7 @@ export interface Dictionary {
     confirmPassword: string; confirmPasswordPlaceholder: string; passwordMismatch: string;
     resetPassword: string; resetPasswordDesc: string; resetPasswordSuccess: string;
     emailNotFound: string; setNewPassword: string;
+    loginRedirect: string; sessionExpired: string;
   };
   notFound: {
     title: string; description: string; backHome: string;
@@ -331,5 +333,12 @@ export interface Dictionary {
     like: string; likeDesc: string;
     follow: string; followDesc: string;
     system: string; systemDesc: string;
+    preferences: string;
+  };
+  collections: {
+    createFirst: string;
+    createCollection: string;
+    emptyCollection: string;
+    collectionColor: string;
   };
 }

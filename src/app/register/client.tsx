@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
@@ -19,6 +19,7 @@ export default function RegisterClient() {
   const { register } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
 
   function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
@@ -64,7 +65,8 @@ export default function RegisterClient() {
       return;
     }
     toast(t.auth.registerSuccess, "success");
-    router.push("/");
+    const returnUrl = searchParams.get("returnUrl");
+    router.push(returnUrl || "/");
   }
 
   return (

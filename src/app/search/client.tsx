@@ -92,11 +92,13 @@ export default function SearchClient() {
   // All data
   const allAgentSkills = useMemo(
     () => [...agentSkills, ...getPublishedSkills()],
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [agentSkills.length],
   );
   const allPrompts = useMemo(
     () => [...skills, ...getPublishedPrompts()],
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [skills.length],
   );
 
   // Search results
@@ -396,7 +398,7 @@ export default function SearchClient() {
                   {recentSearches.map((term) => (
                     <div
                       key={term}
-                      role="option"
+                      role="listitem"
                       className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors group cursor-pointer"
                       onMouseDown={(e) => {
                         e.preventDefault();

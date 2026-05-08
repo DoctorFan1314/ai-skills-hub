@@ -314,6 +314,7 @@ export const en: Dictionary = {
     noFavoritesDesc: "Visit the skills marketplace and click bookmark",
     noSubmissionsDesc: "Go to the Submit page to contribute your Prompt skills",
     noHistoryDesc: "Visiting skill pages and copying Prompts are recorded automatically",
+    unsavedChanges: "You have unsaved changes",
   },
   settings: {
     editProfile: "Edit Profile",
@@ -524,6 +525,8 @@ export const en: Dictionary = {
     resetPasswordSuccess: "Password reset successful! Please log in with your new password",
     emailNotFound: "This email is not registered",
     setNewPassword: "Set New Password",
+    loginRedirect: "Login successful",
+    sessionExpired: "Session expired, please login again",
   },
   notFound: {
     title: "Page Not Found",
@@ -777,5 +780,12 @@ export const en: Dictionary = {
     followDesc: "Notify when someone follows you",
     system: "System Notifications",
     systemDesc: "Receive system announcements and important updates",
+    preferences: "Preferences",
+  },
+  collections: {
+    createFirst: "Create your first collection",
+    createCollection: "Create Collection",
+    emptyCollection: "No skills in this collection yet",
+    collectionColor: "Collection Color",
   },
 };

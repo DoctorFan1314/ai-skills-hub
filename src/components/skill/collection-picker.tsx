@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, FolderOpen } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 import type { UserCollection } from "@/lib/types";
 
@@ -58,7 +58,16 @@ export function CollectionPicker({
                   </button>
                 ))
               ) : (
-                <p className="px-3 py-2 text-xs text-muted-foreground">{t.common.noData}</p>
+                <div className="flex flex-col items-center gap-2 px-3 py-4 text-center">
+                  <FolderOpen className="h-8 w-8 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground">{t.common.noData}</p>
+                  <button
+                    className="text-xs text-primary hover:underline"
+                    onClick={() => setShowNewCollection(true)}
+                  >
+                    + {t.common.newCollection}
+                  </button>
+                </div>
               )}
             </div>
             <div className="border-t border-border">

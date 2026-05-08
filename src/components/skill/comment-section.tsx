@@ -11,6 +11,7 @@ import type { Comment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, ThumbsUp, MessageSquare, Pencil, Trash2, X, Check, Bold, Italic, Code, List, Reply } from "lucide-react";
+import { StarRating } from "@/components/ui/star-rating";
 
 const MarkdownRenderer = lazy(() =>
   import("@/components/shared/markdown-renderer").then((m) => ({ default: m.MarkdownRenderer }))
@@ -24,7 +25,6 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
   const [comments, setComments] = useState<Comment[]>([]);
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
   const [, setTick] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -136,7 +136,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
       const idx = all.findIndex((c) => c.id === commentId);
       if (idx !== -1) {
         all[idx].content = editContent.trim();
-        (all[idx] as Comment & { editedAt?: string }).editedAt = editedAt;
+        all[idx].editedAt = editedAt;
         localStorage.setItem(STORAGE_KEYS.allComments, JSON.stringify(all));
         setComments(all.filter((c) => c.skillId === skillId));
       }
@@ -148,7 +148,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
         const uIdx = userComments.findIndex((c) => c.id === commentId);
         if (uIdx !== -1) {
           userComments[uIdx].content = editContent.trim();
-          (userComments[uIdx] as Comment & { editedAt?: string }).editedAt = editedAt;
+          userComments[uIdx].editedAt = editedAt;
           localStorage.setItem(key, JSON.stringify(userComments));
         }
       }
@@ -212,23 +212,9 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
             </button>
           </div>
         )}
-        <div className="flex items-center gap-1" role="radiogroup" aria-label={t.comments.rating}>
+        <div className="flex items-center gap-1">
           <span className="text-sm text-muted-foreground mr-2">{t.comments.rating}：</span>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              role="radio"
-              aria-checked={rating === star}
-              aria-label={`${star} star${star > 1 ? "s" : ""}`}
-              onMouseEnter={() => setHoverRating(star)}
-              onMouseLeave={() => setHoverRating(0)}
-              onClick={() => setRating(star)}
-              className="p-0.5 star-rating-btn"
-            >
-              <Star className={`h-4 w-4 ${(hoverRating || rating) >= star ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground/30"}`} />
-            </button>
-          ))}
+          <StarRating value={rating} onChange={setRating} />
           {rating > 0 && <span className="text-xs text-muted-foreground ml-1">{rating}/5</span>}
         </div>
         <Textarea
@@ -267,14 +253,10 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
                     <p className="text-sm font-medium text-foreground">{c.username}</p>
                     <div className="flex items-center gap-2">
                       {c.rating && (
-                        <div className="flex gap-0.5">
-                          {Array.from({ length: c.rating }).map((_, i) => (
-                            <Star key={i} className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                          ))}
-                        </div>
+                        <StarRating value={c.rating} readonly size={12} />
                       )}
                       <time className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString(locale)}</time>
-                      {(c as Comment & { editedAt?: string }).editedAt && (
+                      {c.editedAt && (
                         <span className="text-xs text-muted-foreground/60">({t.common.edited})</span>
                       )}
                     </div>

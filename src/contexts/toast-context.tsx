@@ -6,6 +6,7 @@ interface Toast {
   id: string;
   message: string;
   type?: "info" | "success" | "error" | "warning";
+  createdAt?: number;
 }
 
 interface ToastContextValue {
@@ -22,9 +23,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const toast = useCallback(
     (message: string, type: Toast["type"] = "info") => {
       const id = crypto.randomUUID();
+      const now = Date.now();
       setToasts((prev) => {
-        if (prev.some((t) => t.message === message)) return prev;
-        const next = [...prev, { id, message, type }];
+        // Only suppress if an identical message was added less than 500ms ago
+        const recentDuplicate = prev.some((t) => t.message === message && t.createdAt && now - t.createdAt < 500);
+        if (recentDuplicate) return prev;
+        const next = [...prev, { id, message, type, createdAt: now }];
         // Keep at most 5 toasts, remove earliest
         return next.length > 5 ? next.slice(next.length - 5) : next;
       });

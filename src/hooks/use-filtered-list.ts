@@ -114,8 +114,16 @@ export function useFilteredList<T>({
 
   useEffect(() => () => clearTimeout(debounceRef.current), []);
 
-  // Reset pagination when filters/sort change
+  // Reset pagination when filters/sort change OR items identity changes
   const filterDeps = filters.map((f) => filterValues[f.key]).join("|");
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    // If items identity changed, reset pagination
+    if (itemsRef.current !== items) {
+      itemsRef.current = items;
+      setVisibleCount(pageSize);
+    }
+  }, [items, pageSize]);
   useEffect(() => {
     setVisibleCount(pageSize);
   }, [filterDeps, sortBy, pageSize]);

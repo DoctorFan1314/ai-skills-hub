@@ -8,9 +8,10 @@ export type NotificationType = "comment_reply" | "skill_update" | "submission_st
 
 const ALL_TYPES: NotificationType[] = ["comment_reply", "skill_update", "submission_status", "like", "follow", "system"];
 
-function loadPreferences(): Record<NotificationType, boolean> {
+function loadPreferences(email?: string): Record<NotificationType, boolean> {
+  const key = email ? STORAGE_KEYS.notificationPrefs(email) : "ai-skills-hub-notification-prefs";
   try {
-    const raw = localStorage.getItem("ai-skills-hub-notification-prefs");
+    const raw = localStorage.getItem(key);
     if (raw) {
       const saved = JSON.parse(raw);
       const result: Record<string, boolean> = {};
@@ -25,9 +26,10 @@ function loadPreferences(): Record<NotificationType, boolean> {
   return defaults as Record<NotificationType, boolean>;
 }
 
-function savePreferences(prefs: Record<NotificationType, boolean>) {
+function savePreferences(prefs: Record<NotificationType, boolean>, email?: string) {
+  const key = email ? STORAGE_KEYS.notificationPrefs(email) : "ai-skills-hub-notification-prefs";
   try {
-    localStorage.setItem("ai-skills-hub-notification-prefs", JSON.stringify(prefs));
+    localStorage.setItem(key, JSON.stringify(prefs));
   } catch { /* ignore */ }
 }
 
@@ -35,7 +37,7 @@ export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [preferences, setPreferences] = useState<Record<NotificationType, boolean>>(loadPreferences);
+  const [preferences, setPreferences] = useState<Record<NotificationType, boolean>>(() => loadPreferences(user?.email));
 
   // Derive unreadCount from notifications
   useEffect(() => {
@@ -54,18 +56,20 @@ export function useNotifications() {
     } catch { /* ignore */ }
   }, [user]);
 
-  // Load preferences from localStorage
+  // Load preferences from localStorage (user-scoped)
   useEffect(() => {
-    setPreferences(loadPreferences());
-  }, []);
+    if (user) {
+      setPreferences(loadPreferences(user.email));
+    }
+  }, [user]);
 
   const updatePreference = useCallback((type: NotificationType, enabled: boolean) => {
     setPreferences(prev => {
       const updated = { ...prev, [type]: enabled };
-      savePreferences(updated);
+      savePreferences(updated, user?.email);
       return updated;
     });
-  }, []);
+  }, [user]);
 
   const isTypeEnabled = useCallback((type: NotificationType): boolean => {
     return preferences[type] !== false;

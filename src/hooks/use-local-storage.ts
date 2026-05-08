@@ -14,6 +14,21 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     setLoaded(true);
   }, [key]);
 
+  // Cross-tab sync: listen for storage events
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === key && e.newValue !== null) {
+        try {
+          setValue(JSON.parse(e.newValue));
+        } catch {
+          setValue(e.newValue as T);
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [key]);
+
   const setStoredValue = useCallback(
     (updater: T | ((prev: T) => T)) => {
       setValue((prev) => {

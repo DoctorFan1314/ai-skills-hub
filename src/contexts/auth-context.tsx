@@ -87,7 +87,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const session = localStorage.getItem(STORAGE_KEYS.session);
-      if (session) setUser(JSON.parse(session));
+      if (session) {
+        const parsed = JSON.parse(session);
+        // Check session expiry: 30 days
+        if (parsed.loginTimestamp) {
+          const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+          if (Date.now() - parsed.loginTimestamp > thirtyDaysMs) {
+            localStorage.removeItem(STORAGE_KEYS.session);
+            setLoaded(true);
+            return;
+          }
+        }
+        setUser(parsed);
+      }
     } catch {
       /* ignore */
     }
@@ -172,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         saveUsers(users);
       }
 
-      const session = toSessionUser(found);
+      const session = { ...toSessionUser(found), loginTimestamp: Date.now() };
       localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
       setUser(session);
       return true;
@@ -197,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       users.push(newUser);
       saveUsers(users);
-      const session = toSessionUser(newUser);
+      const session = { ...toSessionUser(newUser), loginTimestamp: Date.now() };
       localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
       setUser(session);
       return true;

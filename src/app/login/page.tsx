@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import LoginClient from "./client";
 
 export const metadata: Metadata = {
-  title: "登录 — AI Skills Hub",
-  description: "登录你的 AI Skills Hub 账号，继续探索高质量 LLM 技能模板",
+  title: "Login — AI Skills Hub",
+  description: "Sign in to your AI Skills Hub account and continue exploring high-quality LLM skill templates.",
 };
 
 export default function LoginPage() {
-  return <LoginClient />;
+  return (
+    <Suspense fallback={<div className="min-h-[calc(100vh-8rem)] flex items-center justify-center"><div className="h-96 w-full max-w-md bg-secondary rounded-xl animate-pulse" /></div>}>
+      <LoginClient />
+    </Suspense>
+  );
 }

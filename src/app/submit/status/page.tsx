@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import SubmitStatusClient from "./client";
 
 export const metadata: Metadata = {
-  title: "提交状态 — AI Skills Hub",
-  description: "查看你的模板提交历史和审核状态",
+  title: "Submission Status — AI Skills Hub",
+  description: "View your template submission history and review status",
 };
 
 export default function SubmitStatusPage() {

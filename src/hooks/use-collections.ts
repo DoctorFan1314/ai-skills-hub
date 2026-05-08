@@ -16,7 +16,7 @@ export function useCollections() {
     } catch { /* ignore */ }
   }, [user]);
 
-  const createCollection = useCallback((name: string, description: string, isPublic: boolean = true) => {
+  const createCollection = useCallback((name: string, description: string, isPublic: boolean = true, options?: { coverImage?: string; color?: string }) => {
     if (!user) return null;
     const collection: UserCollection = {
       id: crypto.randomUUID(),
@@ -26,6 +26,8 @@ export function useCollections() {
       createdAt: new Date().toISOString(),
       userId: user.email,
       isPublic,
+      coverImage: options?.coverImage,
+      color: options?.color,
     };
     setCollections(prev => {
       const updated = [...prev, collection];
@@ -70,7 +72,7 @@ export function useCollections() {
     });
   }, [user]);
 
-  const updateCollection = useCallback((collectionId: string, updates: Partial<Pick<UserCollection, "name" | "description" | "isPublic">>) => {
+  const updateCollection = useCallback((collectionId: string, updates: Partial<Pick<UserCollection, "name" | "description" | "isPublic" | "coverImage" | "color">>) => {
     if (!user) return;
     setCollections(prev => {
       const updated = prev.map(c =>

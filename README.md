@@ -345,6 +345,30 @@ ai-skills-hub/
 | User avatar optimization | ✅ | `<img>` → Next.js `<Image>` component |
 | Dropdown focus-visible | ✅ | Removed `outline-none`, restored focus ring |
 | Star rating keyboard focus | ✅ | `.star-rating-btn:focus-visible` CSS rule |
+| Login/Register return URL | ✅ | After auth, redirects back to original page via `returnUrl` param |
+| Skill detail tab keyboard nav | ✅ | ArrowLeft/Right/Home/End key navigation on skill detail tabs |
+| Admin ARIA tabs | ✅ | Full ARIA tab pattern with keyboard navigation on admin page |
+| Submit category radio semantics | ✅ | `role="radiogroup"` + `role="radio"` + arrow keys for category selection |
+| Reusable StarRating component | ✅ | Interactive + readonly modes, shared across comment sections |
+| Reusable TagChip component | ✅ | Unified tag rendering across all card types |
+| useCopyToClipboard hook | ✅ | Consolidated clipboard + toast + copied-state pattern |
+| AgentSkill difficulty badge | ✅ | Beginner/intermediate/advanced levels with color-coded badges |
+| Category dropdown in upload | ✅ | Predefined category `<select>` replaces free-text input |
+| Collection visual identifiers | ✅ | `coverImage` and `color` fields on UserCollection |
+| Auth session expiry | ✅ | Sessions expire after 30 days, auto-cleared on load |
+| Unsaved changes guard | ✅ | Dirty-state tracking with navigate-away warning in settings |
+| Categories page SEO | ✅ | Full metadata, OG, Twitter card, canonical URL |
+| Compare page SEO | ✅ | Metadata export with title and description |
+| Tags detail OG + canonical | ✅ | `openGraph`, `twitter`, `alternates.canonical` on tag pages |
+| Categories detail JSON-LD | ✅ | BreadcrumbList structured data on category pages |
+| Unified English metadata | ✅ | All 8 Chinese-only pages now use English titles |
+| Notification prefs user-scoped | ✅ | Preferences stored per-user instead of global key |
+| useLocalStorage cross-tab sync | ✅ | `storage` event listener reflects changes across tabs |
+| Focus ring overflow fix | ✅ | `box-shadow` fallback for `overflow-hidden` containers |
+| Theme switch smooth transition | ✅ | 0.3s color transition on theme toggle |
+| Prose dark mode overrides | ✅ | Markdown uses project design tokens in dark mode |
+| 7 new error boundaries | ✅ | categories, trending, tags, search, profile, guide, users |
+| 3 new loading skeletons | ✅ | prompts, categories, tags/[tag] pages |
 
 ---
 

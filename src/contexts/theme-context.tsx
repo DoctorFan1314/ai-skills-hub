@@ -65,12 +65,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 function applyTheme(resolved: "dark" | "light") {
   const root = document.documentElement;
-  if (resolved === "dark") {
+  const isDark = resolved === "dark";
+  // Smooth the color change
+  root.style.transition = "background-color 0.3s, color 0.3s, border-color 0.3s";
+  if (isDark) {
     root.classList.add("dark");
   } else {
     root.classList.remove("dark");
   }
-  document.documentElement.style.colorScheme = resolved === "dark" ? "dark" : "light";
+  document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  // Remove transition after it completes to avoid interfering with other animations
+  setTimeout(() => {
+    root.style.transition = "";
+  }, 350);
 }
 
 export function useTheme() {

@@ -168,6 +168,9 @@
   @media (prefers-reduced-motion: reduce) {
     .glass-card-hover { transition: none; }
     .glass-card-hover:hover { transform: none; }
+    .animate-page-fade-in { animation: none; }
+    .animate-slideDown,
+    .animate-fadeIn { animation: none; }
   }
   .glow-text {
     text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
@@ -208,6 +211,8 @@
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+    /* box-shadow fallback for overflow-hidden parents that clip outline */
+    box-shadow: 0 0 0 2px var(--ring);
   }
 }
 
@@ -221,6 +226,16 @@
 /* Light mode subtle gradient */
 :root:not(.dark) body {
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+/* Prose dark mode overrides using project design tokens */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
 }
 
 /* Print styles */

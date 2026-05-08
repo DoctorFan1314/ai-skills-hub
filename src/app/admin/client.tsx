@@ -112,10 +112,26 @@ export default function AdminClient() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div role="tablist" aria-label={t.admin.title} className="flex flex-wrap gap-2 mb-8" onKeyDown={(e) => {
+        const tabKeys = TABS.map((t) => t.key);
+        const currentIndex = tabKeys.indexOf(tab);
+        let newIndex = currentIndex;
+        if (e.key === "ArrowRight") { e.preventDefault(); newIndex = (currentIndex + 1) % tabKeys.length; }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); newIndex = (currentIndex - 1 + tabKeys.length) % tabKeys.length; }
+        else if (e.key === "Home") { e.preventDefault(); newIndex = 0; }
+        else if (e.key === "End") { e.preventDefault(); newIndex = tabKeys.length - 1; }
+        else return;
+        setTab(tabKeys[newIndex]);
+        document.getElementById(`admin-tab-${tabKeys[newIndex]}`)?.focus();
+      }}>
         {TABS.map((t) => (
           <button
             key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
+            id={`admin-tab-${t.key}`}
+            aria-controls={`admin-tabpanel-${t.key}`}
+            tabIndex={tab === t.key ? 0 : -1}
             onClick={() => setTab(t.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
               tab === t.key ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border hover:text-foreground"
@@ -130,7 +146,7 @@ export default function AdminClient() {
       </div>
 
       {tab === "pending" && (
-        <div className="space-y-4">
+        <div role="tabpanel" id="admin-tabpanel-pending" aria-labelledby="admin-tab-pending" className="space-y-4">
           {pendingSubs.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <CheckCircle className="h-12 w-12 text-green-400/50 mx-auto mb-3" />
@@ -191,7 +207,7 @@ export default function AdminClient() {
       )}
 
       {tab === "users" && (
-        <div className="glass-card p-6">
+        <div role="tabpanel" id="admin-tabpanel-users" aria-labelledby="admin-tab-users" className="glass-card p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t.admin.registeredUsers} ({users.length})</h2>
           {users.length === 0 ? (
             <p className="text-muted-foreground">{t.admin.noUsers}</p>
@@ -217,6 +233,7 @@ export default function AdminClient() {
       )}
 
       {tab === "analytics" && (
+        <div role="tabpanel" id="admin-tabpanel-analytics" aria-labelledby="admin-tab-analytics">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass-card p-5 text-center">
             <p className="text-3xl font-bold text-foreground">{users.length}</p>
@@ -235,10 +252,11 @@ export default function AdminClient() {
             <p className="text-sm text-muted-foreground mt-1">{t.admin.pendingSubmissions}</p>
           </div>
         </div>
+        </div>
       )}
 
       {tab === "comments" && (
-        <div className="space-y-3">
+        <div role="tabpanel" id="admin-tabpanel-comments" aria-labelledby="admin-tab-comments" className="space-y-3">
           {comments.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />

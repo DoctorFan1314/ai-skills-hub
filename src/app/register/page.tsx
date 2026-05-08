@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import RegisterClient from "./client";
 
 export const metadata: Metadata = {
-  title: "注册 — AI Skills Hub",
-  description: "创建 AI Skills Hub 账号，解锁全部高质量 LLM 技能模板",
+  title: "Register — AI Skills Hub",
+  description: "Create an AI Skills Hub account to unlock all high-quality LLM skill templates.",
 };
 
 export default function RegisterPage() {
-  return <RegisterClient />;
+  return (
+    <Suspense fallback={<div className="min-h-[calc(100vh-8rem)] flex items-center justify-center"><div className="h-96 w-full max-w-md bg-secondary rounded-xl animate-pulse" /></div>}>
+      <RegisterClient />
+    </Suspense>
+  );
 }

@@ -7,7 +7,7 @@ import { JsonLd, generatePromptJsonLd, generateBreadcrumbJsonLd } from "@/compon
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const skill = getSkillById(id);
-  if (!skill) return { title: "Prompt 未找到 — AI Skills Hub" };
+  if (!skill) return { title: "Prompt Not Found — AI Skills Hub" };
   return {
     title: `${skill.title} — AI Skills Hub`,
     description: skill.subtitle,
