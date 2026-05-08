@@ -80,8 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-    // Run migration for old plaintext passwords
-    migrateOldPasswords();
+    // Run migration for old plaintext passwords (async)
+    migrateOldPasswords().catch(() => { /* ignore */ });
     setLoaded(true);
   }, []);
 
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
   }, []);
 
-  const migrateOldPasswords = useCallback(() => {
+  const migrateOldPasswords = useCallback(async () => {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.users);
       if (!raw) return;
@@ -106,23 +106,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if any user has old "password" field
       const hasLegacy = parsed.some((u: LegacyStoredUser) => "password" in u && typeof u.password === "string");
       if (!hasLegacy) return;
-      // Migrate synchronously is not possible with async hash, so we do best-effort
-      // For migration, we store plaintext as hash temporarily and let user re-login
-      const migrated: StoredUser[] = parsed.map((u: LegacyStoredUser | StoredUser) => {
+      // Migrate with proper async hashing
+      const migrated: StoredUser[] = await Promise.all(parsed.map(async (u: LegacyStoredUser | StoredUser) => {
         if ("password" in u && typeof (u as LegacyStoredUser).password === "string") {
           const legacy = u as LegacyStoredUser;
-          // Store password directly as hash placeholder — will be properly hashed on next login
           return {
             username: legacy.username,
             email: legacy.email,
-            passwordHash: legacy.password, // will be fixed on next login
+            passwordHash: await hashPassword(legacy.password),
             joinDate: new Date().toISOString(),
             preferences: { theme: "dark" as const, language: "zh" as const },
             role: "user" as const,
           };
         }
         return u as StoredUser;
-      });
+      }));
       localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(migrated));
     } catch {
       /* ignore */

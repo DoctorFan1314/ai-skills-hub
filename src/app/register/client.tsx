@@ -21,6 +21,22 @@ export default function RegisterClient() {
   const router = useRouter();
   const { t } = useI18n();
 
+  function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[a-z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) return { score, label: t.common.passwordWeak, color: "bg-red-500" };
+    if (score === 2) return { score, label: t.common.passwordFair, color: "bg-orange-500" };
+    if (score === 3) return { score, label: t.common.passwordGood, color: "bg-yellow-500" };
+    if (score === 4) return { score, label: t.common.passwordStrong, color: "bg-blue-500" };
+    return { score, label: t.common.passwordVeryStrong, color: "bg-green-500" };
+  }
+
+  const passwordStrength = password ? getPasswordStrength(password) : null;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -71,6 +87,23 @@ export default function RegisterClient() {
             <div>
               <label htmlFor="password" className="text-sm text-foreground mb-1.5 block">{t.auth.password}</label>
               <Input id="password" type="password" autoComplete="new-password" placeholder={t.auth.passwordPlaceholder} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
+              {passwordStrength && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className={`h-1 flex-1 rounded-full transition-colors ${
+                          i <= passwordStrength.score ? passwordStrength.color : "bg-secondary"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className={`text-xs ${passwordStrength.score <= 1 ? "text-red-400" : passwordStrength.score === 2 ? "text-orange-400" : passwordStrength.score === 3 ? "text-yellow-400" : passwordStrength.score === 4 ? "text-blue-400" : "text-green-400"}`}>
+                    {passwordStrength.label}
+                  </p>
+                </div>
+              )}
             </div>
             <div>
               <label htmlFor="confirmPassword" className="text-sm text-foreground mb-1.5 block">{t.auth.confirmPassword}</label>

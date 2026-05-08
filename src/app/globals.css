@@ -126,6 +126,7 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
@@ -169,10 +170,10 @@
     .glass-card-hover:hover { transform: none; }
   }
   .glow-text {
-    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
   }
   .glow-border {
-    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15), inset 0 0 15px rgba(0, 212, 255, 0.05);
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.2);
   }
   .gradient-text {
     background: linear-gradient(135deg, var(--primary), #7c3aed);

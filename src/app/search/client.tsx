@@ -28,6 +28,11 @@ interface Suggestion {
   href: string;
 }
 
+function fuzzyMatch(query: string, text: string): boolean {
+  const words = query.trim().split(/\s+/);
+  return words.every((word) => text.includes(word));
+}
+
 function getRecentSearches(): string[] {
   if (typeof window === "undefined") return [];
   try {
@@ -72,6 +77,8 @@ export default function SearchClient() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [highlightIdx, setHighlightIdx] = useState(-1);
+  const [visibleAgentCount, setVisibleAgentCount] = useState(8);
+  const [visiblePromptCount, setVisiblePromptCount] = useState(8);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -98,21 +105,21 @@ export default function SearchClient() {
 
     const matchedAgentSkills = allAgentSkills.filter(
       (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.title.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q) ||
-        s.tags.some((tag) => tag.toLowerCase().includes(q)) ||
-        s.triggers.some((tr) => tr.toLowerCase().includes(q)) ||
-        s.category.toLowerCase().includes(q),
+        fuzzyMatch(q, s.name.toLowerCase()) ||
+        fuzzyMatch(q, s.title.toLowerCase()) ||
+        fuzzyMatch(q, s.description.toLowerCase()) ||
+        s.tags.some((tag) => fuzzyMatch(q, tag.toLowerCase())) ||
+        s.triggers.some((tr) => fuzzyMatch(q, tr.toLowerCase())) ||
+        fuzzyMatch(q, s.category.toLowerCase()),
     );
 
     const matchedPrompts = allPrompts.filter(
       (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.subtitle.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q) ||
-        s.tags.some((tag) => tag.toLowerCase().includes(q)) ||
-        s.category.toLowerCase().includes(q),
+        fuzzyMatch(q, s.title.toLowerCase()) ||
+        fuzzyMatch(q, s.subtitle.toLowerCase()) ||
+        fuzzyMatch(q, s.description.toLowerCase()) ||
+        s.tags.some((tag) => fuzzyMatch(q, tag.toLowerCase())) ||
+        fuzzyMatch(q, s.category.toLowerCase()),
     );
 
     return { agentSkills: matchedAgentSkills, prompts: matchedPrompts };
@@ -210,6 +217,12 @@ export default function SearchClient() {
 
   // Cleanup debounce on unmount
   useEffect(() => () => clearTimeout(debounceRef.current), []);
+
+  // Reset visible counts when query changes
+  useEffect(() => {
+    setVisibleAgentCount(8);
+    setVisiblePromptCount(8);
+  }, [query]);
 
   // Handle search submit (Enter)
   const handleSearch = useCallback(() => {
@@ -475,10 +488,22 @@ export default function SearchClient() {
                 )}
               </div>
               {searchResults.agentSkills.length > 0 ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {searchResults.agentSkills.slice(0, 8).map((skill) => (
-                    <AgentSkillCard key={skill.id} skill={skill} />
-                  ))}
+                <div className="space-y-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {searchResults.agentSkills.slice(0, visibleAgentCount).map((skill) => (
+                      <AgentSkillCard key={skill.id} skill={skill} />
+                    ))}
+                  </div>
+                  {searchResults.agentSkills.length > visibleAgentCount && (
+                    <div className="text-center">
+                      <button
+                        onClick={() => setVisibleAgentCount((prev) => prev + 8)}
+                        className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
+                      >
+                        Load more ({searchResults.agentSkills.length - visibleAgentCount})
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="glass-card p-8 text-center">
@@ -510,10 +535,22 @@ export default function SearchClient() {
                 )}
               </div>
               {searchResults.prompts.length > 0 ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {searchResults.prompts.slice(0, 8).map((skill) => (
-                    <SkillCard key={skill.id} skill={skill} />
-                  ))}
+                <div className="space-y-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {searchResults.prompts.slice(0, visiblePromptCount).map((skill) => (
+                      <SkillCard key={skill.id} skill={skill} />
+                    ))}
+                  </div>
+                  {searchResults.prompts.length > visiblePromptCount && (
+                    <div className="text-center">
+                      <button
+                        onClick={() => setVisiblePromptCount((prev) => prev + 8)}
+                        className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
+                      >
+                        Load more ({searchResults.prompts.length - visiblePromptCount})
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="glass-card p-8 text-center">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ChevronRight, Sparkles, Compass, Search } from "lucide-react";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
@@ -18,6 +18,8 @@ export function OnboardingTooltip() {
   const [visible, setVisible] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
   const [targetRect, setTargetRect] = useState({ top: 0, left: 0, width: 0, height: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const stepTexts = [
     { title: t.onboarding.step1Title, desc: t.onboarding.step1Desc },
@@ -61,6 +63,8 @@ export function OnboardingTooltip() {
 
     // Small delay to let the page render
     const timer = setTimeout(() => {
+      // Save currently focused element to restore later
+      triggerRef.current = document.activeElement as HTMLElement;
       setVisible(true);
       positionTooltip(0);
     }, 800);
@@ -85,9 +89,55 @@ export function OnboardingTooltip() {
     };
   }, [visible, step, positionTooltip]);
 
+  // Focus trap: cycle Tab/Shift+Tab within the tooltip card
+  useEffect(() => {
+    if (!visible || !cardRef.current) return;
+
+    const card = cardRef.current;
+    // Focus the first focusable element in the card
+    const focusable = card.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length > 0) {
+      focusable[0].focus();
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Tab") return;
+      const els = Array.from(
+        card.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (els.length === 0) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    card.addEventListener("keydown", handleKeyDown);
+    return () => card.removeEventListener("keydown", handleKeyDown);
+  }, [visible, step]);
+
   const handleSkip = useCallback(() => {
     setVisible(false);
     try { localStorage.setItem(STORAGE_KEYS.onboardingCompleted, "true"); } catch {}
+    // Restore focus to trigger element
+    if (triggerRef.current) {
+      triggerRef.current.focus();
+      triggerRef.current = null;
+    }
   }, []);
 
   const handleNext = useCallback(() => {
@@ -129,7 +179,7 @@ export function OnboardingTooltip() {
         className="absolute pointer-events-auto w-[360px] max-w-[calc(100vw-40px)] -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300"
         style={{ top: tooltipPos.top, left: tooltipPos.left }}
       >
-        <div className="glass-card p-6 border border-white/10 shadow-2xl">
+        <div ref={cardRef} className="glass-card p-6 border border-white/10 shadow-2xl" role="dialog" aria-modal="true">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

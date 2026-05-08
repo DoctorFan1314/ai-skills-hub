@@ -70,5 +70,20 @@ export function useCollections() {
     });
   }, [user]);
 
-  return { collections, createCollection, addToCollection, removeFromCollection, deleteCollection };
+  const updateCollection = useCallback((collectionId: string, updates: Partial<Pick<UserCollection, "name" | "description" | "isPublic">>) => {
+    if (!user) return;
+    setCollections(prev => {
+      const updated = prev.map(c =>
+        c.id === collectionId ? { ...c, ...updates } : c
+      );
+      localStorage.setItem(STORAGE_KEYS.collections(user.email), JSON.stringify(updated));
+      return updated;
+    });
+  }, [user]);
+
+  const isInCollection = useCallback((skillId: string): UserCollection[] => {
+    return collections.filter(c => c.skillIds.includes(skillId));
+  }, [collections]);
+
+  return { collections, createCollection, addToCollection, removeFromCollection, deleteCollection, updateCollection, isInCollection };
 }

@@ -70,6 +70,7 @@ function applyTheme(resolved: "dark" | "light") {
   } else {
     root.classList.remove("dark");
   }
+  document.documentElement.style.colorScheme = resolved === "dark" ? "dark" : "light";
 }
 
 export function useTheme() {

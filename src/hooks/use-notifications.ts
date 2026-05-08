@@ -9,6 +9,11 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Derive unreadCount from notifications
+  useEffect(() => {
+    setUnreadCount(notifications.filter(n => !n.read).length);
+  }, [notifications]);
+
   // Load from localStorage
   useEffect(() => {
     if (!user) return;
@@ -17,7 +22,6 @@ export function useNotifications() {
       if (raw) {
         const parsed: Notification[] = JSON.parse(raw);
         setNotifications(parsed);
-        setUnreadCount(parsed.filter(n => !n.read).length);
       }
     } catch { /* ignore */ }
   }, [user]);
@@ -27,7 +31,6 @@ export function useNotifications() {
     setNotifications(prev => {
       const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
       localStorage.setItem(STORAGE_KEYS.notifications(user.email), JSON.stringify(updated));
-      setUnreadCount(updated.filter(n => !n.read).length);
       return updated;
     });
   }, [user]);
@@ -37,7 +40,6 @@ export function useNotifications() {
     setNotifications(prev => {
       const updated = prev.map(n => ({ ...n, read: true }));
       localStorage.setItem(STORAGE_KEYS.notifications(user.email), JSON.stringify(updated));
-      setUnreadCount(0);
       return updated;
     });
   }, [user]);
@@ -45,7 +47,6 @@ export function useNotifications() {
   const clearAll = useCallback(() => {
     if (!user) return;
     setNotifications([]);
-    setUnreadCount(0);
     localStorage.removeItem(STORAGE_KEYS.notifications(user.email));
   }, [user]);
 
@@ -61,7 +62,6 @@ export function useNotifications() {
     setNotifications(prev => {
       const updated = [newNotif, ...prev].slice(0, 50); // max 50
       localStorage.setItem(STORAGE_KEYS.notifications(user.email), JSON.stringify(updated));
-      setUnreadCount(updated.filter(n => !n.read).length);
       return updated;
     });
   }, [user]);

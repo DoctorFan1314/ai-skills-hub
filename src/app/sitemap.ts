@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { skills } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
 import { categories } from "@/lib/categories";
+import { agentSkillCategories } from "@/lib/agent-skill-categories";
 import { getAllTags } from "@/lib/tag-utils";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -47,5 +48,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...promptPages, ...agentSkillPages, ...categoryPages, ...tagPages];
+  const agentCategoryPages = agentSkillCategories.map((c) => ({
+    url: `${base}/skills?category=${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...promptPages, ...agentSkillPages, ...categoryPages, ...agentCategoryPages, ...tagPages];
 }

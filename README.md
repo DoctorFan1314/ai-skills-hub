@@ -280,6 +280,28 @@ ai-skills-hub/
 | CSS focus-visible | ✅ | Global keyboard focus ring styles |
 | Reduced-motion guard | ✅ | All CSS animations respect prefers-reduced-motion |
 | Light mode glass-card | ✅ | Backdrop blur with proper light-mode colors |
+| Homepage RSC | ✅ | Server component with lazy-loaded particles and client tab state |
+| Fuzzy search | ✅ | Multi-word AND matching with typo tolerance |
+| Search pagination | ✅ | Load More button for search results |
+| Prompts active filters | ✅ | Removable filter tags on prompts page |
+| Comment pagination | ✅ | Load More for comment sections |
+| Comment "edited" mark | ✅ | Edited badge on modified comments |
+| Password strength meter | ✅ | 5-bar strength indicator on registration |
+| Mobile search in Sheet | ✅ | Search input in mobile navigation drawer |
+| Guide code copy | ✅ | One-click copy on guide code examples |
+| Toast warning type | ✅ | Yellow warning toast; max 5 enforced |
+| Theme color-scheme sync | ✅ | `document.documentElement.style.colorScheme` for native widgets |
+| CSS scroll-behavior | ✅ | Smooth scrolling for anchor links |
+| Glow theme-adaptive | ✅ | Glow effects use CSS variables for light/dark |
+| 14 language highlight | ✅ | Python, Bash, YAML, CSS, HTML, SQL, Java, Go, Rust + existing |
+| Skill detail refactor | ✅ | Split into ReportModal, Lightbox, CollectionPicker, VersionTimeline |
+| useFilteredList hook | ✅ | Shared filtering logic for skills and prompts pages |
+| Focus trap (onboarding) | ✅ | Modal focus trap with Tab cycling and focus restore |
+| Lightbox keyboard nav | ✅ | Escape close + ArrowLeft/Right navigation |
+| Report modal ESC | ✅ | Escape to close report dialog |
+| Collection edit | ✅ | updateCollection and isInCollection functions |
+| Auth password hash fix | ✅ | Migration hashes passwords immediately, no plaintext |
+| Notification state fix | ✅ | unreadCount derived via useEffect, no stale state |
 
 ---
 

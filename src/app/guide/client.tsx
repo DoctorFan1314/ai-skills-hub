@@ -1,9 +1,37 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Copy, Zap, Globe, Laptop, ArrowRight, Sparkles, Bot, Terminal } from "lucide-react";
+import { BookOpen, Copy, Check, Zap, Globe, Laptop, ArrowRight, Sparkles, Bot, Terminal } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
+
+function CodeBlock({ code, label }: { code: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [code]);
+
+  return (
+    <div className="bg-secondary border border-border rounded-lg p-3 relative group">
+      {label && <p className="text-xs text-muted-foreground/60 mb-1">{label}</p>}
+      <div className="flex items-start gap-2">
+        <p className="text-sm text-foreground font-mono flex-1">{code}</p>
+        <button
+          onClick={handleCopy}
+          className="opacity-0 group-hover:opacity-100 shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          aria-label={copied ? "Copied" : "Copy code"}
+        >
+          {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function GuideClient() {
   const { t } = useI18n();
@@ -86,7 +114,7 @@ export default function GuideClient() {
           <p>{t.guide.agentSkillDesc2}</p>
           <div className="bg-secondary border border-border rounded-lg p-4 mt-4">
             <p className="text-xs text-muted-foreground/60 mb-2">{t.guide.installExample}</p>
-            <p className="text-sm text-foreground font-mono">npx skills install web-scraper</p>
+            <CodeBlock code="npx skills install web-scraper" />
             <p className="text-xs text-muted-foreground/60 mt-2">{t.guide.installNote}</p>
           </div>
         </div>
@@ -168,7 +196,7 @@ export default function GuideClient() {
             <p className="text-sm text-muted-foreground mb-3">{t.guide.cotDesc}</p>
             <div className="bg-secondary border border-border rounded-lg p-3">
               <p className="text-xs text-muted-foreground/60 mb-1">{t.guide.example}</p>
-              <p className="text-sm text-foreground font-mono">{t.guide.cotExample}</p>
+              <CodeBlock code={t.guide.cotExample} />
             </div>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
@@ -176,7 +204,7 @@ export default function GuideClient() {
             <p className="text-sm text-muted-foreground mb-3">{t.guide.fewShotDesc}</p>
             <div className="bg-secondary border border-border rounded-lg p-3">
               <p className="text-xs text-muted-foreground/60 mb-1">{t.guide.example}</p>
-              <p className="text-sm text-foreground font-mono">{t.guide.fewShotExample}</p>
+              <CodeBlock code={t.guide.fewShotExample} />
             </div>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
@@ -184,7 +212,7 @@ export default function GuideClient() {
             <p className="text-sm text-muted-foreground mb-3">{t.guide.roleDesc}</p>
             <div className="bg-secondary border border-border rounded-lg p-3">
               <p className="text-xs text-muted-foreground/60 mb-1">{t.guide.example}</p>
-              <p className="text-sm text-foreground font-mono">{t.guide.roleExample}</p>
+              <CodeBlock code={t.guide.roleExample} />
             </div>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
@@ -192,7 +220,7 @@ export default function GuideClient() {
             <p className="text-sm text-muted-foreground mb-3">{t.guide.structuredDesc}</p>
             <div className="bg-secondary border border-border rounded-lg p-3">
               <p className="text-xs text-muted-foreground/60 mb-1">{t.guide.example}</p>
-              <p className="text-sm text-foreground font-mono">{t.guide.structuredExample}</p>
+              <CodeBlock code={t.guide.structuredExample} />
             </div>
           </div>
           <div className="bg-secondary/30 border border-border rounded-lg p-5">
@@ -200,7 +228,7 @@ export default function GuideClient() {
             <p className="text-sm text-muted-foreground mb-3">{t.guide.selfCritiqueDesc}</p>
             <div className="bg-secondary border border-border rounded-lg p-3">
               <p className="text-xs text-muted-foreground/60 mb-1">{t.guide.example}</p>
-              <p className="text-sm text-foreground font-mono">{t.guide.selfCritiqueExample}</p>
+              <CodeBlock code={t.guide.selfCritiqueExample} />
             </div>
           </div>
         </div>

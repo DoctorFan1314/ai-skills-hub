@@ -6,6 +6,61 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.1.0] — 2026-05-08
+
+### Bug Fixes
+- **`error.tsx` deprecated API** — `unstable_retry` replaced with `reset()` (Next.js 16 breaking change)
+- **Auth password migration** — Old passwords no longer stored as plaintext in `passwordHash`; migration now hashes immediately via `hashPassword()`
+- **Notification `unreadCount` sync** — Removed `setUnreadCount` calls inside `setNotifications` updater (anti-pattern in concurrent mode); now derived via `useEffect`
+- **Prompt Playground `{var}` fix** — `buildPrompt` now replaces both `{{var}}` and `{var}` formats; previously `{var}` variables were detected but never substituted
+- **Sitemap agent categories** — Added agent skill category entries (`/skills?category=...`) to sitemap generation
+
+### Features
+- **Homepage RSC** — Removed `"use client"` from `page.tsx`; tab state moved to new `HomeContent` client component; `ParticleBackground` lazy-loaded via `dynamic({ ssr: false })`, reducing initial JS bundle
+- **Mobile search in Sheet** — Navbar mobile drawer now includes a search input at the top, routing to `/search?q=...`
+- **Search pagination** — Search results now show 8 items initially with "Load More" button; resets on query change
+- **Fuzzy search** — Search page now splits query into words and matches all tokens (AND logic), providing typo tolerance
+- **Infinite scroll prep** — Skills page "Load More" button with Intersection Observer pattern
+- **Prompts active filters** — Prompt list page now shows removable filter tags above results, matching the skills page pattern
+- **Comment "edited" mark** — Edited comments display `(edited)` badge next to the timestamp
+- **Comment activity sync** — Deleting a comment now also removes the corresponding activity record
+- **Comment pagination** — Comments section shows 10 initially with "Load More" button
+- **Guide code copy** — Code examples on the guide page now have a one-click copy button in the top-right corner
+- **Login forgot password toast** — "Forgot password" span now shows a "Coming soon" toast on click instead of doing nothing
+- **Password strength indicator** — Registration page shows a 5-bar strength meter below the password input (length, uppercase, lowercase, digit, special char)
+- **Copy install command toast** — Agent skill card now shows a toast notification after copying the install command
+- **Lightbox keyboard nav** — Screenshot lightbox now supports Escape to close and ArrowLeft/Right to navigate between images
+- **Report modal ESC** — Report modal now closes on Escape key press with focus trap
+- **Tab CSS hidden** — Featured section tab panels now use CSS `hidden` instead of `key={tab}` forced remount, reducing DOM churn
+- **Markdown more languages** — `MarkdownRenderer` now highlights Python, Bash, YAML, CSS, HTML, SQL, Java, Go, Rust (14 languages total)
+- **Onboarding focus trap** — Onboarding tooltip now traps focus within the dialog; Tab cycles within the card; focus restored on skip/finish
+- **Theme `color-scheme` sync** — `applyTheme` now sets `document.documentElement.style.colorScheme` for native browser widget consistency
+- **CSS `scroll-behavior: smooth`** — Anchor links now smooth-scroll instead of jumping
+- **CSS glow light-mode fix** — `.glow-text` and `.glow-border` now use `hsl(var(--primary))` instead of hardcoded cyan, adapting to light/dark themes
+- **Toast `warning` type** — Added yellow-styled warning toast type; max 5 toasts enforced
+- **Collections `updateCollection`** — `useCollections` hook now supports editing collection name, description, and visibility
+- **Collections `isInCollection`** — New query function to check which collections contain a given skill
+- **Categories page i18n** — Category listing page title and subtitle now use i18n keys instead of hardcoded English
+- **Register i18n** — Password strength labels now use i18n keys (`passwordWeak`/`Fair`/`Good`/`Strong`/`VeryStrong`)
+
+### Refactoring
+- **`useFilteredList` hook** — New generic hook extracting shared filtering logic (query debounce, URL sync, pagination, active filters) from both skills and prompts list pages
+- **Skill detail sub-components** — Split 900-line `skills/[id]/client.tsx` into 4 focused components: `ReportModal`, `Lightbox`, `CollectionPicker`, `VersionTimeline`
+
+### Internationalization
+- **New i18n keys** — `common.edited`, `common.passwordWeak`, `common.passwordFair`, `common.passwordGood`, `common.passwordStrong`, `common.passwordVeryStrong`, `common.loadMore`, `common.remaining`
+
+### New Files
+- `src/components/home/home-content.tsx` — Client component holding homepage tab state
+- `src/components/shared/lazy-particle-bg.tsx` — Dynamic import wrapper for ParticleBackground
+- `src/components/skill/report-modal.tsx` — Extracted report modal component
+- `src/components/skill/lightbox.tsx` — Extracted screenshot lightbox with keyboard nav
+- `src/components/skill/collection-picker.tsx` — Extracted collection picker dropdown
+- `src/components/skill/version-timeline.tsx` — Extracted version history timeline
+- `src/hooks/use-filtered-list.ts` — Generic filtered list hook
+
+---
+
 ## [v2.0.7] — 2026-05-08
 
 ### Features

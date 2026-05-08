@@ -54,6 +54,9 @@ export const zh: Dictionary = {
     reset: "重置", detail: "详情", generatePreview: "生成预览", previewPrompt: "预览完整 Prompt",
     screenshots: "截图", versionHistory: "版本历史", changelog: "更新日志",
     dependencies: "依赖", noDependencies: "无依赖",
+    edited: "已编辑",
+    passwordWeak: "弱", passwordFair: "一般", passwordGood: "良好", passwordStrong: "强", passwordVeryStrong: "非常强",
+    loadMore: "加载更多", remaining: "剩余",
   },
   home: {
     heroTitle: "探索强大的 Agent 技能",

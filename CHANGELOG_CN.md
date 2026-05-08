@@ -6,6 +6,61 @@
 
 ---
 
+## [v2.1.0] — 2026-05-08
+
+### 修复
+- **`error.tsx` 废弃 API** — `unstable_retry` 替换为 `reset()`（Next.js 16 breaking change）
+- **认证密码迁移** — 旧密码不再以明文存入 `passwordHash`；迁移时立即通过 `hashPassword()` 哈希
+- **通知 `unreadCount` 同步** — 移除在 `setNotifications` updater 内部调用 `setUnreadCount` 的反模式；改为 `useEffect` 派生
+- **Prompt Playground `{var}` 修复** — `buildPrompt` 现在同时替换 `{{var}}` 和 `{var}` 两种格式；之前 `{var}` 变量被识别但不会被替换
+- **Sitemap Agent 分类** — 为 Agent 技能分类添加 sitemap 条目（`/skills?category=...`）
+
+### 新功能
+- **首页 RSC 化** — 移除 `page.tsx` 的 `"use client"`；tab 状态移至新的 `HomeContent` 客户端组件；`ParticleBackground` 通过 `dynamic({ ssr: false })` 延迟加载，减少初始 JS 包体积
+- **移动端 Sheet 搜索** — 导航栏移动端抽屉顶部新增搜索输入框，路由到 `/search?q=...`
+- **搜索分页** — 搜索结果初始显示 8 条，带"加载更多"按钮；查询变化时重置
+- **模糊搜索** — 搜索页将查询拆分为多个单词，全部匹配（AND 逻辑），提供拼写容错
+- **无限滚动准备** — 技能页"加载更多"按钮配合 Intersection Observer 模式
+- **Prompts 活跃筛选标签** — Prompt 列表页现在在结果上方显示可移除的筛选标签，与技能页一致
+- **评论"已编辑"标记** — 编辑后的评论在时间戳旁显示"已编辑"标记
+- **评论活动同步** — 删除评论时同步清理对应的活动记录
+- **评论分页** — 评论区初始显示 10 条，带"加载更多"按钮
+- **指南代码复制** — 新手指南的代码示例右上角新增一键复制按钮
+- **登录忘记密码 Toast** — "忘记密码"文字点击后显示"即将上线"Toast 提示
+- **密码强度指示器** — 注册页密码输入框下方显示 5 格强度条（长度、大写、小写、数字、特殊字符）
+- **复制安装命令 Toast** — Agent 技能卡片复制安装命令后显示 Toast 通知
+- **Lightbox 键盘导航** — 截图灯箱支持 Escape 关闭和左右箭头键切换图片
+- **举报弹窗 ESC** — 举报弹窗支持 Escape 键关闭并实现焦点陷阱
+- **Tab CSS hidden** — 精选区 Tab 面板改用 CSS `hidden` 切换，替代 `key={tab}` 强制 remount，减少 DOM 开销
+- **Markdown 多语言高亮** — `MarkdownRenderer` 新增 Python、Bash、YAML、CSS、HTML、SQL、Java、Go、Rust 高亮（共 14 种语言）
+- **引导焦点陷阱** — 引导弹窗现在捕获焦点；Tab 在弹窗内循环；跳过/完成时恢复焦点
+- **主题 `color-scheme` 同步** — `applyTheme` 现在设置 `document.documentElement.style.colorScheme`，确保浏览器原生控件一致性
+- **CSS `scroll-behavior: smooth`** — 锚点链接现在平滑滚动而非跳转
+- **CSS glow 亮色修复** — `.glow-text` 和 `.glow-border` 改用 `hsl(var(--primary))`，适配亮暗主题
+- **Toast `warning` 类型** — 新增黄色警告类型；最多强制 5 个 Toast
+- **收藏集 `updateCollection`** — `useCollections` hook 支持编辑收藏集名称、描述和可见性
+- **收藏集 `isInCollection`** — 新增查询函数，检查某技能是否在收藏集中
+- **分类页 i18n** — 分类列表页标题和副标题改用 i18n 键替代硬编码英文
+- **注册 i18n** — 密码强度标签改用 i18n 键（`passwordWeak`/`Fair`/`Good`/`Strong`/`VeryStrong`）
+
+### 重构
+- **`useFilteredList` Hook** — 提取通用过滤列表 hook（查询防抖、URL 同步、分页、活跃筛选），技能页和模板页共用
+- **技能详情页子组件** — 将 900 行的 `skills/[id]/client.tsx` 拆分为 4 个聚焦组件：`ReportModal`、`Lightbox`、`CollectionPicker`、`VersionTimeline`
+
+### 国际化
+- **新增 i18n 键** — `common.edited`、`common.passwordWeak`、`common.passwordFair`、`common.passwordGood`、`common.passwordStrong`、`common.passwordVeryStrong`、`common.loadMore`、`common.remaining`
+
+### 新文件
+- `src/components/home/home-content.tsx` — 首页 Tab 状态客户端组件
+- `src/components/shared/lazy-particle-bg.tsx` — ParticleBackground 动态导入包装
+- `src/components/skill/report-modal.tsx` — 提取的举报弹窗组件
+- `src/components/skill/lightbox.tsx` — 提取的截图灯箱（含键盘导航）
+- `src/components/skill/collection-picker.tsx` — 提取的收藏集选择器
+- `src/components/skill/version-timeline.tsx` — 提取的版本历史时间线
+- `src/hooks/use-filtered-list.ts` — 通用过滤列表 Hook
+
+---
+
 ## [v2.0.7] — 2026-05-08
 
 ### 新功能

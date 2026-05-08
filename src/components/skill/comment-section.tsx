@@ -28,6 +28,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [visibleCommentCount, setVisibleCommentCount] = useState(10);
 
   // Load comments from global store
   useEffect(() => {
@@ -123,11 +124,13 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
   function handleSaveEdit(commentId: string) {
     if (!editContent.trim()) return;
     try {
+      const editedAt = new Date().toISOString();
       const raw = localStorage.getItem(STORAGE_KEYS.allComments);
       const all: Comment[] = raw ? JSON.parse(raw) : [];
       const idx = all.findIndex((c) => c.id === commentId);
       if (idx !== -1) {
         all[idx].content = editContent.trim();
+        (all[idx] as Comment & { editedAt?: string }).editedAt = editedAt;
         localStorage.setItem(STORAGE_KEYS.allComments, JSON.stringify(all));
         setComments(all.filter((c) => c.skillId === skillId));
       }
@@ -139,6 +142,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
         const uIdx = userComments.findIndex((c) => c.id === commentId);
         if (uIdx !== -1) {
           userComments[uIdx].content = editContent.trim();
+          (userComments[uIdx] as Comment & { editedAt?: string }).editedAt = editedAt;
           localStorage.setItem(key, JSON.stringify(userComments));
         }
       }
@@ -168,6 +172,18 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
         const skRaw = localStorage.getItem(skKey);
         const skComments: Comment[] = skRaw ? JSON.parse(skRaw) : [];
         localStorage.setItem(skKey, JSON.stringify(skComments.filter((c) => c.id !== commentId)));
+      } catch { /* ignore */ }
+      // 清理 activity
+      try {
+        if (user) {
+          const actKey = STORAGE_KEYS.activity(user.email);
+          const actRaw = localStorage.getItem(actKey);
+          const activities = actRaw ? JSON.parse(actRaw) : [];
+          const updatedActivities = activities.filter((a: { type: string; skillId?: string; id?: string }) =>
+            !(a.type === "comment" && a.id === commentId)
+          );
+          localStorage.setItem(actKey, JSON.stringify(updatedActivities));
+        }
       } catch { /* ignore */ }
     } catch { /* ignore */ }
     setTick((t) => t + 1);
@@ -221,7 +237,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
         <p className="text-sm text-muted-foreground text-center py-6">{t.comments.noComments}</p>
       ) : (
         <div className="space-y-4">
-          {comments.map((c) => (
+          {comments.slice(0, visibleCommentCount).map((c) => (
             <div key={c.id} className="border-t border-border pt-4 first:border-0 first:pt-0">
               <div className="flex items-center gap-3 mb-2">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
@@ -238,6 +254,9 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
                       </div>
                     )}
                     <time className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString(locale)}</time>
+                    {(c as Comment & { editedAt?: string }).editedAt && (
+                      <span className="text-xs text-muted-foreground/60">({t.common.edited})</span>
+                    )}
                   </div>
                 </div>
               </div>

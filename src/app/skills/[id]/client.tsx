@@ -10,10 +10,14 @@ import {
   Download, Star, Copy, Check,
   Terminal, FileCode, Clock, ThumbsUp, Reply, X,
   Search, ArrowLeft,
-  Share2, BadgeCheck, UserPlus, UserCheck, AlertTriangle, ChevronDown, Image as ImageIcon,
+  Share2, BadgeCheck, UserPlus, UserCheck, AlertTriangle, Image as ImageIcon,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { MarkdownRenderer, CopyButton, codeTheme } from "@/components/shared/markdown-renderer";
+import { ReportModal } from "@/components/skill/report-modal";
+import { Lightbox } from "@/components/skill/lightbox";
+import { CollectionPicker } from "@/components/skill/collection-picker";
+import { VersionTimeline } from "@/components/skill/version-timeline";
 import { useI18n } from "@/contexts/i18n-context";
 import { useToast } from "@/contexts/toast-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -91,12 +95,19 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToUser, setReplyToUser] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const [reportReason, setReportReason] = useState<"spam" | "abuse" | "copyright" | "other">("spam");
-  const [reportDesc, setReportDesc] = useState("");
-  const [showCollections, setShowCollections] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState("");
-  const [showNewCollection, setShowNewCollection] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  // Report modal ESC close + focus trap
+  useEffect(() => {
+    if (!showReport) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowReport(false);
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [showReport]);
 
   // Load persisted comments from localStorage
   useEffect(() => {
@@ -155,7 +166,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
     }
   }
 
-  function handleSubmitReport() {
+  function handleSubmitReport(reason: "spam" | "abuse" | "copyright" | "other", description: string) {
     try {
       const existing = localStorage.getItem(STORAGE_KEYS.reports);
       const reports: unknown[] = existing ? JSON.parse(existing) : [];
@@ -163,8 +174,8 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
         id: `rpt-${Date.now()}`,
         targetType: "skill",
         targetId: skill?.id,
-        reason: reportReason,
-        description: reportDesc,
+        reason,
+        description,
         reporterEmail: user?.email || "anonymous",
         timestamp: new Date().toISOString(),
         status: "pending",
@@ -172,8 +183,6 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
       localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify(reports));
     } catch { /* ignore */ }
     setShowReport(false);
-    setReportReason("spam");
-    setReportDesc("");
     toast(t.common.reportSubmitted, "success");
   }
 
@@ -482,80 +491,14 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
             </div>
 
             {/* Add to Collection */}
-            <div className="glass-card p-5">
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-border text-foreground hover:bg-secondary"
-                  onClick={() => setShowCollections(!showCollections)}
-                >
-                  {t.common.addToCollection}
-                  <ChevronDown className="h-3.5 w-3.5 ml-auto" />
-                </Button>
-                {showCollections && (
-                  <div className="absolute z-20 bottom-full mb-1 left-0 w-full glass-card border border-border rounded-lg shadow-lg overflow-hidden">
-                    <div className="max-h-48 overflow-y-auto">
-                      {collections.length > 0 ? (
-                        collections.map((col) => (
-                          <button
-                            key={col.id}
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors text-foreground"
-                            onClick={() => {
-                              addToCollection(col.id, skill.id);
-                              setShowCollections(false);
-                              toast(`${skill.name} → ${col.name}`, "success");
-                            }}
-                          >
-                            {col.name}
-                          </button>
-                        ))
-                      ) : (
-                        <p className="px-3 py-2 text-xs text-muted-foreground">{t.common.noData}</p>
-                      )}
-                    </div>
-                    <div className="border-t border-border">
-                      {showNewCollection ? (
-                        <div className="p-2 flex gap-1">
-                          <input
-                            type="text"
-                            value={newCollectionName}
-                            onChange={(e) => setNewCollectionName(e.target.value)}
-                            placeholder={t.common.collectionName}
-                            className="flex-1 px-2 py-1 text-xs bg-secondary border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none"
-                            autoFocus
-                          />
-                          <Button
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={() => {
-                              if (newCollectionName.trim()) {
-                                const col = createCollection(newCollectionName.trim(), "");
-                                if (!col) return;
-                                addToCollection(col.id, skill.id);
-                                setNewCollectionName("");
-                                setShowNewCollection(false);
-                                setShowCollections(false);
-                                toast(`${skill.name} → ${col.name}`, "success");
-                              }
-                            }}
-                          >
-                            {t.common.confirm}
-                          </Button>
-                        </div>
-                      ) : (
-                        <button
-                          className="w-full text-left px-3 py-2 text-xs text-primary hover:bg-secondary transition-colors"
-                          onClick={() => setShowNewCollection(true)}
-                        >
-                          + {t.common.newCollection}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <CollectionPicker
+              collections={collections}
+              skillId={skill.id}
+              skillName={skill.name}
+              onAddToCollection={addToCollection}
+              onCreateCollection={createCollection}
+              onSuccess={(msg) => toast(msg, "success")}
+            />
 
             {/* Report button */}
             <div className="glass-card p-5">
@@ -776,125 +719,25 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
       {/* Tab: Version History */}
       {activeTab === "versions" && (
         <div role="tabpanel" id="detail-tabpanel-versions" aria-labelledby="detail-tab-versions" className="max-w-2xl">
-          <div className="glass-card p-6">
-            <div className="relative">
-              {/* Vertical timeline line */}
-              <div className="absolute left-[11px] top-3 bottom-3 w-px bg-border" />
-
-              <div className="space-y-6">
-                {versions.map((v, i) => (
-                  <div key={`${v.version}-${i}`} className="relative flex gap-4">
-                    {/* Timeline dot */}
-                    <div className={`relative z-10 mt-1 h-[22px] w-[22px] rounded-full border-2 shrink-0 ${
-                      i === 0
-                        ? "bg-primary border-primary"
-                        : "bg-background border-border"
-                    }`}>
-                      {i === 0 && (
-                        <div className="absolute inset-1 rounded-full bg-primary-foreground" />
-                      )}
-                    </div>
-
-                    {/* Version content */}
-                    <div className="flex-1 pb-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-semibold ${i === 0 ? "text-foreground" : "text-muted-foreground"}`}>
-                          v{v.version}
-                        </span>
-                        {i === 0 && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
-                            Latest
-                          </Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground ml-auto">{v.date}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{v.changelog}</p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">by {v.author}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <VersionTimeline versions={versions} />
         </div>
       )}
 
-      {/* Report modal overlay */}
-      {showReport && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowReport(false)}
-        >
-          <div
-            className="glass-card w-full max-w-md mx-4 p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">{t.common.report}</h3>
-              <button onClick={() => setShowReport(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <p className="text-sm text-muted-foreground mb-4">{t.common.reportReason}</p>
-
-            <div className="space-y-2 mb-4">
-              {(["spam", "abuse", "copyright", "other"] as const).map((reason) => (
-                <label key={reason} className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="report-reason"
-                    value={reason}
-                    checked={reportReason === reason}
-                    onChange={() => setReportReason(reason)}
-                    className="accent-primary"
-                  />
-                  <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                    {t.common[`report${reason.charAt(0).toUpperCase() + reason.slice(1)}` as keyof typeof t.common]}
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            <textarea
-              value={reportDesc}
-              onChange={(e) => setReportDesc(e.target.value)}
-              placeholder={t.common.reportReason}
-              className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none min-h-[60px] mb-4"
-            />
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowReport(false)}>
-                {t.common.cancel}
-              </Button>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={handleSubmitReport}>
-                {t.common.report}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Report modal */}
+      <ReportModal
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        onSubmit={handleSubmitReport}
+      />
 
       {/* Lightbox overlay for screenshots */}
-      {lightboxSrc && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setLightboxSrc(null)}
-        >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <button
-              onClick={() => setLightboxSrc(null)}
-              className="absolute -top-10 right-0 text-white/70 hover:text-white"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <img
-              src={lightboxSrc}
-              alt="Screenshot"
-              className="max-w-full max-h-[90vh] rounded-lg object-contain"
-            />
-          </div>
-        </div>
+      {skill.screenshots && (
+        <Lightbox
+          src={lightboxSrc}
+          screenshots={skill.screenshots}
+          onClose={() => setLightboxSrc(null)}
+          onNavigate={setLightboxSrc}
+        />
       )}
     </div>
   );

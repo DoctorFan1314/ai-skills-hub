@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Zap, SlidersHorizontal, X } from "lucide-react";
@@ -11,6 +10,7 @@ import { agentSkillCategories } from "@/lib/agent-skill-categories";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { CreateDropdown } from "@/components/skills/create-dropdown";
 import { useI18n } from "@/contexts/i18n-context";
+import { useFilteredList } from "@/hooks/use-filtered-list";
 
 const CreateFromGithub = dynamic(() => import("@/components/skills/create-from-github").then(m => ({ default: m.CreateFromGithub })), { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> });
 const CreateFromUpload = dynamic(() => import("@/components/skills/create-from-upload").then(m => ({ default: m.CreateFromUpload })), { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div> });
@@ -20,76 +20,74 @@ const ALL_LICENSES = ["MIT", "Apache-2.0", "ISC", "BSD-3-Clause"];
 const ALL_KEY = "__all__";
 
 export default function SkillsClient() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { t } = useI18n();
 
   const collections = [t.agentSkills.collectionAll, "Vercel Agent Toolkit", "Anthropic Agent Suite", "Inference.sh Toolkit", t.agentSkills.collectionCommunity, t.agentSkills.collectionDevTools, t.agentSkills.collectionProductivity, t.agentSkills.collectionDataTools];
   const categories = [t.agentSkills.collectionAll, ...agentSkillCategories.map((c) => c.name)];
 
-  // --- State initialized from URL params ---
-  const [query, setQuery] = useState(searchParams.get("q") || "");
-  const [sortBy, setSortBy] = useState<"downloads" | "stars" | "newest">(
-    (["downloads", "stars", "newest"].includes(searchParams.get("sort") || "")
-      ? searchParams.get("sort")
-      : "downloads") as "downloads" | "stars" | "newest",
-  );
-  const [selectedCollection, setSelectedCollection] = useState(
-    searchParams.get("collection") || t.agentSkills.collectionAll,
-  );
-  const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || t.agentSkills.collectionAll,
-  );
-  const [selectedLicense, setSelectedLicense] = useState(
-    searchParams.get("license") || ALL_KEY,
-  );
   const [showFilters, setShowFilters] = useState(false);
   const [showGithub, setShowGithub] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [refresh, setRefresh] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const allSkills = useMemo(() => [...agentSkills, ...getPublishedSkills()], [refresh]);
 
   const handleCreated = useCallback(() => setRefresh((r) => r + 1), []);
 
-  // --- URL sync ---
-  const updateURL = useCallback(
-    (overrides: Record<string, string>) => {
-      const params = new URLSearchParams();
-      const q = overrides.q ?? query;
-      const collection = overrides.collection ?? selectedCollection;
-      const category = overrides.category ?? selectedCategory;
-      const license = overrides.license ?? selectedLicense;
-      const sort = overrides.sort ?? sortBy;
-
-      if (q) params.set("q", q);
-      if (collection && collection !== t.agentSkills.collectionAll) params.set("collection", collection);
-      if (category && category !== t.agentSkills.collectionAll) params.set("category", category);
-      if (license && license !== ALL_KEY) params.set("license", license);
-      if (sort && sort !== "downloads") params.set("sort", sort);
-
-      const url = params.toString() ? `/skills?${params.toString()}` : "/skills";
-      router.replace(url, { scroll: false });
+  const {
+    query,
+    handleQueryChange,
+    sortBy,
+    setSortBy,
+    filterValues,
+    setFilter,
+    filtered,
+    visibleList,
+    visibleCount,
+    loadMore,
+    clearFilters,
+    activeFilters,
+  } = useFilteredList({
+    items: allSkills,
+    filters: [
+      { key: "collection", defaultValue: t.agentSkills.collectionAll, allValue: t.agentSkills.collectionAll, label: t.agentSkills.collection },
+      { key: "category", defaultValue: t.agentSkills.collectionAll, allValue: t.agentSkills.collectionAll, label: t.agentSkills.category },
+      { key: "license", defaultValue: ALL_KEY, allValue: ALL_KEY, label: t.agentSkills.license },
+    ],
+    defaultSort: "downloads",
+    validSorts: ["downloads", "stars", "newest"],
+    basePath: "/skills",
+    pageSize: PAGE_SIZE,
+    filterFn: (item, q, filters) => {
+      if (q.trim()) {
+        const queryLower = q.toLowerCase();
+        if (
+          !item.name.toLowerCase().includes(queryLower) &&
+          !item.title.toLowerCase().includes(queryLower) &&
+          !item.description.toLowerCase().includes(queryLower) &&
+          !item.triggers.some((tr: string) => tr.toLowerCase().includes(queryLower)) &&
+          !item.tags.some((tag: string) => tag.toLowerCase().includes(queryLower))
+        ) return false;
+      }
+      if (filters.collection && filters.collection !== t.agentSkills.collectionAll) {
+        if (item.collection !== filters.collection) return false;
+      }
+      if (filters.category && filters.category !== t.agentSkills.collectionAll) {
+        if (item.category !== filters.category) return false;
+      }
+      if (filters.license && filters.license !== ALL_KEY) {
+        if (item.license !== filters.license) return false;
+      }
+      return true;
     },
-    [query, selectedCollection, selectedCategory, selectedLicense, sortBy, router, t.agentSkills.collectionAll],
-  );
-
-  const handleQueryChange = useCallback(
-    (val: string) => {
-      setQuery(val);
-      clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => updateURL({ q: val }), 300);
+    sortFn: (a, b, sort) => {
+      if (sort === "downloads") return b.downloads - a.downloads;
+      if (sort === "stars") return b.stars - a.stars;
+      return b.lastUpdated.localeCompare(a.lastUpdated);
     },
-    [updateURL],
-  );
+  });
 
-  useEffect(() => () => clearTimeout(debounceRef.current), []);
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [selectedCollection, selectedCategory, selectedLicense, sortBy]);
-
-  // --- Cross-filter counts ---
+  // --- Cross-filter counts (specific to this page) ---
   const getFilteredSkills = useCallback(
     (excludeCollection?: boolean, excludeCategory?: boolean, excludeLicense?: boolean) => {
       let result = query.trim()
@@ -103,18 +101,18 @@ export default function SkillsClient() {
           )
         : [...allSkills];
 
-      if (!excludeCollection && selectedCollection !== t.agentSkills.collectionAll) {
-        result = result.filter((s) => s.collection === selectedCollection);
+      if (!excludeCollection && filterValues.collection !== t.agentSkills.collectionAll) {
+        result = result.filter((s) => s.collection === filterValues.collection);
       }
-      if (!excludeCategory && selectedCategory !== t.agentSkills.collectionAll) {
-        result = result.filter((s) => s.category === selectedCategory);
+      if (!excludeCategory && filterValues.category !== t.agentSkills.collectionAll) {
+        result = result.filter((s) => s.category === filterValues.category);
       }
-      if (!excludeLicense && selectedLicense !== ALL_KEY) {
-        result = result.filter((s) => s.license === selectedLicense);
+      if (!excludeLicense && filterValues.license !== ALL_KEY) {
+        result = result.filter((s) => s.license === filterValues.license);
       }
       return result;
     },
-    [allSkills, query, selectedCollection, selectedCategory, selectedLicense, t.agentSkills.collectionAll],
+    [allSkills, query, filterValues, t.agentSkills.collectionAll],
   );
 
   const collectionCounts = useMemo(() => {
@@ -144,53 +142,6 @@ export default function SkillsClient() {
     }
     return counts;
   }, [getFilteredSkills]);
-
-  // --- Main filtered list ---
-  const filtered = useMemo(() => {
-    const result = getFilteredSkills();
-    result.sort((a, b) => {
-      if (sortBy === "downloads") return b.downloads - a.downloads;
-      if (sortBy === "stars") return b.stars - a.stars;
-      return b.lastUpdated.localeCompare(a.lastUpdated);
-    });
-    return result;
-  }, [getFilteredSkills, sortBy]);
-
-  // --- Active filters ---
-  const activeFilters = useMemo(() => {
-    const list: { key: string; label: string; clear: () => void }[] = [];
-    if (selectedCollection !== t.agentSkills.collectionAll) {
-      list.push({
-        key: "collection",
-        label: `${t.agentSkills.collection}: ${selectedCollection}`,
-        clear: () => { setSelectedCollection(t.agentSkills.collectionAll); updateURL({ collection: t.agentSkills.collectionAll }); },
-      });
-    }
-    if (selectedCategory !== t.agentSkills.collectionAll) {
-      list.push({
-        key: "category",
-        label: `${t.agentSkills.category}: ${selectedCategory}`,
-        clear: () => { setSelectedCategory(t.agentSkills.collectionAll); updateURL({ category: t.agentSkills.collectionAll }); },
-      });
-    }
-    if (selectedLicense !== ALL_KEY) {
-      list.push({
-        key: "license",
-        label: `${t.agentSkills.license}: ${selectedLicense}`,
-        clear: () => { setSelectedLicense(ALL_KEY); updateURL({ license: ALL_KEY }); },
-      });
-    }
-    return list;
-  }, [selectedCollection, selectedCategory, selectedLicense, t.agentSkills.collectionAll, t.agentSkills.collection, t.agentSkills.category, t.agentSkills.license, updateURL]);
-
-  const clearAllFilters = useCallback(() => {
-    setQuery("");
-    setSelectedCollection(t.agentSkills.collectionAll);
-    setSelectedCategory(t.agentSkills.collectionAll);
-    setSelectedLicense(ALL_KEY);
-    setSortBy("downloads");
-    router.replace("/skills", { scroll: false });
-  }, [router, t.agentSkills.collectionAll]);
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-12 lg:px-8">
@@ -240,7 +191,7 @@ export default function SkillsClient() {
                 aria-checked={sortBy === s}
                 variant={sortBy === s ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => { setSortBy(s); updateURL({ sort: s }); }}
+                onClick={() => setSortBy(s)}
                 className={`text-xs ${sortBy === s ? "text-foreground" : "text-muted-foreground"}`}
               >
                 {s === "downloads" ? t.agentSkills.sortPopular : s === "stars" ? t.agentSkills.sortRating : t.agentSkills.sortNewest}
@@ -265,7 +216,7 @@ export default function SkillsClient() {
               </span>
             ))}
             <button
-              onClick={clearAllFilters}
+              onClick={clearFilters}
               className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
             >
               {t.common.clearFilters}
@@ -282,10 +233,10 @@ export default function SkillsClient() {
                   <button
                     key={c}
                     role="radio"
-                    aria-checked={selectedCollection === c}
-                    onClick={() => { setSelectedCollection(c); updateURL({ collection: c }); }}
+                    aria-checked={filterValues.collection === c}
+                    onClick={() => setFilter("collection", c)}
                     className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                      selectedCollection === c
+                      filterValues.collection === c
                         ? "bg-primary/10 text-primary border-primary/30"
                         : "bg-secondary text-muted-foreground border-border hover:border-primary/20"
                     }`}
@@ -302,10 +253,10 @@ export default function SkillsClient() {
                   <button
                     key={c}
                     role="radio"
-                    aria-checked={selectedCategory === c}
-                    onClick={() => { setSelectedCategory(c); updateURL({ category: c }); }}
+                    aria-checked={filterValues.category === c}
+                    onClick={() => setFilter("category", c)}
                     className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                      selectedCategory === c
+                      filterValues.category === c
                         ? "bg-primary/10 text-primary border-primary/30"
                         : "bg-secondary text-muted-foreground border-border hover:border-primary/20"
                     }`}
@@ -322,10 +273,10 @@ export default function SkillsClient() {
                   <button
                     key={lic}
                     role="radio"
-                    aria-checked={selectedLicense === lic}
-                    onClick={() => { setSelectedLicense(lic); updateURL({ license: lic }); }}
+                    aria-checked={filterValues.license === lic}
+                    onClick={() => setFilter("license", lic)}
                     className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                      selectedLicense === lic
+                      filterValues.license === lic
                         ? "bg-primary/10 text-primary border-primary/30"
                         : "bg-secondary text-muted-foreground border-border hover:border-primary/20"
                     }`}
@@ -350,7 +301,7 @@ export default function SkillsClient() {
           <p className="text-muted-foreground text-lg mb-1">{t.common.noResults}</p>
           <p className="text-muted-foreground text-sm mb-6">{t.common.tryDifferent}</p>
           <button
-            onClick={clearAllFilters}
+            onClick={clearFilters}
             className="px-5 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
           >
             {t.common.clearFilters}
@@ -359,14 +310,14 @@ export default function SkillsClient() {
       ) : (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filtered.slice(0, visibleCount).map((skill) => (
+            {visibleList.map((skill) => (
               <AgentSkillCard key={skill.id} skill={skill} />
             ))}
           </div>
           {filtered.length > visibleCount && (
             <div className="text-center mt-10">
               <button
-                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                onClick={loadMore}
                 className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
               >
                 {t.common.more} ({filtered.length - visibleCount})

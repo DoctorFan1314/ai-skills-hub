@@ -24,6 +24,9 @@ export interface Dictionary {
     reset: string; detail: string; generatePreview: string; previewPrompt: string;
     screenshots: string; versionHistory: string; changelog: string;
     dependencies: string; noDependencies: string;
+    edited: string;
+    passwordWeak: string; passwordFair: string; passwordGood: string; passwordStrong: string; passwordVeryStrong: string;
+    loadMore: string; remaining: string;
   };
   home: {
     featuredTitle: string; featuredSubtitle: string;

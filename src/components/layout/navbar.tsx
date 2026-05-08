@@ -220,7 +220,28 @@ export function Navbar() {
             />
             <SheetContent side="right" className="bg-card border-border w-72">
               <SheetTitle className="text-foreground sr-only">{t.common.navigationMenu}</SheetTitle>
-              <nav className="flex flex-col gap-1 mt-8">
+              <div className="mt-8 mb-4 px-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t.common.search}
+                    className="h-9 w-full pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-sm"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const q = searchQuery.trim();
+                        if (q) {
+                          router.push(`/search?q=${encodeURIComponent(q)}`);
+                          setSearchQuery("");
+                          setSheetOpen(false);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <nav className="flex flex-col gap-1">
                 {navLinks.map((link) => (
                   <Link key={link.href} href={link.href} onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary">
                     {link.label}

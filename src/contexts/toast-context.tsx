@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useCallback } from "react";
 interface Toast {
   id: string;
   message: string;
-  type?: "info" | "success" | "error";
+  type?: "info" | "success" | "error" | "warning";
 }
 
 interface ToastContextValue {
@@ -24,7 +24,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       const id = crypto.randomUUID();
       setToasts((prev) => {
         if (prev.some((t) => t.message === message)) return prev;
-        return [...prev, { id, message, type }];
+        const next = [...prev, { id, message, type }];
+        // Keep at most 5 toasts, remove earliest
+        return next.length > 5 ? next.slice(next.length - 5) : next;
       });
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));

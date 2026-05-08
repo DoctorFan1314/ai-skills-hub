@@ -7,10 +7,12 @@ import { useState } from "react";
 import type { AgentSkill } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
+import { useToast } from "@/contexts/toast-context";
 
 export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
   const [copied, setCopied] = useState(false);
   const { t } = useI18n();
+  const { toast } = useToast();
 
   return (
     <div className="glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden">
@@ -83,7 +85,9 @@ export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          navigator.clipboard.writeText(skill.installCommand).catch(() => {});
+          navigator.clipboard.writeText(skill.installCommand).then(() => {
+            toast(t.agentSkills.installCopied, "success");
+          }).catch(() => {});
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         }}
@@ -91,7 +95,9 @@ export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             e.stopPropagation();
-            navigator.clipboard.writeText(skill.installCommand).catch(() => {});
+            navigator.clipboard.writeText(skill.installCommand).then(() => {
+              toast(t.agentSkills.installCopied, "success");
+            }).catch(() => {});
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           }

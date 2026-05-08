@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { categories } from "@/lib/categories";
 import { getSkillsByCategory } from "@/lib/mock-data";
@@ -5,6 +7,7 @@ import { agentSkills } from "@/lib/mock-agent-skills";
 import { SkillCard } from "@/components/skill/skill-card";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { ArrowRight } from "lucide-react";
+import { useI18n } from "@/contexts/i18n-context";
 
 const categoryToAgentCategory: Record<string, string[]> = {
   content: ["通讯协作", "文件处理"],
@@ -16,11 +19,12 @@ const categoryToAgentCategory: Record<string, string[]> = {
 };
 
 export default function CategoriesPage() {
+  const { t } = useI18n();
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Categories</h1>
-        <p className="text-muted-foreground">Explore Agent Skills and Prompt Templates by domain</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t.categories.title}</h1>
+        <p className="text-muted-foreground">{t.categories.subtitle}</p>
       </div>
       <div className="space-y-12">
         {categories.map((cat) => {

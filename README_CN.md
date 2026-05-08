@@ -279,6 +279,28 @@ ai-skills-hub/
 | CSS focus-visible | ✅ | 全局键盘焦点环样式 |
 | reduced-motion 保护 | ✅ | 所有 CSS 动画尊重 prefers-reduced-motion |
 | 亮色模式毛玻璃 | ✅ | 背景模糊配合正确的亮色模式配色 |
+| 首页 RSC 化 | ✅ | Server Component + 延迟加载粒子 + 客户端 Tab 状态 |
+| 模糊搜索 | ✅ | 多词 AND 匹配，拼写容错 |
+| 搜索分页 | ✅ | 搜索结果"加载更多"按钮 |
+| Prompts 活跃筛选标签 | ✅ | Prompt 列表页可移除的筛选标签 |
+| 评论分页 | ✅ | 评论区"加载更多" |
+| 评论"已编辑"标记 | ✅ | 编辑后的评论显示已编辑标记 |
+| 密码强度指示器 | ✅ | 注册页 5 格强度条 |
+| 移动端 Sheet 搜索 | ✅ | 移动端导航抽屉搜索入口 |
+| 指南代码复制 | ✅ | 新手指南代码示例一键复制 |
+| Toast warning 类型 | ✅ | 黄色警告 Toast；最多 5 个 |
+| 主题 color-scheme 同步 | ✅ | 设置 `document.documentElement.style.colorScheme` 确保原生控件一致 |
+| CSS scroll-behavior | ✅ | 锚点链接平滑滚动 |
+| Glow 主题自适应 | ✅ | 发光效果使用 CSS 变量适配亮暗主题 |
+| 14 种语言高亮 | ✅ | Python、Bash、YAML、CSS、HTML、SQL、Java、Go、Rust 等 |
+| 技能详情页重构 | ✅ | 拆分为 ReportModal、Lightbox、CollectionPicker、VersionTimeline |
+| useFilteredList Hook | ✅ | 技能页和模板页共用的通用过滤列表 Hook |
+| 引导焦点陷阱 | ✅ | Modal 焦点陷阱，Tab 循环，焦点恢复 |
+| Lightbox 键盘导航 | ✅ | Escape 关闭 + 左右箭头切换 |
+| 举报弹窗 ESC | ✅ | Escape 关闭举报弹窗 |
+| 收藏集编辑 | ✅ | updateCollection 和 isInCollection 函数 |
+| 认证密码哈希修复 | ✅ | 迁移时立即哈希，不存明文 |
+| 通知状态修复 | ✅ | unreadCount 通过 useEffect 派生，避免 stale state |
 
 ---
 

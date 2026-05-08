@@ -54,6 +54,9 @@ export const en: Dictionary = {
     reset: "Reset", detail: "Detail", generatePreview: "Generate Preview", previewPrompt: "Preview Full Prompt",
     screenshots: "Screenshots", versionHistory: "Version History", changelog: "Changelog",
     dependencies: "Dependencies", noDependencies: "No dependencies",
+    edited: "edited",
+    passwordWeak: "Weak", passwordFair: "Fair", passwordGood: "Good", passwordStrong: "Strong", passwordVeryStrong: "Very Strong",
+    loadMore: "Load More", remaining: "remaining",
   },
   home: {
     heroTitle: "Discover Powerful Agent Skills",

@@ -109,6 +109,9 @@ export default function SkillDetailClient({ id }: { id: string }) {
     for (const [key, value] of Object.entries(variableValues)) {
       if (value) result = result.replaceAll(`{{${key}}}`, value);
     }
+    for (const [key, value] of Object.entries(variableValues)) {
+      if (value) result = result.replace(new RegExp(`\\{${key}\\}`, "g"), value);
+    }
     return result;
   };
 
