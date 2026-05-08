@@ -125,7 +125,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
     const newComment: LocalComment = {
       id: `local-${Date.now()}`,
       user: user?.username || "User",
-      avatar: user ? user.username.charAt(0).toUpperCase() : "U",
+      avatar: user?.avatar || (user ? user.username.charAt(0).toUpperCase() : "U"),
       content: commentText.trim(),
       rating: commentRating,
       date: new Date().toISOString().slice(0, 10),
@@ -669,8 +669,12 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
             {localComments.map((comment) => (
               <div key={comment.id} className="glass-card p-5">
                 <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-medium shrink-0">
-                    {comment.avatar}
+                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-medium shrink-0 overflow-hidden">
+                    {comment.avatar && comment.avatar.startsWith("data:") ? (
+                      <img src={comment.avatar} alt={comment.user} className="h-full w-full object-cover" />
+                    ) : (
+                      comment.avatar
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

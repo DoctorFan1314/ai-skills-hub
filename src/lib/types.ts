@@ -94,6 +94,7 @@ export interface Comment {
   skillId: string;
   userEmail: string;
   username: string;
+  avatar?: string;
   content: string;
   rating?: number;
   createdAt: string;

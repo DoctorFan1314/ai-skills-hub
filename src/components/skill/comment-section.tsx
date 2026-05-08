@@ -48,6 +48,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
       skillId,
       userEmail: user.email,
       username: user.username,
+      avatar: user.avatar,
       content: content.trim(),
       rating: rating || undefined,
       createdAt: new Date().toISOString(),
@@ -240,9 +241,13 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
           {comments.slice(0, visibleCommentCount).map((c) => (
             <div key={c.id} className="border-t border-border pt-4 first:border-0 first:pt-0">
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                  {c.username.charAt(0).toUpperCase()}
-                </div>
+                {c.avatar ? (
+                  <img src={c.avatar} alt={c.username} className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                    {c.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-medium text-foreground">{c.username}</p>
                   <div className="flex items-center gap-2">
