@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, Download, Star, Package, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -112,8 +113,7 @@ export default function UserProfileClient({ username }: { username: string }) {
           {/* Avatar */}
           <div className="h-20 w-20 shrink-0 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-3xl font-bold text-primary overflow-hidden">
             {user.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar} alt={user.username} className="h-full w-full object-cover" />
+              <Image src={user.avatar} alt={user.username} width={80} height={80} className="h-full w-full object-cover" unoptimized />
             ) : (
               user.username.charAt(0).toUpperCase()
             )}

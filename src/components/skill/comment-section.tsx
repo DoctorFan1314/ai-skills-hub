@@ -10,7 +10,7 @@ import { canPerformAction } from "@/lib/utils";
 import type { Comment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, ThumbsUp, MessageSquare, Pencil, Trash2, X, Check, Bold, Italic, Code, List } from "lucide-react";
+import { Star, ThumbsUp, MessageSquare, Pencil, Trash2, X, Check, Bold, Italic, Code, List, Reply } from "lucide-react";
 
 const MarkdownRenderer = lazy(() =>
   import("@/components/shared/markdown-renderer").then((m) => ({ default: m.MarkdownRenderer }))
@@ -29,6 +29,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [visibleCommentCount, setVisibleCommentCount] = useState(10);
 
   // Load comments from global store
@@ -54,6 +55,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
       content: content.trim(),
       rating: rating || undefined,
       createdAt: new Date().toISOString(),
+      parentId: replyingTo || undefined,
       likes: 0,
       likedBy: [],
     };
@@ -93,6 +95,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
     setComments((prev) => [comment, ...prev]);
     setContent("");
     setRating(0);
+    setReplyingTo(null);
     toast(t.comments.commentPublished, "success");
   }
 
@@ -200,6 +203,15 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
 
       {/* Comment form */}
       <div className="mb-6 space-y-3">
+        {replyingTo && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 rounded-lg px-3 py-2">
+            <Reply className="h-3 w-3" />
+            <span>{t.comments.replyingTo} @{comments.find(c => c.id === replyingTo)?.username || "user"}</span>
+            <button onClick={() => { setReplyingTo(null); setContent(""); }} className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground">
+              <X className="h-3 w-3" />{t.comments.cancelReply}
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-1" role="radiogroup" aria-label={t.comments.rating}>
           <span className="text-sm text-muted-foreground mr-2">{t.comments.rating}：</span>
           {[1, 2, 3, 4, 5].map((star) => (
@@ -212,7 +224,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
               onMouseEnter={() => setHoverRating(star)}
               onMouseLeave={() => setHoverRating(0)}
               onClick={() => setRating(star)}
-              className="p-0.5"
+              className="p-0.5 star-rating-btn"
             >
               <Star className={`h-4 w-4 ${(hoverRating || rating) >= star ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground/30"}`} />
             </button>
@@ -240,89 +252,182 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
         <p className="text-sm text-muted-foreground text-center py-6">{t.comments.noComments}</p>
       ) : (
         <div className="space-y-4">
-          {comments.slice(0, visibleCommentCount).map((c) => (
-            <div key={c.id} className="border-t border-border pt-4 first:border-0 first:pt-0">
-              <div className="flex items-center gap-3 mb-2">
-                {c.avatar ? (
-                  <img src={c.avatar} alt={c.username} className="h-8 w-8 rounded-full object-cover" />
+          {comments.filter((c) => !c.parentId).slice(0, visibleCommentCount).map((c) => (
+            <div key={c.id}>
+              <div className="border-t border-border pt-4 first:border-0 first:pt-0">
+                <div className="flex items-center gap-3 mb-2">
+                  {c.avatar ? (
+                    <img src={c.avatar} alt={c.username} className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                      {c.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{c.username}</p>
+                    <div className="flex items-center gap-2">
+                      {c.rating && (
+                        <div className="flex gap-0.5">
+                          {Array.from({ length: c.rating }).map((_, i) => (
+                            <Star key={i} className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                          ))}
+                        </div>
+                      )}
+                      <time className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString(locale)}</time>
+                      {(c as Comment & { editedAt?: string }).editedAt && (
+                        <span className="text-xs text-muted-foreground/60">({t.common.edited})</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {editingId === c.id ? (
+                  <div className="ml-11 space-y-2">
+                    <Textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      rows={2}
+                      className="bg-secondary border-border text-foreground text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => handleSaveEdit(c.id)} className="flex items-center gap-1 text-xs text-primary hover:underline"><Check className="h-3 w-3" />{t.common.save}</button>
+                      <button onClick={() => setEditingId(null)} className="flex items-center gap-1 text-xs text-muted-foreground hover:underline"><X className="h-3 w-3" />{t.common.cancel}</button>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                    {c.username.charAt(0).toUpperCase()}
+                  <div className="text-sm text-foreground mb-2 ml-11 prose prose-sm dark:prose-invert max-w-none">
+                    <Suspense fallback={<div className="animate-pulse bg-secondary rounded h-4 w-3/4" />}>
+                      <MarkdownRenderer content={c.content} />
+                    </Suspense>
                   </div>
                 )}
-                <div>
-                  <p className="text-sm font-medium text-foreground">{c.username}</p>
-                  <div className="flex items-center gap-2">
-                    {c.rating && (
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: c.rating }).map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                        ))}
-                      </div>
-                    )}
-                    <time className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString(locale)}</time>
-                    {(c as Comment & { editedAt?: string }).editedAt && (
-                      <span className="text-xs text-muted-foreground/60">({t.common.edited})</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              {editingId === c.id ? (
-                <div className="ml-11 space-y-2">
-                  <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    rows={2}
-                    className="bg-secondary border-border text-foreground text-sm"
-                  />
-                  <div className="flex gap-2">
-                    <button onClick={() => handleSaveEdit(c.id)} className="flex items-center gap-1 text-xs text-primary hover:underline"><Check className="h-3 w-3" />{t.common.save}</button>
-                    <button onClick={() => setEditingId(null)} className="flex items-center gap-1 text-xs text-muted-foreground hover:underline"><X className="h-3 w-3" />{t.common.cancel}</button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm text-foreground mb-2 ml-11 prose prose-sm dark:prose-invert max-w-none">
-                  <Suspense fallback={<div className="animate-pulse bg-secondary rounded h-4 w-3/4" />}>
-                    <MarkdownRenderer content={c.content} />
-                  </Suspense>
-                </div>
-              )}
-              <div className="ml-11 flex items-center gap-3">
-                <button
-                  onClick={() => handleLike(c.id)}
-                  aria-label={user && c.likedBy?.includes(user.email) ? t.comments.likes : t.common.like}
-                  aria-pressed={!!(user && c.likedBy?.includes(user.email))}
-                  className={`flex items-center gap-1 text-xs transition-colors ${
-                    user && c.likedBy?.includes(user.email) ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <ThumbsUp className="h-3 w-3" />
-                  {c.likes > 0 && c.likes}
-                </button>
-                {user && c.userEmail === user.email && (
-                  <>
+                <div className="ml-11 flex items-center gap-3">
+                  <button
+                    onClick={() => handleLike(c.id)}
+                    aria-label={user && c.likedBy?.includes(user.email) ? t.comments.likes : t.common.like}
+                    aria-pressed={!!(user && c.likedBy?.includes(user.email))}
+                    className={`flex items-center gap-1 text-xs transition-colors ${
+                      user && c.likedBy?.includes(user.email) ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <ThumbsUp className="h-3 w-3" />
+                    {c.likes > 0 && c.likes}
+                  </button>
+                  {user && (
                     <button
-                      onClick={() => handleEdit(c.id)}
-                      aria-label={t.common.edit}
+                      onClick={() => { setReplyingTo(c.id); setContent(`@${c.username} `); }}
+                      aria-label={t.comments.reply}
                       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Pencil className="h-3 w-3" />
+                      <Reply className="h-3 w-3" />
+                      {t.comments.reply}
                     </button>
-                    <button
-                      onClick={() => setDeleteConfirmId(c.id)}
-                      aria-label={t.common.delete}
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </>
+                  )}
+                  {user && c.userEmail === user.email && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(c.id)}
+                        aria-label={t.common.edit}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(c.id)}
+                        aria-label={t.common.delete}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                {deleteConfirmId === c.id && (
+                  <div className="ml-11 mt-2 flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">{t.comments.deleteConfirm}</span>
+                    <button onClick={() => { handleDelete(c.id); setDeleteConfirmId(null); }} className="text-red-400 hover:underline">{t.common.confirm}</button>
+                    <button onClick={() => setDeleteConfirmId(null)} className="text-muted-foreground hover:underline">{t.common.cancel}</button>
+                  </div>
                 )}
               </div>
-              {deleteConfirmId === c.id && (
-                <div className="ml-11 mt-2 flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">{t.comments.deleteConfirm}</span>
-                  <button onClick={() => { handleDelete(c.id); setDeleteConfirmId(null); }} className="text-red-400 hover:underline">{t.common.confirm}</button>
-                  <button onClick={() => setDeleteConfirmId(null)} className="text-muted-foreground hover:underline">{t.common.cancel}</button>
+
+              {/* Replies */}
+              {comments.filter((r) => r.parentId === c.id).length > 0 && (
+                <div className="ml-8 pl-4 border-l-2 border-border/50 space-y-3 mt-2">
+                  {comments.filter((r) => r.parentId === c.id).map((r) => (
+                    <div key={r.id} className="pt-2">
+                      <div className="flex items-center gap-3 mb-1">
+                        {r.avatar ? (
+                          <img src={r.avatar} alt={r.username} className="h-6 w-6 rounded-full object-cover" />
+                        ) : (
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                            {r.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-medium text-foreground">{r.username}</p>
+                          <time className="text-[10px] text-muted-foreground">{new Date(r.createdAt).toLocaleDateString(locale)}</time>
+                        </div>
+                      </div>
+                      {editingId === r.id ? (
+                        <div className="ml-9 space-y-2">
+                          <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            rows={2}
+                            className="bg-secondary border-border text-foreground text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <button onClick={() => handleSaveEdit(r.id)} className="flex items-center gap-1 text-xs text-primary hover:underline"><Check className="h-3 w-3" />{t.common.save}</button>
+                            <button onClick={() => setEditingId(null)} className="flex items-center gap-1 text-xs text-muted-foreground hover:underline"><X className="h-3 w-3" />{t.common.cancel}</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-foreground ml-9 prose prose-sm dark:prose-invert max-w-none">
+                          <Suspense fallback={<div className="animate-pulse bg-secondary rounded h-4 w-3/4" />}>
+                            <MarkdownRenderer content={r.content} />
+                          </Suspense>
+                        </div>
+                      )}
+                      <div className="ml-9 flex items-center gap-3 mt-1">
+                        <button
+                          onClick={() => handleLike(r.id)}
+                          aria-label={user && r.likedBy?.includes(user.email) ? t.comments.likes : t.common.like}
+                          aria-pressed={!!(user && r.likedBy?.includes(user.email))}
+                          className={`flex items-center gap-1 text-[10px] transition-colors ${
+                            user && r.likedBy?.includes(user.email) ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <ThumbsUp className="h-2.5 w-2.5" />
+                          {r.likes > 0 && r.likes}
+                        </button>
+                        {user && r.userEmail === user.email && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(r.id)}
+                              aria-label={t.common.edit}
+                              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Pencil className="h-2.5 w-2.5" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(r.id)}
+                              aria-label={t.common.delete}
+                              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="h-2.5 w-2.5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {deleteConfirmId === r.id && (
+                        <div className="ml-9 mt-1 flex items-center gap-2 text-[10px]">
+                          <span className="text-muted-foreground">{t.comments.deleteConfirm}</span>
+                          <button onClick={() => { handleDelete(r.id); setDeleteConfirmId(null); }} className="text-red-400 hover:underline">{t.common.confirm}</button>
+                          <button onClick={() => setDeleteConfirmId(null)} className="text-muted-foreground hover:underline">{t.common.cancel}</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

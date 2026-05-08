@@ -66,23 +66,27 @@ export function AvatarCropDialog({ open, onOpenChange, imageSrc, onCropComplete 
     setLoading(true);
     try {
       const dataUrl = await getCroppedImg(imageSrc, croppedAreaPixels);
-      // Check base64 size (roughly 4/3 of binary size); warn if over 500KB
+      // Compress if over 200KB
       const approxBytes = Math.round((dataUrl.length * 3) / 4);
-      if (approxBytes > 500 * 1024) {
-        // Re-encode at lower quality
-        const blob = await fetch(dataUrl).then(r => r.blob());
-        const lower = await new Promise<string>((resolve, reject) => {
-          const canvas = document.createElement("canvas");
-          canvas.width = 128;
-          canvas.height = 128;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) { reject(new Error("Canvas not supported")); return; }
-          const img = new Image();
-          img.onload = () => { ctx.drawImage(img, 0, 0, 128, 128); resolve(canvas.toDataURL("image/jpeg", 0.6)); };
-          img.onerror = () => reject(new Error("Failed to compress image"));
-          img.src = URL.createObjectURL(blob);
-        });
-        onCropComplete(lower);
+      const MAX_SIZE = 200 * 1024; // 200KB
+      if (approxBytes > MAX_SIZE) {
+        // Re-render at smaller size with lower quality
+        const smallCanvas = document.createElement("canvas");
+        smallCanvas.width = 128;
+        smallCanvas.height = 128;
+        const smallCtx = smallCanvas.getContext("2d");
+        if (smallCtx) {
+          const blob = await fetch(dataUrl).then(r => r.blob());
+          const lower = await new Promise<string>((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => { smallCtx.drawImage(img, 0, 0, 128, 128); resolve(smallCanvas.toDataURL("image/jpeg", 0.6)); };
+            img.onerror = () => reject(new Error("Failed to compress image"));
+            img.src = URL.createObjectURL(blob);
+          });
+          onCropComplete(lower);
+        } else {
+          onCropComplete(dataUrl);
+        }
       } else {
         onCropComplete(dataUrl);
       }

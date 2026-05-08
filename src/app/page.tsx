@@ -10,9 +10,9 @@ export default function HomePage() {
       <JsonLd data={generateWebSiteJsonLd()} />
       <LazyParticleBackground />
       <OnboardingTooltip />
-      <main id="main-content" className="relative z-10">
+      <div className="relative z-10">
         <HomeContent />
-      </main>
+      </div>
     </>
   );
 }

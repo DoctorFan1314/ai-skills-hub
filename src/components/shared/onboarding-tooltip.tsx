@@ -14,6 +14,9 @@ const STEPS = [
 
 export function OnboardingTooltip() {
   const { t } = useI18n();
+  const [shouldShow] = useState(() => {
+    try { return !localStorage.getItem(STORAGE_KEYS.onboardingCompleted); } catch { return true; }
+  });
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
@@ -161,7 +164,7 @@ export function OnboardingTooltip() {
     }
   }, [step]);
 
-  if (!visible) return null;
+  if (!visible || !shouldShow) return null;
 
   const currentStep = STEPS[step];
   const Icon = currentStep.icon;

@@ -282,6 +282,7 @@ export const en: Dictionary = {
     comments: "My Comments",
     history: "History",
     settings: "Settings",
+    notifications: "Notifications",
     joinedAt: "Joined",
     noFavorites: "No favorites yet",
     noLikes: "No liked items yet",
@@ -714,6 +715,7 @@ export const en: Dictionary = {
     noComments: "No comments",
     skillPrefix: "Skill: ",
     adminSecurityNote: "Note: Admin authentication requires server-side verification. Currently in client-side demo mode.",
+    confirmDeleteComment: "Are you sure you want to delete this comment?",
   },
   search: {
     title: "Search",

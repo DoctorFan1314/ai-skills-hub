@@ -282,6 +282,7 @@ export const zh: Dictionary = {
     comments: "我的评论",
     history: "使用历史",
     settings: "设置",
+    notifications: "通知",
     joinedAt: "加入于",
     noFavorites: "还没有收藏任何内容",
     noFavoritesDesc: "浏览技能市场，点击收藏按钮添加到这里",
@@ -714,6 +715,7 @@ export const zh: Dictionary = {
     noComments: "暂无评论",
     skillPrefix: "技能: ",
     adminSecurityNote: "注意：管理员认证需要服务端验证，当前仅为客户端演示模式",
+    confirmDeleteComment: "确定要删除这条评论吗？",
   },
   search: {
     title: "搜索",

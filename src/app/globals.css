@@ -211,6 +211,13 @@
   }
 }
 
+/* Star rating keyboard focus */
+.star-rating-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* Light mode subtle gradient */
 :root:not(.dark) body {
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);

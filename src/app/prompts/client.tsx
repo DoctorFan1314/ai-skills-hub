@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search, Zap, Plus, X } from "lucide-react";
 import { skills, getPublishedPrompts } from "@/lib/mock-data";
 import { SkillCard } from "@/components/skill/skill-card";
@@ -89,13 +90,13 @@ export default function PromptsClient() {
           </div>
           <p className="text-muted-foreground">{t.prompts.subtitle} · {allPrompts.length}+</p>
         </div>
-        <button
+        <Button
           onClick={() => setShowUpload(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors"
+          className="gap-2"
         >
           <Plus className="h-4 w-4" />
           {t.create.newPrompt}
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4 mb-8">

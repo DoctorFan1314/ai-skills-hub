@@ -140,13 +140,13 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">{t.agentSkills.notFound}</h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            The skill you&apos;re looking for may have been removed or doesn&apos;t exist. Try searching or browse trending skills below.
+            {t.notFound.description}
           </p>
         </div>
 
         {trendingSkills.length > 0 && (
           <div className="mb-12">
-            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Trending Skills</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">{t.agentSkills.trending}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {trendingSkills.map((s) => (
                 <Link
@@ -184,7 +184,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
           <Link href="/search">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Search className="h-4 w-4 mr-2" />
-              Search
+              {t.search.title}
             </Button>
           </Link>
         </div>

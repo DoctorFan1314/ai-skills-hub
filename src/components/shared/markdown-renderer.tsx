@@ -1,37 +1,15 @@
 "use client";
 
 import { useState, memo } from "react";
+import dynamic from "next/dynamic";
 import DOMPurify from "dompurify";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
-import ts from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
-import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
-import md from "react-syntax-highlighter/dist/esm/languages/hljs/markdown";
-import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
-import bash from "react-syntax-highlighter/dist/esm/languages/hljs/bash";
-import yaml from "react-syntax-highlighter/dist/esm/languages/hljs/yaml";
-import css from "react-syntax-highlighter/dist/esm/languages/hljs/css";
-import html from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
-import sql from "react-syntax-highlighter/dist/esm/languages/hljs/sql";
-import java from "react-syntax-highlighter/dist/esm/languages/hljs/java";
-import go from "react-syntax-highlighter/dist/esm/languages/hljs/go";
-import rust from "react-syntax-highlighter/dist/esm/languages/hljs/rust";
 
-SyntaxHighlighter.registerLanguage("typescript", ts);
-SyntaxHighlighter.registerLanguage("json", json);
-SyntaxHighlighter.registerLanguage("markdown", md);
-SyntaxHighlighter.registerLanguage("python", python);
-SyntaxHighlighter.registerLanguage("bash", bash);
-SyntaxHighlighter.registerLanguage("shell", bash);
-SyntaxHighlighter.registerLanguage("yaml", yaml);
-SyntaxHighlighter.registerLanguage("css", css);
-SyntaxHighlighter.registerLanguage("html", html);
-SyntaxHighlighter.registerLanguage("xml", html);
-SyntaxHighlighter.registerLanguage("sql", sql);
-SyntaxHighlighter.registerLanguage("java", java);
-SyntaxHighlighter.registerLanguage("go", go);
-SyntaxHighlighter.registerLanguage("rust", rust);
+const LazySyntaxHighlighter = dynamic(
+  () => import("./lazy-syntax-highlighter"),
+  { ssr: false, loading: () => <div className="my-4 h-20 bg-secondary animate-pulse rounded-lg" /> }
+);
 
 export const codeTheme: Record<string, React.CSSProperties> = {
   "hljs": { background: "#0d1117", color: "#e6edf3", padding: "1rem", borderRadius: "0 0 0.5rem 0.5rem", overflow: "auto" },
@@ -147,9 +125,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: { co
               <span className="text-xs text-muted-foreground font-mono">{codeLang || "code"}</span>
               <CopyButton text={codeLines.join("\n")} />
             </div>
-            <SyntaxHighlighter language={codeLang || "text"} style={codeTheme} customStyle={{ margin: 0, fontSize: "0.875rem" }}>
-              {codeLines.join("\n")}
-            </SyntaxHighlighter>
+            <LazySyntaxHighlighter code={codeLines.join("\n")} language={codeLang || "text"} />
           </div>
         );
         codeLines = [];

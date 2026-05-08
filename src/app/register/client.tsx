@@ -112,14 +112,7 @@ export default function RegisterClient() {
             {error && <p role="alert" className="text-sm text-red-400 text-center">{error}</p>}
             <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{loading ? "..." : t.auth.registerNow}</Button>
           </form>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs"><span className="px-3 bg-card text-muted-foreground">{t.common.or}</span></div>
-          </div>
-          <div className="space-y-3">
-            <Button variant="outline" type="button" onClick={() => toast(t.auth.oauthRegisterComingSoon)} className="w-full border-border text-foreground hover:bg-secondary">{t.auth.registerWithGoogle}</Button>
-            <Button variant="outline" type="button" onClick={() => toast(t.auth.oauthRegisterComingSoon)} className="w-full border-border text-foreground hover:bg-secondary">{t.auth.registerWithGithub}</Button>
-          </div>
+          {/* OAuth buttons removed — not yet available */}
           <p className="text-center text-sm text-muted-foreground mt-6">
             {t.auth.hasAccount} <Link href="/login" className="text-primary hover:underline">{t.auth.loginNow}</Link>
           </p>

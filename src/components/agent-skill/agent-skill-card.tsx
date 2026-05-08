@@ -14,20 +14,29 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
   const { t } = useI18n();
   const { toast } = useToast();
 
+  const preventLinkNav = compareMode ? (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); } : undefined;
+
   return (
-    <div className={`glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden ${selected ? "ring-2 ring-primary" : ""}`}>
+    <div
+      className={`glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden ${selected ? "ring-2 ring-primary" : ""} ${compareMode ? "cursor-pointer" : ""}`}
+      onClick={compareMode ? (e) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); } : undefined}
+      role={compareMode ? "checkbox" : undefined}
+      aria-checked={compareMode ? selected : undefined}
+      aria-label={compareMode ? `${skill.name} - ${selected ? "Selected" : "Not selected"} for comparison` : undefined}
+      tabIndex={compareMode ? 0 : undefined}
+      onKeyDown={compareMode ? (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); onToggleSelect?.(skill.id); } } : undefined}
+    >
       {compareMode && (
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); }}
-          className={`absolute top-3 left-3 z-10 h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+        <div
+          className={`absolute top-3 left-3 z-10 h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors pointer-events-none ${
             selected
               ? "bg-primary border-primary text-primary-foreground"
-              : "bg-secondary border-border text-muted-foreground hover:border-primary/50"
+              : "bg-secondary/80 border-border text-muted-foreground"
           }`}
-          aria-label={selected ? "Deselect for comparison" : "Select for comparison"}
+          aria-hidden="true"
         >
           {selected && <CheckCircle className="h-4 w-4" />}
-        </button>
+        </div>
       )}
       {skill.trending && (
         <div className="absolute top-3 right-3 z-10">
@@ -38,14 +47,14 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
       )}
 
       <div className="flex items-start gap-3 mb-3">
-        <Link href={`/skills/${skill.id}`} className="shrink-0" aria-label={skill.title}>
+        <Link href={`/skills/${skill.id}`} className="shrink-0" aria-label={skill.title} onClick={preventLinkNav}>
           <div className="h-10 w-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-lg hover:border-primary/40 transition-colors">
             {skill.avatar || skill.name.charAt(0).toUpperCase()}
           </div>
         </Link>
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex items-center gap-2 mb-0.5 pr-20">
-            <Link href={`/skills/${skill.id}`} className="min-w-0">
+            <Link href={`/skills/${skill.id}`} className="min-w-0" onClick={preventLinkNav}>
               <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                 {skill.name}
               </h3>
@@ -60,7 +69,7 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
         </div>
       </div>
 
-      <Link href={`/skills/${skill.id}`} className="block">
+      <Link href={`/skills/${skill.id}`} className="block" onClick={preventLinkNav}>
         <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
           {skill.description}
         </p>

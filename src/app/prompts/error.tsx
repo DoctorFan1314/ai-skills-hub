@@ -8,10 +8,10 @@ import { useI18n } from "@/contexts/i18n-context";
 
 export default function PromptsError({
   error,
-  unstable_retry,
+  reset,
 }: {
   error: Error & { digest?: string };
-  unstable_retry: () => void;
+  reset: () => void;
 }) {
   const { t } = useI18n();
 
@@ -28,7 +28,7 @@ export default function PromptsError({
         <h1 className="text-xl font-bold text-foreground mb-2">{t.error.title}</h1>
         <p className="text-muted-foreground text-sm mb-8">{t.error.description}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button onClick={() => unstable_retry()} className="gap-2">
+          <Button onClick={() => reset()} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             {t.error.retry}
           </Button>

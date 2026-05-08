@@ -323,6 +323,27 @@ ai-skills-hub/
 | 移动端 Sheet 头像 | ✅ | 移动端导航显示头像 + 通知铃铛 |
 | 评论系统统一 | ✅ | Agent 技能使用共享 CommentSection 组件 |
 | 详情页骨架屏 | ✅ | 懒加载 MarkdownRenderer 动画骨架屏 |
+| 评论回复/楼中楼 | ✅ | 回复评论，嵌套显示，左侧缩进边框 |
+| 通知 Tab 页 | ✅ | 个人中心通知 Tab，按类型筛选，标记已读，分页 |
+| 提交编辑/删除 | ✅ | 个人中心删除或编辑待审核提交 |
+| 管理面板评论分页 | ✅ | 默认 20 条，支持加载更多 |
+| 管理面板删除确认 | ✅ | 删除评论前弹出确认对话框 |
+| 举报弹窗无障碍 | ✅ | `role="dialog"`、焦点陷阱、Escape 关闭 |
+| 导航栏键盘提示 | ✅ | 搜索按钮旁 `Ctrl+K` 提示 |
+| 路由切换回顶 | ✅ | 页面导航自动滚动到顶部 |
+| 引导完成守卫 | ✅ | 已完成引导不再挂载组件 |
+| 对比模式修复 | ✅ | 整张卡片可点击选中 |
+| MarkdownRenderer 懒加载 | ✅ | 动态导入，首屏减少 ~150KB |
+| 头像自动压缩 | ✅ | 超过 200KB 压缩为 128×128、60% JPEG |
+| 搜索输入防抖 | ✅ | URL 更新 500ms 防抖 |
+| Error Boundary API 修复 | ✅ | `unstable_retry` → `reset()`，兼容 Next.js 16 稳定版 |
+| 首页嵌套 main 修复 | ✅ | 移除重复 `<main>` 标签 |
+| Prompt Not Found 增强 | ✅ | 搜索图标、双按钮、glass-card 风格 |
+| 分享剪贴板回退 | ✅ | 分享失败时回退到复制 URL |
+| OAuth 按钮移除 | ✅ | 移除未实现的登录/注册 OAuth |
+| 用户头像优化 | ✅ | `<img>` → Next.js `<Image>` 组件 |
+| 下拉菜单焦点样式 | ✅ | 移除 `outline-none`，恢复 focus-visible |
+| 星级评分键盘焦点 | ✅ | `.star-rating-btn:focus-visible` CSS 规则 |
 
 ---
 

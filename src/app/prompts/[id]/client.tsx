@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft, ChevronDown, ChevronUp, History, RotateCcw, Play, Crown, Lock } from "lucide-react";
+import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft, ChevronDown, ChevronUp, History, RotateCcw, Play, Crown, Lock, Search } from "lucide-react";
 import { useUserStorage } from "@/hooks/use-user-storage";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { useAuth } from "@/contexts/auth-context";
@@ -96,9 +96,30 @@ export default function SkillDetailClient({ id }: { id: string }) {
 
   if (!skill) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-        <p className="text-muted-foreground text-lg">{t.promptDetail.notFound}</p>
-        <Link href="/prompts" className="text-primary mt-4 inline-block hover:underline">{t.promptDetail.backToList}</Link>
+      <div className="mx-auto max-w-7xl px-4 py-20">
+        <div className="text-center mb-12">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-secondary/50">
+            <Search className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">{t.promptDetail.notFound}</h2>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            {t.notFound.description}
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <Link href="/prompts">
+            <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t.promptDetail.backToList}
+            </Button>
+          </Link>
+          <Link href="/search">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Search className="h-4 w-4 mr-2" />
+              {t.search.title}
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -173,11 +194,22 @@ export default function SkillDetailClient({ id }: { id: string }) {
   async function handleShare() {
     const url = window.location.href;
     if (navigator.share) {
-      try { await navigator.share({ title: skill?.title, url }); } catch { /* user cancelled share */ }
+      try {
+        await navigator.share({ title: skill?.title, url });
+      } catch {
+        // User cancelled or share failed — fall back to clipboard
+        try {
+          await navigator.clipboard.writeText(url);
+          toast(t.common.copied, "success");
+        } catch {
+          setShareError(true);
+          setTimeout(() => setShareError(false), 3000);
+        }
+      }
     } else {
       try {
         await navigator.clipboard.writeText(url);
-        setShareError(false);
+        toast(t.common.copied, "success");
       } catch {
         setShareError(true);
         setTimeout(() => setShareError(false), 3000);
@@ -328,7 +360,7 @@ export default function SkillDetailClient({ id }: { id: string }) {
             )}
           </div>
         )}
-        <div className="mt-4 text-xs text-muted-foreground/60">{t.promptDetail.temperature}：0.7 | {t.promptDetail.effectNote}</div>
+        <div className="mt-4 text-xs text-muted-foreground/60">{t.promptDetail.temperature}: 0.7 | {t.promptDetail.effectNote}</div>
       </div>
 
       {/* Usage Steps */}

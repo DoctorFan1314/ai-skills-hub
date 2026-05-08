@@ -324,6 +324,27 @@ ai-skills-hub/
 | Mobile Sheet avatar | ✅ | Avatar + notification bell in mobile nav drawer |
 | Unified comments | ✅ | Agent skills use shared CommentSection component |
 | Detail page skeletons | ✅ | Animated skeleton for lazy MarkdownRenderer |
+| Comment reply / threading | ✅ | Reply to comments, nested display with indentation |
+| Notification Tab | ✅ | Profile notifications tab with type filters and pagination |
+| Submission edit/delete | ✅ | Delete or edit pending submissions from profile |
+| Admin comment pagination | ✅ | 20 per page with Load More |
+| Admin delete confirmation | ✅ | Confirmation dialog before deleting comments |
+| Report modal a11y | ✅ | `role="dialog"`, focus trap, Escape close |
+| Navbar keyboard hint | ✅ | `Ctrl+K` badge next to search toggle |
+| Scroll to top on nav | ✅ | Auto scroll to top on route change |
+| Onboarding guard | ✅ | Skip mount if onboarding already completed |
+| Compare mode fix | ✅ | Full card clickable in compare mode |
+| Lazy SyntaxHighlighter | ✅ | Dynamic import, ~150KB less initial bundle |
+| Avatar auto-compress | ✅ | 200KB threshold, 128×128 at 60% JPEG |
+| Search input debounce | ✅ | 500ms debounce on URL update |
+| Error boundary API fix | ✅ | `unstable_retry` → `reset()` for Next.js 16 stable |
+| Nested main fix | ✅ | Removed duplicate `<main>` on homepage |
+| Prompt not-found enhanced | ✅ | Search icon, dual buttons, glass-card styling |
+| Share clipboard fallback | ✅ | Prompt share falls back to clipboard copy |
+| OAuth buttons removed | ✅ | Removed non-functional login/register OAuth |
+| User avatar optimization | ✅ | `<img>` → Next.js `<Image>` component |
+| Dropdown focus-visible | ✅ | Removed `outline-none`, restored focus ring |
+| Star rating keyboard focus | ✅ | `.star-rating-btn:focus-visible` CSS rule |
 
 ---
 

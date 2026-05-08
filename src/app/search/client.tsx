@@ -82,6 +82,7 @@ export default function SearchClient() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const urlDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Load recent searches on mount
   useEffect(() => {
@@ -198,11 +199,14 @@ export default function SearchClient() {
         generateSuggestions(value);
       }, 300);
 
-      // Update URL
-      const params = new URLSearchParams();
-      if (value.trim()) params.set("q", value.trim());
-      const url = params.toString() ? `/search?${params}` : "/search";
-      router.replace(url, { scroll: false });
+      // Debounce URL update
+      if (urlDebounceRef.current) clearTimeout(urlDebounceRef.current);
+      urlDebounceRef.current = setTimeout(() => {
+        const params = new URLSearchParams();
+        if (value.trim()) params.set("q", value.trim());
+        const url = params.toString() ? `/search?${params}` : "/search";
+        router.replace(url, { scroll: false });
+      }, 500);
     },
     [generateSuggestions, router],
   );
@@ -216,7 +220,7 @@ export default function SearchClient() {
   }, []);
 
   // Cleanup debounce on unmount
-  useEffect(() => () => clearTimeout(debounceRef.current), []);
+  useEffect(() => () => { clearTimeout(debounceRef.current); clearTimeout(urlDebounceRef.current); }, []);
 
   // Reset visible counts when query changes
   useEffect(() => {
@@ -500,7 +504,7 @@ export default function SearchClient() {
                         onClick={() => setVisibleAgentCount((prev) => prev + 8)}
                         className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
                       >
-                        Load more ({searchResults.agentSkills.length - visibleAgentCount})
+                        {t.common.loadMore} ({searchResults.agentSkills.length - visibleAgentCount} {t.common.remaining})
                       </button>
                     </div>
                   )}
@@ -547,7 +551,7 @@ export default function SearchClient() {
                         onClick={() => setVisiblePromptCount((prev) => prev + 8)}
                         className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
                       >
-                        Load more ({searchResults.prompts.length - visiblePromptCount})
+                        {t.common.loadMore} ({searchResults.prompts.length - visiblePromptCount} {t.common.remaining})
                       </button>
                     </div>
                   )}

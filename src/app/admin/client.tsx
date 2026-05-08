@@ -22,6 +22,7 @@ export default function AdminClient() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [users, setUsers] = useState<{ email: string; username: string; role?: string }[]>([]);
   const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
+  const [visibleCommentCount, setVisibleCommentCount] = useState(20);
 
   const TABS = [
     { key: "pending" as const, label: t.admin.pendingSubmissions, icon: <Clock className="h-4 w-4" /> },
@@ -88,6 +89,7 @@ export default function AdminClient() {
   }
 
   function handleDeleteComment(id: string) {
+    if (!window.confirm(t.admin.confirmDeleteComment || "Are you sure you want to delete this comment?")) return;
     setComments((prev) => prev.filter((c) => c.id !== id));
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.allComments);
@@ -243,21 +245,33 @@ export default function AdminClient() {
               <p className="text-muted-foreground">{t.admin.noComments}</p>
             </div>
           ) : (
-            comments.map((c) => (
-              <div key={c.id} className="glass-card p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-foreground font-medium text-sm">{c.username}</p>
-                    <p className="text-xs text-muted-foreground">{t.admin.skillPrefix}{c.skillId} · {new Date(c.createdAt).toLocaleDateString(locale)}</p>
+            <>
+              {comments.slice(0, visibleCommentCount).map((c) => (
+                <div key={c.id} className="glass-card p-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-foreground font-medium text-sm">{c.username}</p>
+                      <p className="text-xs text-muted-foreground">{t.admin.skillPrefix}{c.skillId} · {new Date(c.createdAt).toLocaleDateString(locale)}</p>
+                    </div>
+                    <button onClick={() => handleDeleteComment(c.id)} className="text-muted-foreground hover:text-red-400 transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button onClick={() => handleDeleteComment(c.id)} className="text-muted-foreground hover:text-red-400 transition-colors">
-                    <Trash2 className="h-4 w-4" />
+                  <p className="text-sm text-muted-foreground mt-2">{c.content}</p>
+                  {c.rating && <p className="text-xs text-yellow-400 mt-1">{"★".repeat(c.rating)}{"☆".repeat(5 - c.rating)}</p>}
+                </div>
+              ))}
+              {visibleCommentCount < comments.length && (
+                <div className="text-center pt-2">
+                  <button
+                    onClick={() => setVisibleCommentCount((prev) => prev + 20)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t.common.loadMore} ({comments.length - visibleCommentCount} {t.common.remaining || "remaining"})
                   </button>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">{c.content}</p>
-                {c.rating && <p className="text-xs text-yellow-400 mt-1">{"★".repeat(c.rating)}{"☆".repeat(5 - c.rating)}</p>}
-              </div>
-            ))
+              )}
+            </>
           )}
         </div>
       )}

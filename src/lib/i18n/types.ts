@@ -115,6 +115,7 @@ export interface Dictionary {
   profile: {
     title: string; overview: string; favorites: string; likes: string;
     submissions: string; comments: string; history: string; settings: string;
+    notifications: string;
     joinedAt: string; noFavorites: string; noLikes: string; noSubmissions: string;
     noComments: string; noHistory: string; browseSkills: string;
     recentActivity: string; noActivity: string; noActivityDesc: string;
@@ -299,7 +300,7 @@ export interface Dictionary {
     noAccess: string; noAccessDesc: string; backHome: string;
     reviewNotePlaceholder: string; adminSubtitle: string;
     noComments: string; skillPrefix: string;
-    adminSecurityNote: string;
+    adminSecurityNote: string; confirmDeleteComment: string;
   };
   search: {
     title: string; subtitle: string; placeholder: string;

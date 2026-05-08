@@ -124,7 +124,7 @@ export function Navbar() {
                     href={link.href}
                     role="menuitem"
                     onClick={() => setMoreOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground outline-none"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <link.icon className="h-4 w-4" />
                     {link.label}
@@ -153,6 +153,7 @@ export function Navbar() {
           ) : (
             <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(true)} className="text-muted-foreground hover:text-foreground" aria-label={t.common.search} aria-expanded={false} id="search-trigger">
               <Search className="h-4 w-4" />
+              <span className="hidden lg:inline text-[10px] text-muted-foreground/60 ml-1">Ctrl+K</span>
             </Button>
           )}
 

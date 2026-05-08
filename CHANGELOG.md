@@ -6,6 +6,44 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.3.0] — 2026-05-08
+
+### Features
+- **Comment reply / threading** — Reply to any comment; replies nest under parents with indentation and @mention prefix
+- **Notification Tab** — Profile page new "Notifications" tab with type filters (All/Comments/Skills/Submissions/System), mark-all-read, and pagination
+- **Submission edit/delete** — Delete pending submissions with confirmation; edit pending submissions via link to submit page
+- **Admin comment pagination** — Admin panel shows 20 comments initially with "Load More"
+- **Admin delete confirmation** — Delete comment now requires confirmation dialog
+- **Report modal a11y** — Added `role="dialog"`, `aria-modal`, focus trap, Escape close, backdrop click close
+- **Navbar keyboard hint** — `Ctrl+K` badge shown next to search toggle (desktop only)
+- **Scroll to top on navigation** — Route changes now scroll to top automatically
+- **Onboarding guard** — Onboarding tooltip no longer mounts if already completed
+- **Compare mode card click fix** — Entire card is clickable in compare mode, not just the checkbox button
+
+### Performance
+- **Lazy SyntaxHighlighter** — SyntaxHighlighter + 12 language modules now dynamically imported, reducing initial bundle by ~150KB
+- **Avatar auto-compress** — Cropped avatars exceeding 200KB are recompressed to 128×128 at 60% JPEG quality
+- **Search input debounce** — URL update debounced by 500ms to prevent excessive history replacements
+
+### Bug Fixes
+- **Error boundary API unified** — skills/prompts `unstable_retry` → standard `reset()`, compatible with Next.js 16 stable
+- **Nested `<main>` on homepage** — Removed duplicate `<main>` tag in page.tsx (layout.tsx already provides one)
+- **Skill not-found hardcoded strings** — "Trending Skills" and "Search" button text now use i18n keys
+- **Prompt detail full-width colon** — `：0.7` → `:0.7` for English locale consistency
+- **Search page "Load more" hardcoded** — Replaced with `t.common.loadMore` i18n key
+- **Compare mode click not working** — Inner `<Link>` elements were intercepting clicks; now prevented in compare mode
+
+### UI Improvements
+- **Prompt not-found page enhanced** — Added search icon, dual buttons (back + search), glass-card styling
+- **Prompt page button consistency** — Raw `<button>` replaced with `<Button>` component
+- **Share clipboard fallback** — Prompt detail share now falls back to clipboard copy on failure
+- **OAuth buttons removed** — Removed non-functional Google/GitHub buttons from login/register pages
+- **User profile avatar optimization** — `<img>` → Next.js `<Image>` component
+- **Dropdown focus-visible fix** — Removed `outline-none`, restored global `focus-visible` styles
+- **Star rating keyboard focus** — Added `.star-rating-btn:focus-visible` CSS rule
+
+---
+
 ## [v2.2.0] — 2026-05-08
 
 ### Features

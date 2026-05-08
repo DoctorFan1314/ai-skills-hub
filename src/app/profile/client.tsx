@@ -12,11 +12,12 @@ import { MySubmissionsTab } from "@/components/profile/my-submissions-tab";
 import { MyCommentsTab } from "@/components/profile/my-comments-tab";
 import { UsageHistoryTab } from "@/components/profile/usage-history-tab";
 import { SettingsTab } from "@/components/profile/settings-tab";
+import { NotificationTab } from "@/components/profile/notification-tab";
 import { useI18n } from "@/contexts/i18n-context";
 import { useSearchParams, useRouter } from "next/navigation";
-import { User, Heart, Bookmark, FileText, MessageSquare, Clock, Settings } from "lucide-react";
+import { User, Heart, Bookmark, FileText, MessageSquare, Clock, Settings, Bell } from "lucide-react";
 
-type TabId = "overview" | "favorites" | "likes" | "submissions" | "comments" | "history" | "settings";
+type TabId = "overview" | "favorites" | "likes" | "submissions" | "comments" | "history" | "settings" | "notifications";
 
 export default function ProfileClient() {
   const searchParams = useSearchParams();
@@ -24,7 +25,7 @@ export default function ProfileClient() {
   const { t } = useI18n();
   const tabFromUrl = searchParams.get("tab") as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(
-    tabFromUrl && ["overview", "favorites", "likes", "submissions", "comments", "history", "settings"].includes(tabFromUrl)
+    tabFromUrl && ["overview", "favorites", "likes", "submissions", "comments", "history", "settings", "notifications"].includes(tabFromUrl)
       ? tabFromUrl
       : "overview"
   );
@@ -43,6 +44,7 @@ export default function ProfileClient() {
     { id: "comments" as const, label: t.profile.comments, icon: MessageSquare },
     { id: "history" as const, label: t.profile.history, icon: Clock },
     { id: "settings" as const, label: t.profile.settings, icon: Settings },
+    { id: "notifications" as const, label: t.profile.notifications, icon: Bell },
   ];
 
   return (
@@ -116,6 +118,7 @@ export default function ProfileClient() {
           {activeTab === "comments" && <MyCommentsTab />}
           {activeTab === "history" && <UsageHistoryTab />}
           {activeTab === "settings" && <SettingsTab />}
+          {activeTab === "notifications" && <NotificationTab />}
         </div>
       </div>
     </AuthGuard>
