@@ -6,6 +6,32 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.2.0] — 2026-05-08
+
+### Features
+- **Forgot password** — Login page "Forgot Password" opens a dialog to reset password inline (email lookup + new password form). Uses per-user salt for new password hash
+- **Data import** — Settings tab now has "Import Data" button alongside Export. Parses JSON backup, validates structure, merges with deduplication
+- **Password hashing (per-user salt)** — `hashPassword` now accepts a per-user random 16-byte hex salt. Old users with static salt are auto-migrated on login. Plaintext password fallback preserved for pre-migration accounts
+- **Admin panel security** — Admin access now requires both email match AND `role === "admin"`. Added security note about server-side verification in production
+- **`<html lang>` init script** — Added inline `<script>` in `<head>` that reads stored language preference from localStorage before first paint, eliminating flash of wrong language for English users
+- **XSS sanitization** — `MarkdownRenderer` now sanitizes HTML output via DOMPurify (client-side) or regex fallback (SSR), preventing script injection in comments, bios, and README content
+- **Rate limiting** — Client-side cooldowns: 3s on comments, 10s on submissions, 5s on reports. Shows i18n toast on violation
+- **Profile Tab keyboard navigation** — Tab list now supports ArrowLeft/Right and Home/End keys following WAI-ARIA Tabs pattern
+- **Profile pagination** — Activity timeline, usage history, my comments, and my favorites all have "Load More" buttons (10-20 items per page)
+- **Clear data confirmation** — "Clear Data" in Settings now shows a confirmation dialog before wiping localStorage
+- **Premium / Preview Limit** — 4 advanced skills marked as premium with `previewLimit: 100`. Premium prompts show truncated content with blurred overlay and lock icon
+- **Skill comparison** — New "Compare Mode" toggle on skills list lets users select 2 skills for side-by-side comparison at `/skills/compare`
+- **Notification preferences** — Settings tab now has toggle switches for each of the 6 notification types. Disabled types are filtered before adding
+- **Mobile Sheet avatar + notifications** — Mobile navigation drawer now shows user avatar + username and notification bell when logged in
+- **Comment system unified** — Agent skill detail page replaced its inline comment system with the shared `<CommentSection>` component. Comments now appear in "My Comments" profile tab and support all shared features (edit, delete, markdown, avatar, pagination)
+- **Detail page skeletons** — Comment section Suspense fallback changed from raw text to animated skeleton
+
+### Bug Fixes
+- **Footer dead links** — Removed strikethrough styling from disabled footer links. Changelog now links to `#`. Remaining links show "Coming soon" tooltip
+- **Profile Tab keyboard nav** — Tab container now supports ArrowLeft/Right/Home/End per WAI-ARIA pattern
+
+---
+
 ## [v2.1.1] — 2026-05-08
 
 ### Critical Bug Fixes

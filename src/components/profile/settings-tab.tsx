@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
-import { Sun, Moon, Monitor, Download, Trash2, AlertTriangle, Camera } from "lucide-react";
+import { Sun, Moon, Monitor, Download, Upload, Trash2, AlertTriangle, Camera, Bell } from "lucide-react";
 import Image from "next/image";
 import { AvatarCropDialog } from "./avatar-crop-dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useNotifications, type NotificationType } from "@/hooks/use-notifications";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -20,6 +22,7 @@ export function SettingsTab() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const { t } = useI18n();
+  const { preferences, updatePreference } = useNotifications();
 
   const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState(user?.bio || "");
@@ -30,7 +33,9 @@ export function SettingsTab() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [cropImage, setCropImage] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   if (!user) return null;
 
@@ -114,7 +119,58 @@ export function SettingsTab() {
       }
     }
     toRemove.forEach((k) => localStorage.removeItem(k));
+    setShowClearConfirm(false);
     toast(t.settings.dataCleared, "success");
+  }
+
+  function handleImportData(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const imported = JSON.parse(reader.result as string);
+        if (typeof imported !== "object" || imported === null) {
+          toast(t.settings.importError, "error");
+          return;
+        }
+        let importCount = 0;
+        for (const [key, value] of Object.entries(imported)) {
+          if (key.startsWith("ai-skills-hub-")) {
+            // Merge: try to append arrays, otherwise overwrite
+            const existingRaw = localStorage.getItem(key);
+            if (existingRaw) {
+              try {
+                const existingParsed = JSON.parse(existingRaw);
+                const importedValue = value;
+                if (Array.isArray(existingParsed) && Array.isArray(importedValue)) {
+                  const existingIds = new Set(existingParsed.map((item: { id?: string }) => item.id).filter(Boolean));
+                  const newItems = importedValue.filter((item: { id?: string }) => !item.id || !existingIds.has(item.id));
+                  if (newItems.length > 0) {
+                    localStorage.setItem(key, JSON.stringify([...newItems, ...existingParsed]));
+                    importCount += newItems.length;
+                  }
+                } else {
+                  localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+                  importCount++;
+                }
+              } catch {
+                localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+                importCount++;
+              }
+            } else {
+              localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+              importCount++;
+            }
+          }
+        }
+        toast(`${t.settings.importSuccess} (${importCount})`, "success");
+      } catch {
+        toast(t.settings.importError, "error");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   }
 
   function handleDeleteAccount() {
@@ -241,6 +297,45 @@ export function SettingsTab() {
         </div>
       </div>
 
+      {/* Notification Preferences */}
+      <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+          <Bell className="h-5 w-5" />{t.notificationPrefs.title}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">{t.notificationPrefs.description}</p>
+        <div className="space-y-4 max-w-lg">
+          {([
+            { type: "comment_reply" as NotificationType, label: t.notificationPrefs.commentReply, desc: t.notificationPrefs.commentReplyDesc },
+            { type: "skill_update" as NotificationType, label: t.notificationPrefs.skillUpdate, desc: t.notificationPrefs.skillUpdateDesc },
+            { type: "submission_status" as NotificationType, label: t.notificationPrefs.submissionStatus, desc: t.notificationPrefs.submissionStatusDesc },
+            { type: "like" as NotificationType, label: t.notificationPrefs.like, desc: t.notificationPrefs.likeDesc },
+            { type: "follow" as NotificationType, label: t.notificationPrefs.follow, desc: t.notificationPrefs.followDesc },
+            { type: "system" as NotificationType, label: t.notificationPrefs.system, desc: t.notificationPrefs.systemDesc },
+          ]).map((item) => (
+            <div key={item.type} className="flex items-center justify-between py-2">
+              <div>
+                <p className="text-sm font-medium text-foreground">{item.label}</p>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={preferences[item.type] !== false}
+                onClick={() => updatePreference(item.type, !(preferences[item.type] !== false))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  preferences[item.type] !== false ? "bg-primary" : "bg-secondary border border-border"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    preferences[item.type] !== false ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Data Management */}
       <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">{t.settings.dataManage}</h3>
@@ -248,9 +343,13 @@ export function SettingsTab() {
           <Button onClick={handleExportData} variant="outline" className="border-border text-foreground hover:bg-secondary">
             <Download className="h-4 w-4 mr-2" />{t.settings.exportData}
           </Button>
-          <Button onClick={handleClearData} variant="outline" className="border-border text-muted-foreground hover:bg-secondary hover:text-foreground">
+          <Button onClick={() => importInputRef.current?.click()} variant="outline" className="border-border text-foreground hover:bg-secondary">
+            <Upload className="h-4 w-4 mr-2" />{t.settings.importData}
+          </Button>
+          <Button onClick={() => setShowClearConfirm(true)} variant="outline" className="border-border text-muted-foreground hover:bg-secondary hover:text-foreground">
             <Trash2 className="h-4 w-4 mr-2" />{t.settings.clearData}
           </Button>
+          <input ref={importInputRef} type="file" accept=".json" className="hidden" onChange={handleImportData} />
         </div>
         <p className="text-xs text-muted-foreground">{t.settings.exportDesc}</p>
       </div>
@@ -299,6 +398,24 @@ export function SettingsTab() {
           onCropComplete={handleCropComplete}
         />
       )}
+
+      {/* Clear Data Confirmation Dialog */}
+      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.settings.clearDataConfirmTitle}</DialogTitle>
+            <DialogDescription>{t.settings.clearDataConfirmDesc}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>
+              {t.common.cancel}
+            </DialogClose>
+            <Button onClick={handleClearData} className="bg-destructive text-white hover:bg-destructive/90">
+              {t.common.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

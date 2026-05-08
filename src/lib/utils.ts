@@ -25,3 +25,11 @@ export function getDifficultyLabel(difficulty: string, t: { prompts: { difficult
     default: return difficulty;
   }
 }
+
+export function canPerformAction(action: string, cooldownMs: number = 3000): boolean {
+  const key = `rate_limit_${action}`;
+  const last = localStorage.getItem(key);
+  if (last && Date.now() - parseInt(last) < cooldownMs) return false;
+  localStorage.setItem(key, String(Date.now()));
+  return true;
+}

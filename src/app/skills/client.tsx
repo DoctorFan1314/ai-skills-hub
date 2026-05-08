@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Zap, SlidersHorizontal, X } from "lucide-react";
+import { Search, Zap, SlidersHorizontal, X, GitCompare } from "lucide-react";
 import { agentSkills, getPublishedSkills } from "@/lib/mock-agent-skills";
 import { agentSkillCategories } from "@/lib/agent-skill-categories";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
@@ -21,6 +22,7 @@ const ALL_KEY = "__all__";
 
 export default function SkillsClient() {
   const { t } = useI18n();
+  const router = useRouter();
 
   const collections = [t.agentSkills.collectionAll, "Vercel Agent Toolkit", "Anthropic Agent Suite", "Inference.sh Toolkit", t.agentSkills.collectionCommunity, t.agentSkills.collectionDevTools, t.agentSkills.collectionProductivity, t.agentSkills.collectionDataTools];
   const categories = [t.agentSkills.collectionAll, ...agentSkillCategories.map((c) => c.name)];
@@ -29,10 +31,20 @@ export default function SkillsClient() {
   const [showGithub, setShowGithub] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
 
   const allSkills = useMemo(() => [...agentSkills, ...getPublishedSkills()], [refresh]);
 
   const handleCreated = useCallback(() => setRefresh((r) => r + 1), []);
+
+  const toggleCompareSelect = useCallback((id: string) => {
+    setSelectedForCompare((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  }, []);
 
   const {
     query,
@@ -198,6 +210,15 @@ export default function SkillsClient() {
               </Button>
             ))}
           </div>
+          <Button
+            variant={compareMode ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => { setCompareMode(!compareMode); if (compareMode) setSelectedForCompare([]); }}
+            className={`border-border ${compareMode ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <GitCompare className="h-4 w-4 mr-1.5" />
+            {t.compare.toggleCompare}
+          </Button>
         </div>
 
         {/* Active Filters Summary */}
@@ -311,7 +332,13 @@ export default function SkillsClient() {
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {visibleList.map((skill) => (
-              <AgentSkillCard key={skill.id} skill={skill} />
+              <AgentSkillCard
+                key={skill.id}
+                skill={skill}
+                compareMode={compareMode}
+                selected={selectedForCompare.includes(skill.id)}
+                onToggleSelect={toggleCompareSelect}
+              />
             ))}
           </div>
           {filtered.length > visibleCount && (
@@ -325,6 +352,17 @@ export default function SkillsClient() {
             </div>
           )}
         </>
+      )}
+
+      {/* Floating Compare Button */}
+      {compareMode && selectedForCompare.length === 2 && (
+        <button
+          onClick={() => router.push(`/skills/compare?ids=${selectedForCompare[0]},${selectedForCompare[1]}`)}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm shadow-lg hover:bg-primary/90 transition-colors"
+        >
+          <GitCompare className="h-4 w-4" />
+          {t.compare.compareCount.replace("{count}", "2")}
+        </button>
       )}
     </div>
   );

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft, ChevronDown, ChevronUp, History, RotateCcw, Play } from "lucide-react";
+import { Star, Users, Clock, Copy, Check, ThumbsUp, Bookmark, Share2, ArrowLeft, ChevronDown, ChevronUp, History, RotateCcw, Play, Crown, Lock } from "lucide-react";
 import { useUserStorage } from "@/hooks/use-user-storage";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { useAuth } from "@/contexts/auth-context";
@@ -19,6 +19,7 @@ import { getRelatedSkills } from "@/lib/related-skills";
 import { getVersions, initVersionForSkill } from "@/lib/prompt-versions";
 import type { PromptVersion } from "@/lib/prompt-versions";
 import { useI18n } from "@/contexts/i18n-context";
+import { useToast } from "@/contexts/toast-context";
 import { getDifficultyLabel } from "@/lib/utils";
 
 function CopyButton({ text, label, copiedLabel, failedLabel }: { text: string; label: string; copiedLabel: string; failedLabel: string }) {
@@ -52,6 +53,7 @@ export default function SkillDetailClient({ id }: { id: string }) {
   const [showVersions, setShowVersions] = useState(false);
   const { user } = useAuth();
   const { t } = useI18n();
+  const { toast } = useToast();
 
   // Playground state
   const [playgroundVars, setPlaygroundVars] = useState<Record<string, string>>({});
@@ -117,6 +119,13 @@ export default function SkillDetailClient({ id }: { id: string }) {
 
   const promptOnline = buildPrompt(skill.promptOnline);
   const promptLocal = buildPrompt(skill.promptLocal);
+
+  // Premium truncation
+  const isPremiumLocked = skill.isPremium && skill.previewLimit;
+  const truncatePrompt = (text: string, limit: number) => {
+    if (!isPremiumLocked || !limit || text.length <= limit) return { preview: text, truncated: false };
+    return { preview: text.slice(0, limit), truncated: true };
+  };
 
   // Parse {{var}} and {var} variables from prompt text, deduplicated
   const parseVariables = (template: string): string[] => {
@@ -187,6 +196,11 @@ export default function SkillDetailClient({ id }: { id: string }) {
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <Badge variant="secondary" className="text-xs border" style={{ color, borderColor: `${color}30`, backgroundColor: `${color}10` }}>{skill.category}</Badge>
           <Badge variant="secondary" className="text-xs bg-secondary border-border text-muted-foreground">{getDifficultyLabel(skill.difficulty, t)}</Badge>
+          {skill.isPremium && (
+            <Badge variant="secondary" className="text-xs bg-yellow-500/10 border-yellow-500/30 text-yellow-500 flex items-center gap-1">
+              <Crown className="h-3 w-3" />{t.promptDetail.premium}
+            </Badge>
+          )}
           <span className="text-xs text-muted-foreground">{skill.version}</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">{skill.title}</h1>
@@ -219,17 +233,49 @@ export default function SkillDetailClient({ id }: { id: string }) {
           </TabsList>
           <TabsContent value="online">
             <p className="text-xs text-muted-foreground mb-3">{t.promptDetail.onlineDesc}</p>
-            <div className="bg-secondary border border-border rounded-lg p-4 mb-4 max-h-64 overflow-y-auto scrollbar-hide">
-              <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{promptOnline}</pre>
+            <div className="bg-secondary border border-border rounded-lg p-4 mb-4 max-h-64 overflow-y-auto scrollbar-hide relative">
+              {(() => {
+                const { preview, truncated } = truncatePrompt(promptOnline, skill.previewLimit || Infinity);
+                return truncated ? (
+                  <>
+                    <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{preview}</pre>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+                      <Lock className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                      <p className="text-sm text-muted-foreground mb-3">{t.promptDetail.upgradeToPremium}</p>
+                      <Button onClick={() => toast(t.promptDetail.premiumComingSoon, "info")} className="bg-yellow-500 text-white hover:bg-yellow-600 font-medium">
+                        <Crown className="h-4 w-4 mr-2" />{t.promptDetail.upgradeToPremium}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{promptOnline}</pre>
+                );
+              })()}
             </div>
-            <CopyButton text={promptOnline} label={t.promptDetail.copyPrompt} copiedLabel={t.common.copied} failedLabel={t.promptDetail.copyFailed} />
+            {!isPremiumLocked && <CopyButton text={promptOnline} label={t.promptDetail.copyPrompt} copiedLabel={t.common.copied} failedLabel={t.promptDetail.copyFailed} />}
           </TabsContent>
           <TabsContent value="local">
             <p className="text-xs text-muted-foreground mb-3">{t.promptDetail.localDesc}</p>
-            <div className="bg-secondary border border-border rounded-lg p-4 mb-4 max-h-64 overflow-y-auto scrollbar-hide">
-              <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{promptLocal}</pre>
+            <div className="bg-secondary border border-border rounded-lg p-4 mb-4 max-h-64 overflow-y-auto scrollbar-hide relative">
+              {(() => {
+                const { preview, truncated } = truncatePrompt(promptLocal, skill.previewLimit || Infinity);
+                return truncated ? (
+                  <>
+                    <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{preview}</pre>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+                      <Lock className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                      <p className="text-sm text-muted-foreground mb-3">{t.promptDetail.upgradeToPremium}</p>
+                      <Button onClick={() => toast(t.promptDetail.premiumComingSoon, "info")} className="bg-yellow-500 text-white hover:bg-yellow-600 font-medium">
+                        <Crown className="h-4 w-4 mr-2" />{t.promptDetail.upgradeToPremium}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{promptLocal}</pre>
+                );
+              })()}
             </div>
-            <CopyButton text={promptLocal} label={t.promptDetail.copyPrompt} copiedLabel={t.common.copied} failedLabel={t.promptDetail.copyFailed} />
+            {!isPremiumLocked && <CopyButton text={promptLocal} label={t.promptDetail.copyPrompt} copiedLabel={t.common.copied} failedLabel={t.promptDetail.copyFailed} />}
           </TabsContent>
         </Tabs>
       </div>

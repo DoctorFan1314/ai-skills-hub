@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
+import { useToast } from "@/contexts/toast-context";
+import { canPerformAction } from "@/lib/utils";
 
 interface ReportModalProps {
   open: boolean;
@@ -13,12 +15,14 @@ interface ReportModalProps {
 
 export function ReportModal({ open, onClose, onSubmit }: ReportModalProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const [reportReason, setReportReason] = useState<"spam" | "abuse" | "copyright" | "other">("spam");
   const [reportDesc, setReportDesc] = useState("");
 
   if (!open) return null;
 
   function handleSubmit() {
+    if (!canPerformAction("report", 5000)) { toast(t.rateLimit.tooFast, "error"); return; }
     onSubmit(reportReason, reportDesc);
     setReportReason("spam");
     setReportDesc("");

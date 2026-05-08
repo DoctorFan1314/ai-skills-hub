@@ -6,6 +6,8 @@ import { useLocale } from "@/hooks/use-locale";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { UserActivity } from "@/lib/types";
 import { ThumbsUp, Bookmark, MessageSquare, Send, Eye, Copy } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 import type { Dictionary } from "@/lib/i18n/types";
 
@@ -24,6 +26,7 @@ export function ActivityTimeline() {
   const { user } = useAuth();
   const { t } = useI18n();
   const locale = useLocale();
+  const [visibleCount, setVisibleCount] = useState(20);
   if (!user) return null;
 
   const typeConfig = getTypeConfig(t);
@@ -48,7 +51,7 @@ export function ActivityTimeline() {
     <div>
       <h2 className="text-lg font-semibold text-foreground mb-4">{t.profile.recentActivity}</h2>
       <div className="space-y-3">
-        {activities.slice(0, 20).map((activity) => {
+        {activities.slice(0, visibleCount).map((activity) => {
           const config = typeConfig[activity.type] || typeConfig.view;
           const Icon = config.icon;
           return (
@@ -69,6 +72,13 @@ export function ActivityTimeline() {
           );
         })}
       </div>
+      {activities.length > visibleCount && (
+        <div className="mt-4 text-center">
+          <Button variant="outline" onClick={() => setVisibleCount((c) => c + 20)} className="border-border text-muted-foreground hover:bg-secondary">
+            {t.common.loadMore} <span className="ml-1 text-xs text-muted-foreground/60">({activities.length - visibleCount} {t.common.remaining})</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

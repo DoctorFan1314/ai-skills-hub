@@ -4,10 +4,38 @@ import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { useAuth } from "@/contexts/auth-context";
 import type { Notification } from "@/lib/types";
 
+export type NotificationType = "comment_reply" | "skill_update" | "submission_status" | "like" | "follow" | "system";
+
+const ALL_TYPES: NotificationType[] = ["comment_reply", "skill_update", "submission_status", "like", "follow", "system"];
+
+function loadPreferences(): Record<NotificationType, boolean> {
+  try {
+    const raw = localStorage.getItem("ai-skills-hub-notification-prefs");
+    if (raw) {
+      const saved = JSON.parse(raw);
+      const result: Record<string, boolean> = {};
+      for (const t of ALL_TYPES) {
+        result[t] = saved[t] !== false; // default to true
+      }
+      return result as Record<NotificationType, boolean>;
+    }
+  } catch { /* ignore */ }
+  const defaults: Record<string, boolean> = {};
+  for (const t of ALL_TYPES) { defaults[t] = true; }
+  return defaults as Record<NotificationType, boolean>;
+}
+
+function savePreferences(prefs: Record<NotificationType, boolean>) {
+  try {
+    localStorage.setItem("ai-skills-hub-notification-prefs", JSON.stringify(prefs));
+  } catch { /* ignore */ }
+}
+
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [preferences, setPreferences] = useState<Record<NotificationType, boolean>>(loadPreferences);
 
   // Derive unreadCount from notifications
   useEffect(() => {
@@ -25,6 +53,23 @@ export function useNotifications() {
       }
     } catch { /* ignore */ }
   }, [user]);
+
+  // Load preferences from localStorage
+  useEffect(() => {
+    setPreferences(loadPreferences());
+  }, []);
+
+  const updatePreference = useCallback((type: NotificationType, enabled: boolean) => {
+    setPreferences(prev => {
+      const updated = { ...prev, [type]: enabled };
+      savePreferences(updated);
+      return updated;
+    });
+  }, []);
+
+  const isTypeEnabled = useCallback((type: NotificationType): boolean => {
+    return preferences[type] !== false;
+  }, [preferences]);
 
   const markAsRead = useCallback((id: string) => {
     if (!user) return;
@@ -52,6 +97,7 @@ export function useNotifications() {
 
   const addNotification = useCallback((notification: Omit<Notification, "id" | "timestamp" | "read" | "userId">) => {
     if (!user) return;
+    if (!isTypeEnabled(notification.type)) return;
     const newNotif: Notification = {
       ...notification,
       id: crypto.randomUUID(),
@@ -64,7 +110,7 @@ export function useNotifications() {
       localStorage.setItem(STORAGE_KEYS.notifications(user.email), JSON.stringify(updated));
       return updated;
     });
-  }, [user]);
+  }, [user, isTypeEnabled]);
 
-  return { notifications, unreadCount, markAsRead, markAllRead, clearAll, addNotification };
+  return { notifications, unreadCount, markAsRead, markAllRead, clearAll, addNotification, preferences, updatePreference, isTypeEnabled };
 }

@@ -20,7 +20,7 @@ export default function AdminClient() {
   const [tab, setTab] = useState<"pending" | "users" | "analytics" | "comments">("pending");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [users, setUsers] = useState<{ email: string; username: string }[]>([]);
+  const [users, setUsers] = useState<{ email: string; username: string; role?: string }[]>([]);
   const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
 
   const TABS = [
@@ -54,11 +54,11 @@ export default function AdminClient() {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.users);
       const stored = raw ? JSON.parse(raw) : [];
-      setUsers(stored.map((u: { email: string; username: string }) => ({ email: u.email, username: u.username })));
+      setUsers(stored.map((u: { email: string; username: string; role?: string }) => ({ email: u.email, username: u.username, role: u.role })));
     } catch { /* ignore */ }
   }, []);
 
-  if (!user || !ADMIN_EMAILS.includes(user.email)) {
+  if (!user || !ADMIN_EMAILS.includes(user.email) || user.role !== "admin") {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
         <Shield className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
@@ -105,6 +105,9 @@ export default function AdminClient() {
           <Shield className="h-8 w-8 text-primary" />{t.admin.title}
         </h1>
         <p className="text-muted-foreground">{t.admin.adminSubtitle}</p>
+        <p className="text-xs text-amber-500/80 mt-2 flex items-center gap-1">
+          <Shield className="h-3 w-3" />{t.admin.adminSecurityNote}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">
@@ -201,7 +204,7 @@ export default function AdminClient() {
                     <p className="text-sm text-foreground font-medium">{u.username}</p>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </div>
-                  {ADMIN_EMAILS.includes(u.email) && (
+                  {ADMIN_EMAILS.includes(u.email) && u.role === "admin" && (
                     <Badge variant="secondary" className="ml-auto bg-primary/10 text-primary border-primary/20 text-[10px]">{t.admin.adminBadge}</Badge>
                   )}
                 </div>

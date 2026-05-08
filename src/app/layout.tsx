@@ -76,6 +76,13 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('ai-skills-hub-theme')||'dark';var d=t==='system'?matchMedia('(prefers-color-scheme:dark)').matches:t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`,
           }}
         />
+        <Script
+          id="lang-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var l=localStorage.getItem('ai-skills-hub-language');if(l==='en')document.documentElement.lang='en-US';else if(l==='zh')document.documentElement.lang='zh-CN';}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <ToastProvider>

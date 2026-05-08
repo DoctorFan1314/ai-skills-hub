@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Download, Star, Copy, Check,
-  Terminal, FileCode, Clock, ThumbsUp, Reply, X,
+  Terminal, FileCode, Clock,
   Search, ArrowLeft,
   Share2, BadgeCheck, UserPlus, UserCheck, AlertTriangle, Image as ImageIcon,
 } from "lucide-react";
@@ -23,6 +23,7 @@ import { useToast } from "@/contexts/toast-context";
 import { useAuth } from "@/contexts/auth-context";
 import { formatNumber } from "@/lib/utils";
 import { useFollows } from "@/hooks/use-follows";
+import { CommentSection } from "@/components/skill/comment-section";
 import { useCollections } from "@/hooks/use-collections";
 
 const SyntaxHighlighter = lazy(() =>
@@ -69,15 +70,6 @@ async function downloadAll(skill: NonNullable<ReturnType<typeof getAgentSkillByI
   });
 }
 
-// Mock default comments
-const defaultComments = [
-  { id: "1", user: "Alice", avatar: "A", content: "非常好用的技能！帮我解决了搜索多个平台的需求，安装也很简单。", rating: 5, date: "2026-04-28", likes: 12, replyTo: null as string | null },
-  { id: "2", user: "Bob", avatar: "B", content: "帮我解决了大问题，搜索功能很强，推荐给所有需要多平台数据的开发者。", rating: 4, date: "2026-04-25", likes: 8, replyTo: null as string | null },
-  { id: "3", user: "Charlie", avatar: "C", content: "安装简单，文档清晰，社区维护活跃。期待更多平台的支持。", rating: 5, date: "2026-04-20", likes: 5, replyTo: null as string | null },
-];
-
-type LocalComment = typeof defaultComments[number];
-
 export default function AgentSkillDetailClient({ id }: { id: string }) {
   const skill = getAgentSkillById(id);
   const { t } = useI18n();
@@ -88,12 +80,6 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState<"intro" | "files" | "feedback" | "versions">("intro");
   const [activeFile, setActiveFile] = useState<string>("");
   const [copiedInstall, setCopiedInstall] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [commentRating, setCommentRating] = useState(5);
-  const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
-  const [localComments, setLocalComments] = useState<LocalComment[]>(defaultComments);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [replyToUser, setReplyToUser] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
@@ -108,48 +94,6 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [showReport]);
-
-  // Load persisted comments from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.skillComments(id));
-      if (raw) {
-        const saved: LocalComment[] = JSON.parse(raw);
-        setLocalComments([...saved, ...defaultComments]);
-      }
-    } catch { /* ignore */ }
-  }, [id]);
-
-  function handleSubmitComment() {
-    if (!commentText.trim()) return;
-    const newComment: LocalComment = {
-      id: `local-${Date.now()}`,
-      user: user?.username || "User",
-      avatar: user?.avatar || (user ? user.username.charAt(0).toUpperCase() : "U"),
-      content: commentText.trim(),
-      rating: commentRating,
-      date: new Date().toISOString().slice(0, 10),
-      likes: 0,
-      replyTo: replyToUser,
-    };
-
-    const updated = [newComment, ...localComments];
-    setLocalComments(updated);
-    setCommentText("");
-    setCommentRating(5);
-    setReplyTo(null);
-    setReplyToUser(null);
-
-    // Persist user-submitted comments to localStorage
-    try {
-      const existing = localStorage.getItem(STORAGE_KEYS.skillComments(id));
-      const saved: LocalComment[] = existing ? JSON.parse(existing) : [];
-      saved.unshift(newComment);
-      localStorage.setItem(STORAGE_KEYS.skillComments(id), JSON.stringify(saved));
-    } catch { /* ignore */ }
-
-    toast(t.comments.title, "success");
-  }
 
   function handleShare() {
     const shareUrl = typeof window !== "undefined" ? window.location.href : "";
@@ -613,110 +557,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
       {/* Tab: Feedback */}
       {activeTab === "feedback" && (
         <div role="tabpanel" id="detail-tabpanel-feedback" aria-labelledby="detail-tab-feedback" className="space-y-6">
-          {/* Comment input */}
-          <div className="glass-card p-5">
-            <div className="flex gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm text-primary font-medium shrink-0">
-                U
-              </div>
-              <div className="flex-1">
-                {replyToUser && (
-                  <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-xs text-primary">
-                    <Reply className="h-3 w-3" />
-                    <span>{t.comments.replyingTo} @{replyToUser}</span>
-                    <button
-                      onClick={() => { setReplyTo(null); setReplyToUser(null); setCommentText(""); }}
-                      className="ml-auto hover:text-primary/70 transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder={replyToUser ? `@${replyToUser} ` : t.agentSkills.writeComment}
-                  className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none min-h-[80px]"
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setCommentRating(i + 1)}
-                        aria-label={`${i + 1} star`}
-                      >
-                        <Star className={`h-4 w-4 ${i < commentRating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}`} />
-                      </button>
-                    ))}
-                  </div>
-                  <Button
-                    size="sm"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    disabled={!commentText.trim()}
-                    onClick={handleSubmitComment}
-                  >
-                    {t.comments.submitComment}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Comments list */}
-          <div className="space-y-4">
-            {localComments.map((comment) => (
-              <div key={comment.id} className="glass-card p-5">
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-medium shrink-0 overflow-hidden">
-                    {comment.avatar && comment.avatar.startsWith("data:") ? (
-                      <img src={comment.avatar} alt={comment.user} className="h-full w-full object-cover" />
-                    ) : (
-                      comment.avatar
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-foreground">{comment.user}</span>
-                      {comment.replyTo && (
-                        <span className="text-xs text-primary/70 flex items-center gap-1">
-                          <Reply className="h-2.5 w-2.5" />
-                          @{comment.replyTo}
-                        </span>
-                      )}
-                      <span className="text-xs text-muted-foreground">{comment.date}</span>
-                      <div className="flex items-center gap-0.5 ml-auto">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`h-3 w-3 ${i < comment.rating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}`} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-2">{comment.content}</p>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setCommentLikes(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <ThumbsUp className={`h-3 w-3 ${commentLikes[comment.id] ? "text-primary fill-primary" : ""}`} />
-                        {comment.likes + (commentLikes[comment.id] ? 1 : 0)}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setReplyToUser(comment.user);
-                          setCommentText(`@${comment.user} `);
-                        }}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Reply className="h-3 w-3" />
-                        {t.comments.reply}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <CommentSection skillId={skill.id} skillTitle={skill.title || skill.name} />
         </div>
       )}
 

@@ -26,7 +26,7 @@ export function Footer() {
     { id: "resources", title: t.footer.resources, links: [
       { label: t.common.guide, href: "/guide" },
       { label: t.common.submit, href: "/submit" },
-      { label: t.footer.changelog, href: "#", disabled: true },
+      { label: t.footer.changelog, href: "#" },
       { label: t.footer.api, href: "#", disabled: true },
     ]},
     { id: "community", title: t.footer.community, links: [
@@ -62,7 +62,9 @@ export function Footer() {
                 {section.links.map((link) => (
                   <li key={link.label}>
                     {link.disabled ? (
-                      <span className="text-sm text-muted-foreground/40 cursor-default line-through" aria-disabled="true" title={t.footer.comingSoon || "Coming soon"}>{link.label}</span>
+                      <span className="text-sm text-muted-foreground/50 cursor-not-allowed" aria-disabled="true" title={t.footer.comingSoon || "Coming soon"}>{link.label}</span>
+                    ) : link.href === "#" ? (
+                      <span className="text-sm text-muted-foreground cursor-default" title={t.footer.comingSoon || "Coming soon"}>{link.label}</span>
                     ) : (
                       <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                         {link.label}

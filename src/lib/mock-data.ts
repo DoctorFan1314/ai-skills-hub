@@ -666,6 +666,8 @@ if (!data?.items) return <Empty />;
     usageStepsOnline: ["复制 Prompt", "描述研究主题", "获取研究报告"],
     usageStepsLocal: ["安装知识量大的模型", "复制本地版 Prompt", "描述主题后运行"],
     likes: 234,
+    isPremium: true,
+    previewLimit: 100,
   },
   // ─── 数据分析 (data) ───────────────────────────────────
   {
@@ -751,6 +753,8 @@ LIMIT 50;
     usageStepsLocal: ["安装代码模型", "复制本地版 Prompt", "粘贴SQL后运行"],
     advancedTips: ["提供EXPLAIN输出结果可获得更精准的建议", "对于复杂JOIN查询，拆解为子查询逐步优化", "结合慢查询日志找出TOP 10热点SQL优先优化"],
     likes: 456,
+    isPremium: true,
+    previewLimit: 100,
   },
   {
     id: "data-cleaner",
@@ -979,6 +983,8 @@ NPS连续2个季度下降，若Q2不改善，可能出现口碑塌方。
     usageStepsLocal: ["安装推理强的模型", "复制本地版 Prompt", "描述数据后运行"],
     advancedTips: ["提供同比和环比数据可获得更精准的趋势分析", "加入竞品数据可获得竞争视角的洞察", "指定汇报对象（CEO/产品/运营）会调整语言风格"],
     likes: 289,
+    isPremium: true,
+    previewLimit: 100,
   },
   // ─── 效率工具 (productivity) ─────────────────────────────
   {
@@ -2041,6 +2047,8 @@ export function TagSelector({ options, value, onChange, placeholder = "搜索标
     usageStepsLocal: ["安装代码模型", "复制本地版 Prompt", "描述故障后运行"],
     advancedTips: ["提供监控截图（Grafana等）可获得更精准的分析", "附上最近的代码变更记录可加速定位", "每次事故后用这个模板生成复盘文档，逐步完善应急预案"],
     likes: 345,
+    isPremium: true,
+    previewLimit: 100,
   },
   {
     id: "swot-analyzer",

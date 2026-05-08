@@ -9,11 +9,14 @@ import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import type { UserActivity } from "@/lib/types";
 import { Eye, Copy, Clock } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function UsageHistoryTab() {
   const { user } = useAuth();
   const { t } = useI18n();
   const locale = useLocale();
+  const [visibleCount, setVisibleCount] = useState(20);
   if (!user) return null;
 
   let activities: UserActivity[] = [];
@@ -36,7 +39,7 @@ export function UsageHistoryTab() {
 
   return (
     <div className="space-y-3">
-      {viewAndCopy.slice(0, 50).map((a) => {
+      {viewAndCopy.slice(0, visibleCount).map((a) => {
         const Icon = a.type === "copy" ? Copy : Eye;
         const label = a.type === "copy" ? t.profile.copiedLabel : t.profile.viewedSkill;
         return (
@@ -61,6 +64,13 @@ export function UsageHistoryTab() {
           </div>
         );
       })}
+      {viewAndCopy.length > visibleCount && (
+        <div className="mt-4 text-center">
+          <Button variant="outline" onClick={() => setVisibleCount((c) => c + 20)} className="border-border text-muted-foreground hover:bg-secondary">
+            {t.common.loadMore} <span className="ml-1 text-xs text-muted-foreground/60">({viewAndCopy.length - visibleCount} {t.common.remaining})</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

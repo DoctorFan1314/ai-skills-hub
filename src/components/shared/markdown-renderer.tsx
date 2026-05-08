@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, memo } from "react";
+import DOMPurify from "dompurify";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -83,8 +84,11 @@ function isTableSeparator(line: string): boolean {
   return /^\|[\s\-:|]+\|$/.test(line.trim());
 }
 
+const sanitize = (html: string) => typeof window !== "undefined" ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : html.replace(/<[^>]*>/g, "");
+
 export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: { content: string }) {
-  const lines = content.split("\n");
+  const sanitizedContent = sanitize(content);
+  const lines = sanitizedContent.split("\n");
   const elements: React.ReactNode[] = [];
   let inCodeBlock = false;
   let codeLines: string[] = [];

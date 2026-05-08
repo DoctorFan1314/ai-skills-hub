@@ -307,6 +307,22 @@ ai-skills-hub/
 | 头像裁剪安全 | ✅ | Canvas null 检查 + reject；错误日志记录 |
 | 导航栏空菜单守卫 | ✅ | 空菜单项时箭头键导航安全守卫 |
 | 通知边界检查 | ✅ | 焦点索引限制在 items 长度范围内 |
+| 忘记密码 | ✅ | 内联重置对话框，邮箱查找 + 新密码表单 |
+| 数据导入 | ✅ | 导入 JSON 备份，验证结构，去重合并 |
+| Per-user 密码盐 | ✅ | 随机 16 字节 hex salt，登录时自动迁移 |
+| Admin 双重验证 | ✅ | 邮箱 + role 角色双重检查 |
+| html lang 初始化 | ✅ | 内联脚本首次渲染前读取 localStorage 语言偏好 |
+| XSS 消毒 | ✅ | DOMPurify 消毒 Markdown 内容，防止脚本注入 |
+| 频率限制 | ✅ | 评论 3 秒、提交 10 秒、举报 5 秒冷却 |
+| Profile 键盘导航 | ✅ | ArrowLeft/Right/Home/End 切换 Tab |
+| Profile 分页 | ✅ | 活动、历史、评论、收藏"加载更多" |
+| 清除数据确认 | ✅ | 清除前弹出确认对话框 |
+| Premium 预览限制 | ✅ | 4 个技能带模糊预览和升级提示 |
+| 技能对比 | ✅ | /skills/compare 并排对比 |
+| 通知偏好 | ✅ | 6 种通知类型独立开关 |
+| 移动端 Sheet 头像 | ✅ | 移动端导航显示头像 + 通知铃铛 |
+| 评论系统统一 | ✅ | Agent 技能使用共享 CommentSection 组件 |
+| 详情页骨架屏 | ✅ | 懒加载 MarkdownRenderer 动画骨架屏 |
 
 ---
 

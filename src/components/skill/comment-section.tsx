@@ -6,6 +6,7 @@ import { useToast } from "@/contexts/toast-context";
 import { useI18n } from "@/contexts/i18n-context";
 import { useLocale } from "@/hooks/use-locale";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
+import { canPerformAction } from "@/lib/utils";
 import type { Comment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
   function handleSubmit() {
     if (!user) { toast(t.comments.loginToComment, "error"); return; }
     if (!content.trim()) { toast(t.comments.commentRequired, "error"); return; }
+    if (!canPerformAction("comment", 3000)) { toast(t.rateLimit.tooFast, "error"); return; }
 
     const comment: Comment = {
       id: crypto.randomUUID(),
@@ -280,7 +282,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
                 </div>
               ) : (
                 <div className="text-sm text-foreground mb-2 ml-11 prose prose-sm dark:prose-invert max-w-none">
-                  <Suspense fallback={<p>{c.content}</p>}>
+                  <Suspense fallback={<div className="animate-pulse bg-secondary rounded h-4 w-3/4" />}>
                     <MarkdownRenderer content={c.content} />
                   </Suspense>
                 </div>

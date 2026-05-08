@@ -20,6 +20,7 @@ interface StoredUser {
   username: string;
   email: string;
   passwordHash: string;
+  salt?: string;
   avatar?: string;
   bio?: string;
   joinDate: string;
@@ -45,12 +46,22 @@ interface AuthContextValue {
   logout: () => void;
   updateProfile: (data: Partial<Pick<User, "username" | "avatar" | "bio" | "preferences">>) => void;
   changePassword: (currentPw: string, newPw: string) => Promise<boolean>;
+  resetPassword: (email: string, newPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function hashPassword(password: string): Promise<string> {
-  const msgUint8 = new TextEncoder().encode(password + "ai-skills-hub-salt");
+// Legacy static salt for backward compatibility
+const LEGACY_STATIC_SALT = "ai-skills-hub-salt";
+
+function generateSalt(): string {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const msgUint8 = new TextEncoder().encode(password + salt);
   const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
   return Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -110,10 +121,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const migrated: StoredUser[] = await Promise.all(parsed.map(async (u: LegacyStoredUser | StoredUser) => {
         if ("password" in u && typeof (u as LegacyStoredUser).password === "string") {
           const legacy = u as LegacyStoredUser;
+          const salt = generateSalt();
           return {
             username: legacy.username,
             email: legacy.email,
-            passwordHash: await hashPassword(legacy.password),
+            passwordHash: await hashPassword(legacy.password, salt),
+            salt,
             joinDate: new Date().toISOString(),
             preferences: { theme: "dark" as const, language: "zh" as const },
             role: "user" as const,
@@ -130,16 +143,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (email: string, password: string): Promise<boolean> => {
       const users = getUsers();
-      const found = users.find((u) => u.email === email);
-      if (!found) return false;
-      const hash = await hashPassword(password);
-      // Support both legacy plaintext and hashed passwords
+      const idx = users.findIndex((u) => u.email === email);
+      if (idx === -1) return false;
+      const found = users[idx];
+
+      // Determine salt to use: per-user salt, or legacy static salt if missing
+      const effectiveSalt = found.salt || LEGACY_STATIC_SALT;
+      const hash = await hashPassword(password, effectiveSalt);
+
+      // Support both hashed passwords and legacy plaintext
       if (found.passwordHash !== hash && found.passwordHash !== password) return false;
-      // If matched plaintext (legacy), upgrade to hash
+
+      // Migrate: if matched plaintext (legacy), upgrade to hash with per-user salt
       if (found.passwordHash === password) {
-        found.passwordHash = hash;
+        const newSalt = generateSalt();
+        found.passwordHash = await hashPassword(password, newSalt);
+        found.salt = newSalt;
+        users[idx] = found;
         saveUsers(users);
       }
+
+      // Migrate: if user had no salt (old static salt hash), add per-user salt on login
+      if (!found.salt) {
+        const newSalt = generateSalt();
+        found.passwordHash = await hashPassword(password, newSalt);
+        found.salt = newSalt;
+        users[idx] = found;
+        saveUsers(users);
+      }
+
       const session = toSessionUser(found);
       localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
       setUser(session);
@@ -152,11 +184,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (username: string, email: string, password: string): Promise<boolean> => {
       const users = getUsers();
       if (users.some((u) => u.email === email)) return false;
-      const hash = await hashPassword(password);
+      const salt = generateSalt();
+      const hash = await hashPassword(password, salt);
       const newUser: StoredUser = {
         username,
         email,
         passwordHash: hash,
+        salt,
         joinDate: new Date().toISOString(),
         preferences: { theme: "dark", language: "zh" },
         role: "user",
@@ -200,17 +234,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const users = getUsers();
       const idx = users.findIndex((u) => u.email === user.email);
       if (idx === -1) return false;
-      const currentHash = await hashPassword(currentPw);
+      const effectiveSalt = users[idx].salt || LEGACY_STATIC_SALT;
+      const currentHash = await hashPassword(currentPw, effectiveSalt);
       if (users[idx].passwordHash !== currentHash && users[idx].passwordHash !== currentPw) return false;
-      users[idx].passwordHash = await hashPassword(newPw);
+      // Generate new salt for the new password
+      const newSalt = generateSalt();
+      users[idx].passwordHash = await hashPassword(newPw, newSalt);
+      users[idx].salt = newSalt;
       saveUsers(users);
       return true;
     },
     [user, getUsers, saveUsers],
   );
 
+  const resetPassword = useCallback(
+    async (email: string, newPassword: string): Promise<boolean> => {
+      const users = getUsers();
+      const idx = users.findIndex((u) => u.email === email);
+      if (idx === -1) return false;
+      // Generate new salt for the new password
+      const newSalt = generateSalt();
+      users[idx].passwordHash = await hashPassword(newPassword, newSalt);
+      users[idx].salt = newSalt;
+      saveUsers(users);
+      return true;
+    },
+    [getUsers, saveUsers],
+  );
+
   return (
-    <AuthContext.Provider value={{ user, loaded, login, register, logout, updateProfile, changePassword }}>
+    <AuthContext.Provider value={{ user, loaded, login, register, logout, updateProfile, changePassword, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

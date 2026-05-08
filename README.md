@@ -308,6 +308,22 @@ ai-skills-hub/
 | Avatar crop safety | ✅ | Canvas null check with reject; error logging |
 | Navbar empty menu guard | ✅ | Arrow key nav guard for empty menu items |
 | Notification bounds check | ✅ | Focus index clamped to items length |
+| Forgot password | ✅ | Inline reset dialog with email lookup + new password form |
+| Data import | ✅ | Import JSON backup with validation and deduplication |
+| Per-user password salt | ✅ | Random 16-byte hex salt, auto-migration on login |
+| Admin dual-check | ✅ | Email + role verification for admin access |
+| html lang init | ✅ | Inline script reads localStorage before first paint |
+| XSS sanitization | ✅ | DOMPurify for Markdown content, script injection prevention |
+| Rate limiting | ✅ | 3s comment, 10s submit, 5s report cooldowns |
+| Profile keyboard nav | ✅ | ArrowLeft/Right/Home/End for tab switching |
+| Profile pagination | ✅ | Load More on activity, history, comments, favorites |
+| Clear data confirmation | ✅ | Confirmation dialog before wiping localStorage |
+| Premium preview limit | ✅ | 4 skills with blurred preview and upgrade prompt |
+| Skill comparison | ✅ | Side-by-side compare at /skills/compare |
+| Notification preferences | ✅ | Toggle switches for 6 notification types |
+| Mobile Sheet avatar | ✅ | Avatar + notification bell in mobile nav drawer |
+| Unified comments | ✅ | Agent skills use shared CommentSection component |
+| Detail page skeletons | ✅ | Animated skeleton for lazy MarkdownRenderer |
 
 ---
 

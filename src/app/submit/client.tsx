@@ -11,6 +11,7 @@ import { useToast } from "@/contexts/toast-context";
 import { useI18n } from "@/contexts/i18n-context";
 import { useLocale } from "@/hooks/use-locale";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
+import { canPerformAction } from "@/lib/utils";
 import type { Submission } from "@/lib/types";
 import { categories } from "@/lib/categories";
 
@@ -52,6 +53,7 @@ export default function SubmitClient() {
     const errs = validate(fd);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
+    if (!canPerformAction("submit", 10000)) { toast(t.rateLimit.tooFast, "error"); return; }
     setSubmitting(true);
 
     const submission: Submission = {

@@ -57,6 +57,7 @@ export interface Dictionary {
     relatedSkills: string; notFound: string; temperature: string; effectNote: string;
     modelsTableLabel: string; modelsTableCaption: string;
     modelName: string; modelStrengths: string; modelUseCase: string; modelAudience: string;
+    premium: string; upgradeToPremium: string; premiumComingSoon: string;
   };
   agentSkills: {
     title: string; subtitle: string; filterAll: string; sortBy: string;
@@ -138,6 +139,8 @@ export interface Dictionary {
     dataExported: string; dataCleared: string; accountDeleted: string;
     passwordPlaceholder: string;
     deleteConfirmPrompt: string; deleteConfirmMismatch: string;
+    importData: string; importSuccess: string; importError: string;
+    clearDataConfirmTitle: string; clearDataConfirmDesc: string;
   };
   submit: {
     title: string; subtitle: string; basicInfo: string; templateName: string;
@@ -206,6 +209,8 @@ export interface Dictionary {
     usernamePlaceholder: string; passwordPlaceholder: string;
     oauthRegisterComingSoon: string; registerWithGoogle: string; registerWithGithub: string;
     confirmPassword: string; confirmPasswordPlaceholder: string; passwordMismatch: string;
+    resetPassword: string; resetPasswordDesc: string; resetPasswordSuccess: string;
+    emailNotFound: string; setNewPassword: string;
   };
   notFound: {
     title: string; description: string; backHome: string;
@@ -228,6 +233,9 @@ export interface Dictionary {
     copyright: string; platforms: string;
     emailRequired: string; emailInvalid: string; alreadySubscribed: string; subscribeSuccess: string;
     comingSoon: string;
+  };
+  rateLimit: {
+    tooFast: string;
   };
   create: {
     newSkill: string; newPrompt: string;
@@ -291,6 +299,7 @@ export interface Dictionary {
     noAccess: string; noAccessDesc: string; backHome: string;
     reviewNotePlaceholder: string; adminSubtitle: string;
     noComments: string; skillPrefix: string;
+    adminSecurityNote: string;
   };
   search: {
     title: string; subtitle: string; placeholder: string;
@@ -305,5 +314,21 @@ export interface Dictionary {
     step1Title: string; step1Desc: string;
     step2Title: string; step2Desc: string;
     step3Title: string; step3Desc: string;
+  };
+  compare: {
+    title: string; compareButton: string; compareCount: string;
+    backToSkills: string; selectTwo: string; toggleCompare: string;
+    higher: string; downloads: string; stars: string; author: string;
+    description: string; category: string; tags: string; version: string;
+    license: string; installCommand: string; noSkillsSelected: string;
+  };
+  notificationPrefs: {
+    title: string; description: string;
+    commentReply: string; commentReplyDesc: string;
+    skillUpdate: string; skillUpdateDesc: string;
+    submissionStatus: string; submissionStatusDesc: string;
+    like: string; likeDesc: string;
+    follow: string; followDesc: string;
+    system: string; systemDesc: string;
   };
 }

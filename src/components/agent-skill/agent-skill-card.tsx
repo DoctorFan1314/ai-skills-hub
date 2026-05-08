@@ -2,20 +2,33 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Download, Star, Copy, Check, Terminal } from "lucide-react";
+import { ArrowRight, Download, Star, Copy, Check, Terminal, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import type { AgentSkill } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
 import { useToast } from "@/contexts/toast-context";
 
-export function AgentSkillCard({ skill }: { skill: AgentSkill }) {
+export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }: { skill: AgentSkill; compareMode?: boolean; selected?: boolean; onToggleSelect?: (id: string) => void }) {
   const [copied, setCopied] = useState(false);
   const { t } = useI18n();
   const { toast } = useToast();
 
   return (
-    <div className="glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden">
+    <div className={`glass-card glass-card-hover p-5 h-full group flex flex-col relative overflow-hidden ${selected ? "ring-2 ring-primary" : ""}`}>
+      {compareMode && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); }}
+          className={`absolute top-3 left-3 z-10 h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+            selected
+              ? "bg-primary border-primary text-primary-foreground"
+              : "bg-secondary border-border text-muted-foreground hover:border-primary/50"
+          }`}
+          aria-label={selected ? "Deselect for comparison" : "Select for comparison"}
+        >
+          {selected && <CheckCircle className="h-4 w-4" />}
+        </button>
+      )}
       {skill.trending && (
         <div className="absolute top-3 right-3 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">

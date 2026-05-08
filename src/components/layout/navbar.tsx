@@ -14,6 +14,7 @@ import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
 
 import { useNotifications } from "@/hooks/use-notifications";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -221,7 +222,23 @@ export function Navbar() {
             />
             <SheetContent side="right" className="bg-card border-border w-72">
               <SheetTitle className="text-foreground sr-only">{t.common.navigationMenu}</SheetTitle>
-              <div className="mt-8 mb-4 px-1">
+              {/* User info + notification bell */}
+              {!loaded ? null : user ? (
+                <div className="mt-8 mb-4 px-4 flex items-center justify-between">
+                  <Link href="/profile" onClick={() => setSheetOpen(false)} className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium overflow-hidden shrink-0">
+                      {user.avatar ? (
+                        <Image src={user.avatar} alt={user.username} width={40} height={40} className="h-10 w-10 rounded-full object-cover" unoptimized />
+                      ) : (
+                        user.username.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-foreground truncate">{user.username}</span>
+                  </Link>
+                  <NotificationBell />
+                </div>
+              ) : null}
+              <div className={`${user ? "" : "mt-8 "}mb-4 px-1`}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input

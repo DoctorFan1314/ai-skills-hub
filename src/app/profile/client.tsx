@@ -50,7 +50,35 @@ export default function ProfileClient() {
       <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8">
         <ProfileHeader />
 
-        <div role="tablist" className="flex gap-1 overflow-x-auto scrollbar-hide mb-8 border-b border-border pb-px">
+        <div
+          role="tablist"
+          className="flex gap-1 overflow-x-auto scrollbar-hide mb-8 border-b border-border pb-px"
+          onKeyDown={(e) => {
+            const tabIds = tabs.map((t) => t.id);
+            const currentIndex = tabIds.indexOf(activeTab);
+            let newIndex = currentIndex;
+
+            if (e.key === "ArrowRight") {
+              e.preventDefault();
+              newIndex = (currentIndex + 1) % tabIds.length;
+            } else if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              newIndex = (currentIndex - 1 + tabIds.length) % tabIds.length;
+            } else if (e.key === "Home") {
+              e.preventDefault();
+              newIndex = 0;
+            } else if (e.key === "End") {
+              e.preventDefault();
+              newIndex = tabIds.length - 1;
+            } else {
+              return;
+            }
+
+            setActiveTab(tabIds[newIndex]);
+            const newTabEl = document.getElementById(`tab-${tabIds[newIndex]}`);
+            newTabEl?.focus();
+          }}
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (

@@ -17,6 +17,7 @@ export function MyCommentsTab() {
   const { t } = useI18n();
   const locale = useLocale();
   const [, setTick] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   if (!user) return null;
 
@@ -56,7 +57,7 @@ export function MyCommentsTab() {
 
   return (
     <div className="space-y-3">
-      {comments.map((c) => {
+      {comments.slice(0, visibleCount).map((c) => {
         const prompt = getSkillById(c.skillId);
         const agent = getAgentSkillById(c.skillId);
         const href = agent ? `/skills/${c.skillId}` : `/prompts/${c.skillId}`;
@@ -76,6 +77,13 @@ export function MyCommentsTab() {
           </div>
         );
       })}
+      {comments.length > visibleCount && (
+        <div className="mt-4 text-center">
+          <Button variant="outline" onClick={() => setVisibleCount((c) => c + 10)} className="border-border text-muted-foreground hover:bg-secondary">
+            {t.common.loadMore} <span className="ml-1 text-xs text-muted-foreground/60">({comments.length - visibleCount} {t.common.remaining})</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
