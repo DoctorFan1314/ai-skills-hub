@@ -37,6 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return "dark";
   });
   const isInitialRef = useRef(true);
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const resolved = resolveTheme(theme);
@@ -52,7 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (theme === "system") {
         const resolved = getSystemTheme();
         setResolvedTheme(resolved);
-        applyTheme(resolved, false);
+        applyTheme(resolved, false, transitionTimeoutRef);
       }
     };
     mq.addEventListener("change", handler);
@@ -64,7 +65,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.theme, newTheme);
     const resolved = resolveTheme(newTheme);
     setResolvedTheme(resolved);
-    applyTheme(resolved, false);
+    applyTheme(resolved, false, transitionTimeoutRef);
   }, []);
 
   const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme, setTheme]);
@@ -76,7 +77,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function applyTheme(resolved: "dark" | "light", isInitial: boolean) {
+function applyTheme(resolved: "dark" | "light", isInitial: boolean, timeoutRef?: React.MutableRefObject<ReturnType<typeof setTimeout> | null>) {
   const root = document.documentElement;
   const isDark = resolved === "dark";
   // Only apply transition on explicit user-initiated theme change, not on initial load
@@ -90,10 +91,14 @@ function applyTheme(resolved: "dark" | "light", isInitial: boolean) {
   }
   document.documentElement.style.colorScheme = isDark ? "dark" : "light";
   if (!isInitial) {
+    // Clear any pending transition cleanup timeout before setting a new one
+    if (timeoutRef?.current) clearTimeout(timeoutRef.current);
     // Remove transition after it completes to avoid interfering with other animations
-    setTimeout(() => {
+    const id = setTimeout(() => {
       root.style.transition = "";
+      if (timeoutRef) timeoutRef.current = null;
     }, 350);
+    if (timeoutRef) timeoutRef.current = id;
   }
 }
 

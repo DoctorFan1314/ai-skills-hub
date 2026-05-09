@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { GitFork, CheckCircle, Loader2, ArrowRight, ArrowLeft, Package } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 import { useToast } from "@/contexts/toast-context";
@@ -37,19 +43,6 @@ export function CreateFromGithub({ open, onClose, onCreated }: Props) {
   const [parsedSkills, setParsedSkills] = useState<{ name: string; title: string; description: string; version: string }[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [done, setDone] = useState(false);
-
-  if (!open) return null;
-
-  const handleEscape = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") reset();
-  }, []);
-
-  useEffect(() => {
-    if (open) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
-  }, [open, handleEscape]);
 
   function handleParse() {
     if (!githubUrl.trim()) {
@@ -127,23 +120,29 @@ export function CreateFromGithub({ open, onClose, onCreated }: Props) {
     onClose();
   }
 
+  function handleOpenChange(v: boolean) {
+    if (!v) reset();
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={reset} role="dialog" aria-modal="true" aria-label={t.create.importGithub}>
-      <div className="w-full max-w-lg mx-4 rounded-2xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent showCloseButton closeLabel={t.common.close} className="max-w-lg">
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
-          <GitFork className="h-5 w-5 text-foreground" />
-          <h2 className="text-lg font-semibold text-foreground">{t.create.importGithub}</h2>
-          <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <GitFork className="h-5 w-5 text-foreground" />
+            {t.create.importGithub}
+          </DialogTitle>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
             {[1, 2, 3].map((s) => (
               <span key={s} className={`flex items-center justify-center w-6 h-6 rounded-full text-xs ${step >= s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{s}</span>
             ))}
           </div>
-        </div>
+        </DialogHeader>
 
         {/* Step 1: Enter URL */}
         {step === 1 && !done && !parsing && (
-          <div className="px-6 py-6 space-y-4">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">{t.create.githubUrlPlaceholder}</p>
             <div>
               <label className="text-sm text-foreground mb-1.5 block">{t.create.githubUrl} <span className="text-red-400">*</span></label>
@@ -166,7 +165,7 @@ export function CreateFromGithub({ open, onClose, onCreated }: Props) {
 
         {/* Parsing state */}
         {step === 1 && parsing && (
-          <div className="px-6 py-12 text-center space-y-3">
+          <div className="py-12 text-center space-y-3">
             <Loader2 className="h-8 w-8 text-primary mx-auto animate-spin" />
             <p className="text-sm text-foreground">{t.create.parsing}</p>
             <p className="text-xs text-muted-foreground">{t.create.parsingDesc}</p>
@@ -175,7 +174,7 @@ export function CreateFromGithub({ open, onClose, onCreated }: Props) {
 
         {/* Step 2: Select skills */}
         {step === 2 && !done && (
-          <div className="px-6 py-6 space-y-4">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">{t.create.selectSkills}</p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {parsedSkills.map((s, i) => (
@@ -212,7 +211,7 @@ export function CreateFromGithub({ open, onClose, onCreated }: Props) {
 
         {/* Step 3: Success */}
         {done && (
-          <div className="px-6 py-10 text-center space-y-4">
+          <div className="py-10 text-center space-y-4">
             <CheckCircle className="h-12 w-12 text-green-400 mx-auto" />
             <h3 className="text-lg font-semibold text-foreground">{t.create.successTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.create.successDesc}</p>
@@ -221,7 +220,7 @@ export function CreateFromGithub({ open, onClose, onCreated }: Props) {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -5,17 +5,20 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { useI18n } from "@/contexts/i18n-context";
 import { useLocale } from "@/hooks/use-locale";
 import type { Notification } from "@/lib/types";
+import type { Dictionary } from "@/lib/i18n/types";
 import { Bell, MessageSquare, Sparkles, FileText, Heart, UserPlus, Info, Check, Filter } from "lucide-react";
 
 type FilterType = "all" | "comment_reply" | "skill_update" | "submission_status" | "system";
 
-const FILTERS: { key: FilterType; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "comment_reply", label: "Comments" },
-  { key: "skill_update", label: "Skills" },
-  { key: "submission_status", label: "Submissions" },
-  { key: "system", label: "System" },
-];
+function getFilters(t: Dictionary): { key: FilterType; label: string }[] {
+  return [
+    { key: "all", label: t.notificationFilters.all },
+    { key: "comment_reply", label: t.notificationFilters.comments },
+    { key: "skill_update", label: t.notificationFilters.skills },
+    { key: "submission_status", label: t.notificationFilters.submissions },
+    { key: "system", label: t.notificationFilters.system },
+  ];
+}
 
 function getNotificationIcon(type: Notification["type"]) {
   switch (type) {
@@ -36,6 +39,8 @@ export function NotificationTab() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [visibleCount, setVisibleCount] = useState(20);
 
+  const filters = getFilters(t);
+
   const filtered = filter === "all"
     ? notifications
     : notifications.filter((n) => n.type === filter);
@@ -46,12 +51,12 @@ export function NotificationTab() {
     const now = Date.now();
     const diff = now - new Date(timestamp).getTime();
     const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return "just now";
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 1) return t.common.justNow;
+    if (minutes < 60) return `${minutes}m ${t.common.ago}`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return `${hours}h ${t.common.ago}`;
     const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d ago`;
+    if (days < 7) return `${days}d ${t.common.ago}`;
     return new Date(timestamp).toLocaleDateString(locale);
   }
 
@@ -60,7 +65,7 @@ export function NotificationTab() {
       <div className="glass-card p-12 text-center">
         <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
         <p className="text-foreground font-medium mb-1">{t.common.noNotifications}</p>
-        <p className="text-sm text-muted-foreground">{"Notifications will appear here when there's activity"}</p>
+        <p className="text-sm text-muted-foreground">{t.common.comingSoon}</p>
       </div>
     );
   }
@@ -97,7 +102,7 @@ export function NotificationTab() {
 
       {/* Filter tabs */}
       <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <button
             key={f.key}
             onClick={() => { setFilter(f.key); setVisibleCount(20); }}
@@ -117,7 +122,7 @@ export function NotificationTab() {
       <div className="space-y-2">
         {visible.length === 0 ? (
           <div className="glass-card p-8 text-center">
-            <p className="text-sm text-muted-foreground">{"No notifications in this category"}</p>
+            <p className="text-sm text-muted-foreground">{t.notificationFilters.emptyCategory}</p>
           </div>
         ) : (
           visible.map((n) => (
@@ -155,7 +160,7 @@ export function NotificationTab() {
             onClick={() => setVisibleCount((prev) => prev + 20)}
             className="text-xs text-primary hover:underline"
           >
-            {t.common.loadMore} ({filtered.length - visibleCount} remaining)
+            {t.common.loadMore} ({filtered.length - visibleCount} {t.common.remaining})
           </button>
         </div>
       )}

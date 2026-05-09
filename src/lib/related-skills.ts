@@ -1,8 +1,9 @@
-import { skills } from "@/lib/mock-data";
+import { skills, getPublishedPrompts } from "@/lib/mock-data";
 import type { Skill } from "@/lib/types";
 
 export function getRelatedSkills(skill: Skill, limit = 4): Skill[] {
-  const scored = skills
+  const allSkills = [...skills, ...getPublishedPrompts()];
+  const scored = allSkills
     .filter((s) => s.id !== skill.id)
     .map((s) => {
       let score = 0;

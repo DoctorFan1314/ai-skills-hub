@@ -76,7 +76,7 @@ function SkillColumn({ skill }: { skill: AgentSkill }) {
           <FileCode className="h-3.5 w-3.5" />
           <span>{skill.license}</span>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-950 border border-border">
           <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <code className="text-xs text-foreground font-mono flex-1 truncate">{skill.installCommand}</code>
           <CopyButton text={skill.installCommand} className="ml-1 text-muted-foreground hover:text-foreground transition-colors" size={12} />
@@ -110,10 +110,17 @@ function CompareContent() {
   const skill2 = getAgentSkillById(ids[1]);
 
   if (!skill1 || !skill2) {
+    const missing1 = !skill1 ? ids[0] : null;
+    const missing2 = !skill2 ? ids[1] : null;
+    const missingNames = [missing1, missing2].filter(Boolean).join(", ");
     return (
       <div className="mx-auto max-w-4xl px-4 py-20 text-center">
         <h2 className="text-2xl font-bold text-foreground mb-4">{t.compare.title}</h2>
-        <p className="text-muted-foreground mb-6">{t.compare.noSkillsSelected}</p>
+        <p className="text-muted-foreground mb-6">
+          {missing1 && missing2
+            ? `Skills "${missing1}" and "${missing2}" not found.`
+            : `Skill "${missing1 || missing2}" not found. Please select valid skills to compare.`}
+        </p>
         <Link href="/skills">
           <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />

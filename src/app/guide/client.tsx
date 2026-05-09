@@ -23,7 +23,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
         <p className="text-sm text-foreground font-mono flex-1">{code}</p>
         <button
           onClick={handleCopy}
-          className="opacity-0 group-hover:opacity-100 shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
           aria-label={copied ? "Copied" : "Copy code"}
         >
           {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}

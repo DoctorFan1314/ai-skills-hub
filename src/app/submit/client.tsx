@@ -14,6 +14,7 @@ import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { canPerformAction } from "@/lib/utils";
 import type { Submission } from "@/lib/types";
 import { categories } from "@/lib/categories";
+import Link from "next/link";
 
 const categoryOptions = categories.map((c) => ({ name: c.name, slug: c.slug }));
 
@@ -85,6 +86,9 @@ export default function SubmitClient() {
         <h1 className="text-2xl font-bold text-foreground mb-3">{t.submit.successTitle}</h1>
         <p className="text-muted-foreground mb-6">{t.submit.successDesc}</p>
         <Button onClick={() => setSubmitted(false)} variant="outline" className="border-border text-foreground hover:bg-secondary">{t.submit.continueSubmit}</Button>
+        <Link href="/submit/status">
+          <Button variant="outline" className="ml-3 border-border text-foreground hover:bg-secondary">{t.submit.viewStatus || "View submission status"}</Button>
+        </Link>
 
         {submissions.length > 0 && (
           <div className="mt-10 text-left">

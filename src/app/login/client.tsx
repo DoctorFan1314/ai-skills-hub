@@ -12,6 +12,11 @@ import { useI18n } from "@/contexts/i18n-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { Mail, KeyRound, Loader2 } from "lucide-react";
 
+function safeReturnUrl(url: string | null): string {
+  if (!url || !url.startsWith("/") || url.includes("://")) return "/";
+  return url;
+}
+
 export default function LoginClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +54,7 @@ export default function LoginClient() {
     }
     toast(t.auth.loginSuccess, "success");
     const returnUrl = searchParams.get("returnUrl");
-    router.push(returnUrl || "/");
+    router.push(safeReturnUrl(returnUrl));
   }
 
   function handleOpenForgot() {

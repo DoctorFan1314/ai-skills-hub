@@ -29,6 +29,7 @@ export interface Dictionary {
     passwordWeak: string; passwordFair: string; passwordGood: string; passwordStrong: string; passwordVeryStrong: string;
     loadMore: string; remaining: string;
     justNow: string;
+    clearSearch: string; viewAllItems: string; comingSoon: string; notFound: string; backToList: string;
   };
   home: {
     featuredTitle: string; featuredSubtitle: string;
@@ -86,6 +87,7 @@ export interface Dictionary {
     trending: string;
     versionLatest: string;
     versionBy: string;
+    currentVersion: string; initialRelease: string;
   };
   categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string;
     nameContent: string; descContent: string;
@@ -115,6 +117,7 @@ export interface Dictionary {
     reply: string; cancelReply: string; replyingTo: string;
     commentPublished: string; commentRequired: string; commentCount: string;
     deleteConfirm: string; commentEdited: string;
+    markdownHint: string;
   };
   profile: {
     title: string; overview: string; favorites: string; likes: string;
@@ -132,6 +135,7 @@ export interface Dictionary {
     noCommentsDesc: string; noLikesDesc: string; noFavoritesDesc: string;
     noSubmissionsDesc: string; noHistoryDesc: string;
     unsavedChanges: string;
+    deleteSubmissionConfirm: string;
   };
   settings: {
     editProfile: string; username: string; bio: string; bioPlaceholder: string;
@@ -164,6 +168,7 @@ export interface Dictionary {
     viewHistoryDesc: string; noSubmissionsYet: string; goToSubmit: string;
     reviewNoteLabel: string;
     anonymousUser: string;
+    viewStatus: string;
   };
   guide: {
     title: string; subtitle: string;
@@ -229,6 +234,7 @@ export interface Dictionary {
   error: {
     title: string; description: string; retry: string;
     backToHome: string;
+    somethingWentWrong: string; tryAgain: string; skillNotFound: string; promptNotFound: string;
   };
   commandPalette: {
     searchPlaceholder: string; noResults: string;
@@ -336,6 +342,9 @@ export interface Dictionary {
     follow: string; followDesc: string;
     system: string; systemDesc: string;
     preferences: string;
+  };
+  notificationFilters: {
+    all: string; comments: string; skills: string; submissions: string; system: string; emptyCategory: string;
   };
   collections: {
     createFirst: string;

@@ -9,6 +9,7 @@ import python from "react-syntax-highlighter/dist/esm/languages/hljs/python";
 import bash from "react-syntax-highlighter/dist/esm/languages/hljs/bash";
 import yaml from "react-syntax-highlighter/dist/esm/languages/hljs/yaml";
 import css from "react-syntax-highlighter/dist/esm/languages/hljs/css";
+import { codeTheme, lightCodeTheme } from "./markdown-renderer";
 import html from "react-syntax-highlighter/dist/esm/languages/hljs/xml";
 import sql from "react-syntax-highlighter/dist/esm/languages/hljs/sql";
 import java from "react-syntax-highlighter/dist/esm/languages/hljs/java";
@@ -30,30 +31,6 @@ SyntaxHighlighter.registerLanguage("java", java);
 SyntaxHighlighter.registerLanguage("go", go);
 SyntaxHighlighter.registerLanguage("rust", rust);
 
-const darkTheme: Record<string, React.CSSProperties> = {
-  "hljs": { background: "#0d1117", color: "#e6edf3", padding: "1rem", borderRadius: "0 0 0.5rem 0.5rem", overflow: "auto" },
-  "hljs-keyword": { color: "#ff7b72" },
-  "hljs-string": { color: "#a5d6ff" },
-  "hljs-number": { color: "#79c0ff" },
-  "hljs-built_in": { color: "#ffa657" },
-  "hljs-comment": { color: "#8b949e" },
-  "hljs-title": { color: "#d2a8ff" },
-  "hljs-attr": { color: "#79c0ff" },
-  "hljs-params": { color: "#e6edf3" },
-};
-
-const lightTheme: Record<string, React.CSSProperties> = {
-  "hljs": { background: "#f6f8fa", color: "#24292f", padding: "1rem", borderRadius: "0 0 0.5rem 0.5rem", overflow: "auto" },
-  "hljs-keyword": { color: "#cf222e" },
-  "hljs-string": { color: "#0a3069" },
-  "hljs-number": { color: "#0550ae" },
-  "hljs-built_in": { color: "#953800" },
-  "hljs-comment": { color: "#6e7781" },
-  "hljs-title": { color: "#8250df" },
-  "hljs-attr": { color: "#0550ae" },
-  "hljs-params": { color: "#24292f" },
-};
-
 export default function LazySyntaxHighlighter({ code, language }: { code: string; language: string }) {
   const [isDark, setIsDark] = useState(false);
 
@@ -66,10 +43,10 @@ export default function LazySyntaxHighlighter({ code, language }: { code: string
     return () => observer.disconnect();
   }, []);
 
-  const codeTheme = isDark ? darkTheme : lightTheme;
+  const selectedTheme = isDark ? codeTheme : lightCodeTheme;
 
   return (
-    <SyntaxHighlighter language={language || "text"} style={codeTheme} customStyle={{ margin: 0, fontSize: "0.875rem" }}>
+    <SyntaxHighlighter language={language || "text"} style={selectedTheme} customStyle={{ margin: 0, fontSize: "0.875rem" }}>
       {code}
     </SyntaxHighlighter>
   );

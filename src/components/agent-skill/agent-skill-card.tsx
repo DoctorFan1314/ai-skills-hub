@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Download, Star, Copy, Check, Terminal, CheckCircle } from "lucide-react";
 import type { AgentSkill } from "@/lib/types";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatRelativeTime } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { TagChip } from "@/components/ui/tag-chip";
@@ -63,7 +63,7 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
           </div>
         </Link>
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="flex items-center gap-2 mb-0.5 pr-20">
+          <div className="flex items-center gap-2 mb-0.5">
             <Link href={`/skills/${skill.id}`} className="min-w-0" onClick={preventLinkNav}>
               <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                 {skill.name}
@@ -100,12 +100,11 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
           <Star className="h-3 w-3" />
           {formatNumber(skill.stars)}
         </span>
-        <span className="text-muted-foreground/60">{skill.lastUpdated}</span>
+        <span className="text-muted-foreground/60">{formatRelativeTime(skill.lastUpdated)}</span>
       </div>
 
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         aria-label={copied ? "Copied" : `Copy install command for ${skill.name}`}
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/80 border border-border group/install cursor-pointer hover:border-primary/30 transition-colors"
         onClick={(e) => {
@@ -113,18 +112,11 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
           e.stopPropagation();
           copy(skill.installCommand, t.agentSkills.installCopied);
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            copy(skill.installCommand, t.agentSkills.installCopied);
-          }
-        }}
       >
         <Terminal className="h-3 w-3 text-muted-foreground shrink-0" />
         <code className="text-xs text-muted-foreground truncate flex-1 font-mono">{skill.installCommand}</code>
         {copied ? <Check className="h-3 w-3 text-green-400 shrink-0" /> : <Copy className="h-3 w-3 text-muted-foreground/60 group-hover/install:text-muted-foreground shrink-0" />}
-      </div>
+      </button>
     </div>
   );
 }

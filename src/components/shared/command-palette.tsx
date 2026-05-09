@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ArrowRight, Command } from "lucide-react";
 import { getCommandItems } from "@/lib/commands";
@@ -16,19 +16,6 @@ export function CommandPalette() {
   const router = useRouter();
   const { t } = useI18n();
 
-  const items = getCommandItems({ push: (url: string) => { router.push(url); handleClose(); } }, t);
-
-  const filtered = query.trim()
-    ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
-    : items;
-
-  const grouped = filtered.reduce<Record<string, typeof items>>((acc, item) => {
-    (acc[item.category] ||= []).push(item);
-    return acc;
-  }, {});
-
-  const flatFiltered = filtered;
-
   const handleClose = useCallback(() => {
     setOpen(false);
     setQuery("");
@@ -42,6 +29,19 @@ export function CommandPalette() {
     setQuery("");
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
+
+  const items = useMemo(() => getCommandItems({ push: (url: string) => { router.push(url); handleClose(); } }, t), [t, router, handleClose]);
+
+  const filtered = useMemo(() => query.trim()
+    ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
+    : items, [query, items]);
+
+  const grouped = useMemo(() => filtered.reduce<Record<string, typeof items>>((acc, item) => {
+    (acc[item.category] ||= []).push(item);
+    return acc;
+  }, {}), [filtered]);
+
+  const flatFiltered = filtered;
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -72,7 +72,7 @@ export function CommandPalette() {
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [open, flatFiltered, selectedIdx]);
+  }, [open, flatFiltered, selectedIdx, handleClose]);
 
   useEffect(() => { setSelectedIdx(0); }, [query]);
 

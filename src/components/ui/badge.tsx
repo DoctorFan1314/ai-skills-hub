@@ -1,4 +1,15 @@
 import { mergeProps } from "@base-ui/react/merge-props"
+
+/**
+ * Badge component.
+ *
+ * When rendering an icon-only badge (no visible text), always include an
+ * `aria-label` on the outer element so screen readers can announce its purpose.
+ *
+ * @example
+ * <Badge aria-label="New" variant="default"><PlusIcon /></Badge>
+ */
+
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
 

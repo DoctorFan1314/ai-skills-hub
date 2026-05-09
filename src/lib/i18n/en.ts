@@ -58,6 +58,8 @@ export const en: Dictionary = {
     edited: "edited",
     passwordWeak: "Weak", passwordFair: "Fair", passwordGood: "Good", passwordStrong: "Strong", passwordVeryStrong: "Very Strong",
     loadMore: "Load More", remaining: "remaining", justNow: "Just now",
+    clearSearch: "Clear search", viewAllItems: "View all {count} items", comingSoon: "Coming soon",
+    notFound: "Not found", backToList: "Back to list",
   },
   home: {
     heroTitle: "Discover Powerful Agent Skills",
@@ -200,6 +202,8 @@ export const en: Dictionary = {
     trending: "Popular",
     versionLatest: "Latest",
     versionBy: "by",
+    currentVersion: "Current version",
+    initialRelease: "Initial release",
   },
   categories: {
     title: "Categories",
@@ -276,6 +280,7 @@ export const en: Dictionary = {
     commentCount: "Comments ({count})",
     deleteConfirm: "Delete this comment?",
     commentEdited: "Comment edited",
+    markdownHint: "Markdown supported: **bold**, *italic*, `code`, - lists",
   },
   profile: {
     title: "Profile",
@@ -321,6 +326,7 @@ export const en: Dictionary = {
     noSubmissionsDesc: "Go to the Submit page to contribute your Prompt skills",
     noHistoryDesc: "Visiting skill pages and copying Prompts are recorded automatically",
     unsavedChanges: "You have unsaved changes",
+    deleteSubmissionConfirm: "Are you sure you want to delete this submission?",
   },
   settings: {
     editProfile: "Edit Profile",
@@ -405,6 +411,7 @@ export const en: Dictionary = {
     goToSubmit: "Go to Submit",
     reviewNoteLabel: "Review Note:",
     anonymousUser: "Anonymous User",
+    viewStatus: "View submission status",
   },
   guide: {
     title: "Getting Started",
@@ -551,6 +558,10 @@ export const en: Dictionary = {
     description: "An unknown error occurred while loading the page",
     retry: "Retry",
     backToHome: "Back to home",
+    somethingWentWrong: "Something went wrong",
+    tryAgain: "Try again",
+    skillNotFound: "Skill not found",
+    promptNotFound: "Prompt not found",
   },
   commandPalette: {
     searchPlaceholder: "Search skills, pages, or commands...",
@@ -781,6 +792,14 @@ export const en: Dictionary = {
     system: "System Notifications",
     systemDesc: "Receive system announcements and important updates",
     preferences: "Preferences",
+  },
+  notificationFilters: {
+    all: "All",
+    comments: "Comments",
+    skills: "Skills",
+    submissions: "Submissions",
+    system: "System",
+    emptyCategory: "No notifications in this category",
   },
   collections: {
     createFirst: "Create your first collection",

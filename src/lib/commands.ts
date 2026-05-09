@@ -1,7 +1,7 @@
 import type { Dictionary } from "@/lib/i18n/types";
 import { categories, getCategoryI18n } from "@/lib/categories";
-import { skills } from "@/lib/mock-data";
-import { agentSkills } from "@/lib/mock-agent-skills";
+import { skills, getPublishedPrompts } from "@/lib/mock-data";
+import { agentSkills, getPublishedSkills } from "@/lib/mock-agent-skills";
 
 export interface CommandItem {
   label: string;
@@ -33,11 +33,13 @@ export function getCommandItems(router: { push: (url: string) => void }, t: Dict
     items.push({ label: `${catLabel}：${i18n.name || cat.name}`, action: () => router.push(`/categories/${cat.slug}`), category: catLabel });
   }
 
-  for (const skill of skills.slice(0, 20)) {
+  const allPrompts = [...skills, ...getPublishedPrompts()];
+  for (const skill of allPrompts) {
     items.push({ label: skill.title, action: () => router.push(`/prompts/${skill.id}`), category: promptLabel });
   }
 
-  for (const skill of agentSkills) {
+  const allAgents = [...agentSkills, ...getPublishedSkills()];
+  for (const skill of allAgents) {
     items.push({ label: skill.name, action: () => router.push(`/skills/${skill.id}`), category: skillLabel });
   }
 

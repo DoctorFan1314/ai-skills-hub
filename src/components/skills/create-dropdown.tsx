@@ -29,7 +29,6 @@ export function CreateDropdown({ onSelectGithub, onSelectUpload, label }: Create
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        onMouseEnter={() => setOpen(true)}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={label}

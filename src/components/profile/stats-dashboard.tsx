@@ -45,7 +45,7 @@ export function StatsDashboard() {
             <div className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${stat.bg} mb-2`}>
               <Icon className={`h-5 w-5 ${stat.color}`} />
             </div>
-            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+            <p className="text-2xl font-bold text-foreground transition-all duration-300">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
           </div>
         );

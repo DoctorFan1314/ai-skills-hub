@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ChevronDown, FolderOpen } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 import type { UserCollection } from "@/lib/types";
@@ -27,9 +28,36 @@ export function CollectionPicker({
   const [showCollections, setShowCollections] = useState(false);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!showCollections) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowCollections(false);
+        setShowNewCollection(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCollections]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!showCollections) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowCollections(false);
+        setShowNewCollection(false);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showCollections]);
 
   return (
-    <div className="glass-card p-5">
+    <div className="glass-card p-5" ref={containerRef}>
       <div className="relative">
         <Button
           variant="outline"
@@ -73,12 +101,12 @@ export function CollectionPicker({
             <div className="border-t border-border">
               {showNewCollection ? (
                 <div className="p-2 flex gap-1">
-                  <input
+                  <Input
                     type="text"
                     value={newCollectionName}
                     onChange={(e) => setNewCollectionName(e.target.value)}
                     placeholder={t.common.collectionName}
-                    className="flex-1 px-2 py-1 text-xs bg-secondary border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    className="flex-1 h-7 text-xs bg-secondary border-border text-foreground placeholder:text-muted-foreground"
                     autoFocus
                   />
                   <Button

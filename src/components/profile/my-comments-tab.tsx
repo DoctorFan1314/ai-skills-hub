@@ -9,26 +9,29 @@ import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import type { Comment } from "@/lib/types";
 import { MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export function MyCommentsTab() {
   const { user } = useAuth();
   const { t } = useI18n();
   const locale = useLocale();
-  const [, setTick] = useState(0);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.comments(user.email));
+      if (raw) setComments(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [user]);
 
   if (!user) return null;
 
-  let comments: Comment[] = [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.comments(user.email));
-    comments = raw ? JSON.parse(raw) : [];
-  } catch { /* ignore */ }
-
   const handleDelete = (id: string, skillId: string) => {
     const updated = comments.filter((c) => c.id !== id);
+    setComments(updated);
     localStorage.setItem(STORAGE_KEYS.comments(user.email), JSON.stringify(updated));
     // Also remove from global
     try {
@@ -42,7 +45,6 @@ export function MyCommentsTab() {
       const skillComments: Comment[] = skillRaw ? JSON.parse(skillRaw) : [];
       localStorage.setItem(STORAGE_KEYS.skillComments(skillId), JSON.stringify(skillComments.filter((c) => c.id !== id)));
     } catch { /* ignore */ }
-    setTick((t) => t + 1);
   };
 
   if (comments.length === 0) {

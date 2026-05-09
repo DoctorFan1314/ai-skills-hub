@@ -164,7 +164,7 @@ export default function TrendingClient() {
             <Link
               key={`${item.type}-${item.id}`}
               href={item.type === "agent" ? `/skills/${item.id}` : `/prompts/${item.id}`}
-              className={`block glass-card p-5 transition-all hover:scale-[1.01] ${rank <= 3 ? `bg-gradient-to-r ${getRankColor(rank)} border` : ""}`}
+              className={`block glass-card p-5 transition-all hover:scale-[1.01] will-change-transform ${rank <= 3 ? `bg-gradient-to-r ${getRankColor(rank)} border` : ""}`}
             >
               <div className="flex items-center gap-4">
                 <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${rank <= 3 ? getRankBadge(rank) + " border" : "bg-secondary text-muted-foreground border border-border"}`}>

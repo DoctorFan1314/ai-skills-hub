@@ -6,7 +6,7 @@ import { useLocale } from "@/hooks/use-locale";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { UserActivity } from "@/lib/types";
 import { ThumbsUp, Bookmark, MessageSquare, Send, Eye, Copy } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 import type { Dictionary } from "@/lib/i18n/types";
@@ -26,16 +26,20 @@ export function ActivityTimeline() {
   const { user } = useAuth();
   const { t } = useI18n();
   const locale = useLocale();
+  const [activities, setActivities] = useState<UserActivity[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.activity(user.email));
+      if (raw) setActivities(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [user]);
+
   if (!user) return null;
 
   const typeConfig = getTypeConfig(t);
-
-  let activities: UserActivity[] = [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.activity(user.email));
-    activities = raw ? JSON.parse(raw) : [];
-  } catch { /* ignore */ }
 
   const recentlyViewed = activities.filter((a) => a.type === "view").slice(0, 10);
 

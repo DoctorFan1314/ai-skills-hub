@@ -48,6 +48,10 @@ export interface Skill {
   isPremium?: boolean;
   previewLimit?: number;
   author?: string;
+  reviewCount?: number;
+  installCount?: number;
+  license?: string;
+  repository?: string;
 }
 
 export interface Category {
@@ -122,17 +126,19 @@ export interface Submission {
   status: "pending" | "approved" | "rejected";
   reviewNote?: string;
   version: string;
+  tags?: string[];
+  variables?: SkillVariable[];
 }
 
 export interface PromptVersion {
   id: string;
   skillId: string;
   version: string;
-  promptOnline: string;
-  promptLocal: string;
+  promptOnline?: string;
+  promptLocal?: string;
   changelog: string;
   updatedAt: string;
-  updatedBy: string;
+  updatedBy?: string;
 }
 
 export interface AgentSkill {

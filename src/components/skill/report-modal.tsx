@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useI18n } from "@/contexts/i18n-context";
 import { useToast } from "@/contexts/toast-context";
 import { canPerformAction } from "@/lib/utils";
@@ -18,51 +24,6 @@ export function ReportModal({ open, onClose, onSubmit }: ReportModalProps) {
   const { toast } = useToast();
   const [reportReason, setReportReason] = useState<"spam" | "abuse" | "copyright" | "other">("spam");
   const [reportDesc, setReportDesc] = useState("");
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      onClose();
-      return;
-    }
-    if (e.key === "Tab" && dialogRef.current) {
-      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-    document.addEventListener("keydown", handleKeyDown);
-    // Focus first focusable element on mount
-    requestAnimationFrame(() => {
-      if (dialogRef.current) {
-        const firstFocusable = dialogRef.current.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        firstFocusable?.focus();
-      }
-    });
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, handleKeyDown]);
-
-  if (!open) return null;
 
   function handleSubmit() {
     if (!canPerformAction("report", 5000)) { toast(t.rateLimit.tooFast, "error"); return; }
@@ -71,25 +32,16 @@ export function ReportModal({ open, onClose, onSubmit }: ReportModalProps) {
     setReportDesc("");
   }
 
+  function handleOpenChange(v: boolean) {
+    if (!v) onClose();
+  }
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t.common.report || "Report"}
-        className="glass-card w-full max-w-md mx-4 p-6 border border-border"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">{t.common.report}</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label={t.common.close}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent showCloseButton closeLabel={t.common.close} className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t.common.report}</DialogTitle>
+        </DialogHeader>
 
         <p className="text-sm text-muted-foreground mb-4">{t.common.reportReason}</p>
 
@@ -118,15 +70,15 @@ export function ReportModal({ open, onClose, onSubmit }: ReportModalProps) {
           className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none min-h-[60px] mb-4"
         />
 
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>
             {t.common.cancel}
           </Button>
           <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={handleSubmit}>
             {t.common.report}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

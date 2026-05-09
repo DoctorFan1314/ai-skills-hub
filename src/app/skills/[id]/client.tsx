@@ -72,7 +72,14 @@ async function downloadAll(skill: NonNullable<ReturnType<typeof getAgentSkillByI
 
 export default function AgentSkillDetailClient({ id }: { id: string }) {
   const skill = getAgentSkillById(id);
-  if (!skill) return null;
+  if (!skill) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center">
+        <p className="text-muted-foreground text-lg">Skill not found / 未找到技能</p>
+        <Link href="/skills" className="text-primary mt-4 inline-block hover:underline">Back to Skills / 返回技能列表</Link>
+      </div>
+    );
+  }
   const { t } = useI18n();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -199,7 +206,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
             {skill.category}
           </Badge>
           <span className="text-muted-foreground">
-            {t.agentSkills.developer}：<span className="text-foreground">{skill.developer}</span>
+            {t.agentSkills.developer}: <span className="text-foreground">{skill.developer}</span>
           </span>
         </div>
       </div>
@@ -280,11 +287,21 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
               <div>
                 <p className="text-xs text-muted-foreground mb-2">{t.agentSkills.install}</p>
                 <div
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border cursor-pointer hover:border-primary/30 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-950 border border-border cursor-pointer hover:border-primary/30 transition-colors"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => {
                     navigator.clipboard.writeText(skill.installCommand);
                     setCopiedInstall(true);
                     setTimeout(() => setCopiedInstall(false), 2000);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigator.clipboard.writeText(skill.installCommand);
+                      setCopiedInstall(true);
+                      setTimeout(() => setCopiedInstall(false), 2000);
+                    }
                   }}
                 >
                   <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -456,8 +473,10 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
                     {fileNames.map((name) => (
                       <button
                         key={name}
+                        role="tab"
+                        aria-selected={currentFile === name}
                         onClick={() => setActiveFile(name)}
-                        className={`sm:hidden text-xs ${currentFile === name ? "text-foreground" : "text-muted-foreground"}`}
+                        className={`sm:hidden text-xs px-1.5 py-0.5 rounded transition-colors ${currentFile === name ? "text-foreground bg-primary/10 border-b-2 border-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}
                       >
                         {name}
                       </button>

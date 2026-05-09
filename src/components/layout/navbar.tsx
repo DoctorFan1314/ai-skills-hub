@@ -58,8 +58,8 @@ export function Navbar() {
   // Close dropdown on route change
   useEffect(() => { setMoreOpen(false); }, [pathname]);
 
-  function handleSearch(e?: React.KeyboardEvent<HTMLInputElement>) {
-    if (e && e.key !== "Enter") return;
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
     const q = searchQuery.trim();
     if (q) {
       const encoded = encodeURIComponent(q);
@@ -137,19 +137,18 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           {searchOpen ? (
-            <div className="flex items-center gap-1">
+            <form role="search" onSubmit={handleSearch} className="flex items-center gap-1">
               <Input
                 placeholder={t.common.search}
                 className="h-8 w-40 md:w-56 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-sm"
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearch}
               />
               <Button variant="ghost" size="icon-sm" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="text-muted-foreground hover:text-foreground" aria-label={t.common.closeSearch} aria-expanded={true}>
                 <X className="h-4 w-4" />
               </Button>
-            </div>
+            </form>
           ) : (
             <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(true)} className="text-muted-foreground hover:text-foreground" aria-label={t.common.search} aria-expanded={false} id="search-trigger">
               <Search className="h-4 w-4" />
@@ -193,11 +192,11 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {!loaded ? null : user ? (
               <Link href="/profile">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity overflow-hidden shrink-0">
+                <div role="img" aria-label={user.username} className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity overflow-hidden shrink-0">
                   {user.avatar ? (
                     <Image src={user.avatar} alt={user.username} width={32} height={32} className="h-8 w-8 rounded-full object-cover" unoptimized />
                   ) : (
-                    <span aria-label={user.username}>{user.username.charAt(0).toUpperCase()}</span>
+                    user.username.charAt(0).toUpperCase()
                   )}
                 </div>
               </Link>

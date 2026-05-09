@@ -144,7 +144,7 @@
     background: linear-gradient(180deg, #0a0e1a 0%, #000000 100%);
   }
   ::selection {
-    background: hsl(var(--primary) / 0.2);
+    background: color-mix(in srgb, var(--primary) 20%, transparent);
     color: var(--foreground);
   }
 }
@@ -184,6 +184,7 @@
     .animate-page-fade-in { animation: none; }
     .animate-slideDown,
     .animate-fadeIn { animation: none; }
+    .animate-pulse { animation: none; transition: none; }
     .hero-animate-1, .hero-animate-2, .hero-animate-3, .hero-animate-4 { animation: none; }
     .tab-panel-enter { animation: none; }
   }

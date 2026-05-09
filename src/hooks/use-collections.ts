@@ -17,10 +17,12 @@ function isValidCollection(item: unknown): item is UserCollection {
 export function useCollections() {
   const { user } = useAuth();
   const [collections, setCollections] = useState<UserCollection[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!user) {
       setCollections([]);
+      setLoaded(true);
       return;
     }
     try {
@@ -32,6 +34,7 @@ export function useCollections() {
         }
       }
     } catch { /* ignore */ }
+    setLoaded(true);
   }, [user]);
 
   const createCollection = useCallback((name: string, description: string, isPublic: boolean = true, options?: { coverImage?: string; color?: string }) => {
@@ -106,5 +109,5 @@ export function useCollections() {
     return collections.filter(c => c.skillIds.includes(skillId));
   }, [collections]);
 
-  return { collections, createCollection, addToCollection, removeFromCollection, deleteCollection, updateCollection, isInCollection };
+  return { collections, loaded, createCollection, addToCollection, removeFromCollection, deleteCollection, updateCollection, isInCollection };
 }

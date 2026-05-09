@@ -32,8 +32,4 @@ export const STORAGE_KEYS = {
   lastPasswordReset: "ai-skills-hub-last-pw-reset",
   // Notification preferences (user-scoped)
   notificationPrefs: (email: string) => `ai-skills-hub-notification-prefs-${email || "anonymous"}`,
-  // Legacy global keys (for migration)
-  legacyLikes: "ai-skills-hub-likes",
-  legacyBookmarks: "ai-skills-hub-bookmarks",
-  legacySubmissions: "ai-skills-hub-submissions",
 } as const;

@@ -35,7 +35,7 @@ export default function SkillDetailLoading() {
       <div className="grid lg:grid-cols-[1fr_280px] gap-6">
         <div className="glass-card p-6 space-y-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-4 bg-secondary rounded" style={{ width: `${60 + Math.random() * 40}%` }} />
+            <div key={i} className="h-4 bg-secondary rounded" style={{ width: `${60 + (i * 7) % 40}%` }} />
           ))}
         </div>
         <div className="space-y-4">

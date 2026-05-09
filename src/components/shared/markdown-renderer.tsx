@@ -22,6 +22,18 @@ export const codeTheme: Record<string, React.CSSProperties> = {
   "hljs-params": { color: "#e6edf3" },
 };
 
+export const lightCodeTheme: Record<string, React.CSSProperties> = {
+  "hljs": { background: "#f6f8fa", color: "#24292f", padding: "1rem", borderRadius: "0 0 0.5rem 0.5rem", overflow: "auto" },
+  "hljs-keyword": { color: "#cf222e" },
+  "hljs-string": { color: "#0a3069" },
+  "hljs-number": { color: "#0550ae" },
+  "hljs-built_in": { color: "#953800" },
+  "hljs-comment": { color: "#6e7781" },
+  "hljs-title": { color: "#8250df" },
+  "hljs-attr": { color: "#0550ae" },
+  "hljs-params": { color: "#24292f" },
+};
+
 
 function InlineMarkdown({ text }: { text: string }) {
   const parts = text.split(/(\*\*.*?\*\*|`[^`]+`)/g);

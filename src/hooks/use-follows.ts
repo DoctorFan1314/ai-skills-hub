@@ -20,6 +20,23 @@ export function useFollows() {
     } catch { /* ignore */ }
   }, [user]);
 
+  // Cross-tab sync for follows
+  useEffect(() => {
+    if (!user) return;
+    const followKey = STORAGE_KEYS.follows(user.email);
+    const handler = (e: StorageEvent) => {
+      if (e.key === followKey) {
+        try {
+          setFollowing(e.newValue !== null ? JSON.parse(e.newValue) : []);
+        } catch {
+          setFollowing([]);
+        }
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, [user]);
+
   const isFollowing = useCallback((author: string) => followingRef.current.includes(author), []);
 
   const toggleFollow = useCallback((author: string) => {

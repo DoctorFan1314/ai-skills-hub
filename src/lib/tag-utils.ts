@@ -1,5 +1,5 @@
-import { skills } from "@/lib/mock-data";
-import { agentSkills } from "@/lib/mock-agent-skills";
+import { skills, getPublishedPrompts } from "@/lib/mock-data";
+import { agentSkills, getPublishedSkills } from "@/lib/mock-agent-skills";
 
 export interface TagInfo {
   tag: string;
@@ -8,12 +8,14 @@ export interface TagInfo {
 
 export function getAllTags(): TagInfo[] {
   const map = new Map<string, number>();
-  for (const skill of skills) {
+  const allPrompts = [...skills, ...getPublishedPrompts()];
+  const allAgents = [...agentSkills, ...getPublishedSkills()];
+  for (const skill of allPrompts) {
     for (const tag of skill.tags) {
       map.set(tag, (map.get(tag) || 0) + 1);
     }
   }
-  for (const skill of agentSkills) {
+  for (const skill of allAgents) {
     for (const tag of skill.tags) {
       map.set(tag, (map.get(tag) || 0) + 1);
     }
@@ -24,8 +26,10 @@ export function getAllTags(): TagInfo[] {
 }
 
 export function getSkillsByTag(tag: string) {
-  const matchedPrompts = skills.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
-  const matchedAgents = agentSkills.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+  const allPrompts = [...skills, ...getPublishedPrompts()];
+  const allAgents = [...agentSkills, ...getPublishedSkills()];
+  const matchedPrompts = allPrompts.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+  const matchedAgents = allAgents.filter((s) => s.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
   return { prompts: matchedPrompts, agents: matchedAgents };
 }
 

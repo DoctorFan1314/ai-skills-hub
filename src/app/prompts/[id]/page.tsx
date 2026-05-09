@@ -12,10 +12,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const siteUrl = getSiteUrl();
   return {
     title: `${skill.title} — AI Skills Hub`,
-    description: skill.subtitle,
+    description: skill.subtitle.slice(0, 160),
     openGraph: {
       title: `${skill.title} — AI Skills Hub`,
-      description: skill.subtitle,
+      description: skill.subtitle.slice(0, 160),
       url: `${siteUrl}/prompts/${id}`,
       type: "article",
     },

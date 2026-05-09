@@ -88,7 +88,7 @@ export function MySubmissionsTab() {
             </div>
             {deleteConfirmId === s.id && (
               <div className="mt-2 flex items-center gap-2 text-xs border-t border-border pt-2">
-                <span className="text-muted-foreground">{"Are you sure you want to delete this submission?"}</span>
+                <span className="text-muted-foreground">{t.profile.deleteSubmissionConfirm}</span>
                 <button onClick={() => handleDelete(s.id)} className="text-red-400 hover:underline">{t.common.confirm}</button>
                 <button onClick={() => setDeleteConfirmId(null)} className="text-muted-foreground hover:underline">{t.common.cancel}</button>
               </div>

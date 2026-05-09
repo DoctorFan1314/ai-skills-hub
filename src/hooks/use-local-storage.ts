@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [value, setValue] = useState<T>(() => {
@@ -12,6 +12,11 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     return initialValue;
   });
   const [loaded, setLoaded] = useState(false);
+
+  // Wrap initialValue in a ref so it doesn't cause re-subscriptions
+  // when the caller passes an inline value
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
 
   useEffect(() => {
     try {
@@ -26,7 +31,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key) {
         if (e.newValue === null) {
-          setValue(initialValue);
+          setValue(initialValueRef.current);
         } else {
           try {
             setValue(JSON.parse(e.newValue));
@@ -38,7 +43,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     };
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [key, initialValue]);
+  }, [key]);
 
   const setStoredValue = useCallback(
     (updater: T | ((prev: T) => T)) => {

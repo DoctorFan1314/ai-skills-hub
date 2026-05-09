@@ -9,21 +9,25 @@ import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import type { UserActivity } from "@/lib/types";
 import { Eye, Copy, Clock } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export function UsageHistoryTab() {
   const { user } = useAuth();
   const { t } = useI18n();
   const locale = useLocale();
+  const [activities, setActivities] = useState<UserActivity[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
-  if (!user) return null;
 
-  let activities: UserActivity[] = [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.activity(user.email));
-    activities = raw ? JSON.parse(raw) : [];
-  } catch { /* ignore */ }
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.activity(user.email));
+      if (raw) setActivities(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [user]);
+
+  if (!user) return null;
 
   const viewAndCopy = activities.filter((a) => a.type === "view" || a.type === "copy");
 

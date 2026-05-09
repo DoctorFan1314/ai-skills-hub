@@ -12,3 +12,11 @@ export const COLORS = {
     creative: "#ec4899",
   } as Record<string, string>,
 } as const;
+
+/**
+ * Get the color for a category slug, falling back to the default category color
+ * if the slug is not recognized.
+ */
+export function getCategoryColor(slug: string): string {
+  return COLORS.category[slug] ?? COLORS.defaultCategoryColor;
+}

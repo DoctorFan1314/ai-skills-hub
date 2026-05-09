@@ -25,6 +25,7 @@ export default function AdminClient() {
   const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
   const [visibleCommentCount, setVisibleCommentCount] = useState(20);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const TABS = [
     { key: "pending" as const, label: t.admin.pendingSubmissions, icon: <Clock className="h-4 w-4" /> },
@@ -45,20 +46,26 @@ export default function AdminClient() {
         }
       }
       setSubmissions(allSubs);
-    } catch { /* ignore */ }
+    } catch {
+      setLoadError((prev) => prev || "Failed to load submissions from localStorage.");
+    }
 
     // Load all comments
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.allComments);
       setComments(raw ? JSON.parse(raw) : []);
-    } catch { /* ignore */ }
+    } catch {
+      setLoadError((prev) => prev || "Failed to load comments from localStorage.");
+    }
 
     // Load all users
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.users);
       const stored = raw ? JSON.parse(raw) : [];
       setUsers(stored.map((u: { email: string; username: string; role?: string }) => ({ email: u.email, username: u.username, role: u.role })));
-    } catch { /* ignore */ }
+    } catch {
+      setLoadError((prev) => prev || "Failed to load users from localStorage.");
+    }
   }, []);
 
   if (!user || !ADMIN_EMAILS.includes(user.email) || user.role !== "admin") {
@@ -120,8 +127,14 @@ export default function AdminClient() {
         </p>
       </div>
 
+      {loadError && (
+        <div role="alert" className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {loadError}
+        </div>
+      )}
+
       <div role="tablist" aria-label={t.admin.title} className="flex flex-wrap gap-2 mb-8" onKeyDown={(e) => {
-        const tabKeys = TABS.map((t) => t.key);
+        const tabKeys = TABS.map((tabItem) => tabItem.key);
         const currentIndex = tabKeys.indexOf(tab);
         let newIndex = currentIndex;
         if (e.key === "ArrowRight") { e.preventDefault(); newIndex = (currentIndex + 1) % tabKeys.length; }
@@ -132,21 +145,21 @@ export default function AdminClient() {
         setTab(tabKeys[newIndex]);
         document.getElementById(`admin-tab-${tabKeys[newIndex]}`)?.focus();
       }}>
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t.key}
+            key={tabItem.key}
             role="tab"
-            aria-selected={tab === t.key}
-            id={`admin-tab-${t.key}`}
-            aria-controls={`admin-tabpanel-${t.key}`}
-            tabIndex={tab === t.key ? 0 : -1}
-            onClick={() => setTab(t.key)}
+            aria-selected={tab === tabItem.key}
+            id={`admin-tab-${tabItem.key}`}
+            aria-controls={`admin-tabpanel-${tabItem.key}`}
+            tabIndex={tab === tabItem.key ? 0 : -1}
+            onClick={() => setTab(tabItem.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
-              tab === t.key ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+              tab === tabItem.key ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border hover:text-foreground"
             }`}
           >
-            {t.icon}{t.label}
-            {t.key === "pending" && pendingSubs.length > 0 && (
+            {tabItem.icon}{tabItem.label}
+            {tabItem.key === "pending" && pendingSubs.length > 0 && (
               <Badge className="ml-1 bg-red-500/20 text-red-400 border-red-500/30 text-[10px] px-1.5">{pendingSubs.length}</Badge>
             )}
           </button>

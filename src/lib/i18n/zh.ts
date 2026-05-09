@@ -58,6 +58,8 @@ export const zh: Dictionary = {
     edited: "已编辑",
     passwordWeak: "弱", passwordFair: "一般", passwordGood: "良好", passwordStrong: "强", passwordVeryStrong: "非常强",
     loadMore: "加载更多", remaining: "剩余", justNow: "刚刚",
+    clearSearch: "清除搜索", viewAllItems: "查看全部 {count} 个项目", comingSoon: "即将推出",
+    notFound: "未找到", backToList: "返回列表",
   },
   home: {
     heroTitle: "探索强大的 Agent 技能",
@@ -200,6 +202,8 @@ export const zh: Dictionary = {
     trending: "热门",
     versionLatest: "最新",
     versionBy: "由",
+    currentVersion: "当前版本",
+    initialRelease: "初始发布",
   },
   categories: {
     title: "分类浏览",
@@ -276,6 +280,7 @@ export const zh: Dictionary = {
     commentCount: "评论 ({count})",
     deleteConfirm: "确定要删除这条评论吗？",
     commentEdited: "评论已编辑",
+    markdownHint: "支持 Markdown：**粗体**、*斜体*、`代码`、- 列表",
   },
   profile: {
     title: "个人中心",
@@ -321,6 +326,7 @@ export const zh: Dictionary = {
       comments: "评论数",
     },
     unsavedChanges: "您有未保存的更改",
+    deleteSubmissionConfirm: "确定要删除此提交吗？",
   },
   settings: {
     editProfile: "编辑资料",
@@ -405,6 +411,7 @@ export const zh: Dictionary = {
     goToSubmit: "去提交模板",
     reviewNoteLabel: "审核备注：",
     anonymousUser: "匿名用户",
+    viewStatus: "查看提交状态",
   },
   guide: {
     title: "新手指南",
@@ -551,6 +558,10 @@ export const zh: Dictionary = {
     description: "页面加载时发生了未知错误",
     retry: "重试",
     backToHome: "返回首页",
+    somethingWentWrong: "出了点问题",
+    tryAgain: "重试",
+    skillNotFound: "技能未找到",
+    promptNotFound: "模板未找到",
   },
   commandPalette: {
     searchPlaceholder: "搜索技能、页面或命令...",
@@ -781,6 +792,14 @@ export const zh: Dictionary = {
     system: "系统通知",
     systemDesc: "接收系统公告和重要更新",
     preferences: "偏好设置",
+  },
+  notificationFilters: {
+    all: "全部",
+    comments: "评论",
+    skills: "技能",
+    submissions: "提交",
+    system: "系统",
+    emptyCategory: "此分类暂无通知",
   },
   collections: {
     createFirst: "创建您的第一个收藏集",

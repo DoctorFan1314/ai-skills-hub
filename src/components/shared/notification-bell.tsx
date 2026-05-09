@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Bell,
   MessageSquare,
@@ -58,10 +59,17 @@ export function NotificationBell() {
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { t } = useI18n();
   const { notifications, unreadCount, markAsRead, markAllRead, clearAll } =
     useNotifications();
+
+  // Close on route change
+  useEffect(() => {
+    setOpen(false);
+    setActiveIdx(-1);
+  }, [pathname]);
 
   // Close on outside click
   useEffect(() => {

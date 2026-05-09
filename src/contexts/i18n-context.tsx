@@ -17,6 +17,9 @@ interface I18nContextValue {
   tFormat: (key: string, vars: Record<string, string | number>) => string;
 }
 
+// NOTE: The default context value provides sensible zh defaults so components
+// that render outside the provider still work (e.g., during SSR or tests).
+// Changing to `null` default would require adding null-checks to every useI18n() call site.
 const I18nContext = createContext<I18nContextValue>({
   lang: "zh",
   setLang: () => {},
@@ -51,7 +54,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const tFormat = useCallback((key: string, vars: Record<string, string | number>) => {
     let result = key;
     for (const [k, v] of Object.entries(vars)) {
-      result = result.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      result = result.replaceAll(`{${k}}`, String(v));
+    }
+    // Dev-mode warning for unresolved placeholders
+    if (process.env.NODE_ENV === "development" && /\{[^}]+\}/.test(result)) {
+      console.warn(`[i18n] Unresolved placeholders in "${result}". Provided vars:`, vars);
     }
     return result;
   }, []);

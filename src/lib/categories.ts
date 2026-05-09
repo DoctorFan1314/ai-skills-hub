@@ -46,6 +46,11 @@ export const categories: Category[] = [
   },
 ];
 
+// NOTE: The i18n maps below are derived from the categories array slugs.
+// If you add a category to the array above, you must also add its i18n keys
+// to the dictionaries (zh/en) AND to the maps below. This dual-maintenance
+// is a known issue; ideally the map should be derived from the categories array
+// dynamically, but the Dictionary type's nested structure makes that non-trivial.
 export function getCategoryI18n(slug: string, t: Dictionary): { name: string; description: string } {
   const map: Record<string, { name: string; description: string }> = {
     content: { name: t.categories.nameContent, description: t.categories.descContent },

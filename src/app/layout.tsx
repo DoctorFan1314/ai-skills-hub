@@ -62,10 +62,6 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: siteUrl,
-    languages: {
-      "zh-CN": siteUrl,
-      "en-US": siteUrl,
-    },
   },
 };
 
@@ -76,7 +72,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="zh-CN"
+      lang="zh-CN" /* Default; the lang-init script updates this at runtime based on user preference */
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >

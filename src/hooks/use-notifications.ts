@@ -42,6 +42,10 @@ export function useNotifications() {
   const prefsRef = useRef(preferences);
   prefsRef.current = preferences;
 
+  // Ref to always have the latest user email for closures (avoids stale closures)
+  const userEmailRef = useRef(user?.email);
+  userEmailRef.current = user?.email;
+
   // Derive unreadCount from notifications using useMemo
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
@@ -68,10 +72,10 @@ export function useNotifications() {
   const updatePreference = useCallback((type: NotificationType, enabled: boolean) => {
     setPreferences(prev => {
       const updated = { ...prev, [type]: enabled };
-      savePreferences(updated, user?.email);
+      savePreferences(updated, userEmailRef.current);
       return updated;
     });
-  }, [user]);
+  }, []);
 
   const isTypeEnabled = useCallback((type: NotificationType): boolean => {
     return prefsRef.current[type] !== false;

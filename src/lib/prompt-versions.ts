@@ -1,15 +1,9 @@
 import { skills } from "@/lib/mock-data";
-import type { Skill } from "@/lib/types";
-
-export interface PromptVersion {
-  id: string;
-  skillId: string;
-  version: string;
-  changelog: string;
-  updatedAt: string;
-}
+import type { Skill, PromptVersion } from "@/lib/types";
 
 const VERSION_KEY_PREFIX = "ai-skills-hub-versions-";
+
+export type { PromptVersion };
 
 export function getVersions(skillId: string): PromptVersion[] {
   try {

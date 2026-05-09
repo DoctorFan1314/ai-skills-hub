@@ -6,7 +6,7 @@ import { TagChip } from "@/components/ui/tag-chip";
 import { Star, Users, ArrowRight } from "lucide-react";
 import type { Skill } from "@/lib/types";
 import { COLORS } from "@/lib/theme";
-import { getDifficultyLabel } from "@/lib/utils";
+import { getDifficultyLabel, formatNumber } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
 
 export function SkillCard({ skill }: { skill: Skill }) {
@@ -44,7 +44,7 @@ export function SkillCard({ skill }: { skill: Skill }) {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {skill.usageCount}+
+              {formatNumber(skill.usageCount)}+
             </span>
             <span>{getDifficultyLabel(skill.difficulty, t)}</span>
           </div>

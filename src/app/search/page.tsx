@@ -5,6 +5,7 @@ import SearchClient from "./client";
 export const metadata: Metadata = {
   title: "Search — AI Skills Hub",
   description: "Search across Agent Skills and Prompt Templates",
+  robots: { index: false },
 };
 
 export default function SearchPage() {

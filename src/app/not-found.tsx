@@ -7,8 +7,20 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/contexts/i18n-context";
-import { agentSkills } from "@/lib/mock-agent-skills";
-import { skills } from "@/lib/mock-data";
+
+const POPULAR_SKILLS = [
+  { id: "web-scraper", name: "Web Scraper", description: "Scrape and extract web data" },
+  { id: "code-executor", name: "Code Executor", description: "Execute code in a sandboxed environment" },
+  { id: "data-analyst", name: "Data Analyst", description: "Analyze and visualize data" },
+  { id: "doc-writer", name: "Doc Writer", description: "Generate documentation automatically" },
+];
+
+const POPULAR_PROMPTS = [
+  { id: "blog-writer", title: "Blog Writer", subtitle: "Write SEO-optimized blog posts" },
+  { id: "code-review", title: "Code Review", subtitle: "Review code for bugs and improvements" },
+  { id: "translate", title: "Translator", subtitle: "Translate text between languages" },
+  { id: "email-drafter", title: "Email Drafter", subtitle: "Draft professional emails" },
+];
 
 export default function NotFound() {
   const { t } = useI18n();
@@ -21,9 +33,6 @@ export default function NotFound() {
       router.push(`/search?q=${encodeURIComponent(query.trim())}`);
     }
   }
-
-  const hotSkills = agentSkills.filter(s => s.trending).slice(0, 4);
-  const hotPrompts = skills.filter(s => s.trending).slice(0, 4);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-20 text-center">
@@ -50,7 +59,7 @@ export default function NotFound() {
           <Zap className="h-4 w-4" />{t.notFound.popularSkills}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {hotSkills.map(s => (
+          {POPULAR_SKILLS.map(s => (
             <Link key={s.id} href={`/skills/${s.id}`} className="glass-card p-3 hover:bg-secondary transition-colors">
               <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
               <p className="text-xs text-muted-foreground truncate">{s.description}</p>
@@ -65,7 +74,7 @@ export default function NotFound() {
           <FileText className="h-4 w-4" />{t.notFound.popularPrompts}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {hotPrompts.map(s => (
+          {POPULAR_PROMPTS.map(s => (
             <Link key={s.id} href={`/prompts/${s.id}`} className="glass-card p-3 hover:bg-secondary transition-colors">
               <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
               <p className="text-xs text-muted-foreground truncate">{s.subtitle}</p>

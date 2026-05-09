@@ -61,6 +61,8 @@ function generateSalt(): string {
 }
 
 async function hashPassword(password: string, salt: string): Promise<string> {
+  // TODO: Migrate from SHA-256 to PBKDF2 (or Argon2) for stronger key derivation.
+  // Cannot change now as it would break existing user password hashes in localStorage.
   const msgUint8 = new TextEncoder().encode(password + salt);
   const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
   return Array.from(new Uint8Array(hashBuffer))
@@ -163,17 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const effectiveSalt = found.salt || LEGACY_STATIC_SALT;
       const hash = await hashPassword(password, effectiveSalt);
 
-      // Support both hashed passwords and legacy plaintext
-      if (found.passwordHash !== hash && found.passwordHash !== password) return false;
-
-      // Migrate: if matched plaintext (legacy), upgrade to hash with per-user salt
-      if (found.passwordHash === password) {
-        const newSalt = generateSalt();
-        found.passwordHash = await hashPassword(password, newSalt);
-        found.salt = newSalt;
-        users[idx] = found;
-        saveUsers(users);
-      }
+      // Verify hash only (plaintext fallback removed for security)
+      if (found.passwordHash !== hash) return false;
 
       // Migrate: if user had no salt (old static salt hash), add per-user salt on login
       if (!found.salt) {
@@ -248,7 +241,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (idx === -1) return false;
       const effectiveSalt = users[idx].salt || LEGACY_STATIC_SALT;
       const currentHash = await hashPassword(currentPw, effectiveSalt);
-      if (users[idx].passwordHash !== currentHash && users[idx].passwordHash !== currentPw) return false;
+      if (users[idx].passwordHash !== currentHash) return false;
       // Generate new salt for the new password
       const newSalt = generateSalt();
       users[idx].passwordHash = await hashPassword(newPw, newSalt);

@@ -4,6 +4,8 @@ export interface AgentSkillCategory {
   icon: string;
   description: string;
   color: string;
+  nameI18nKey: string;
+  descI18nKey: string;
 }
 
 export const agentSkillCategories: AgentSkillCategory[] = [
@@ -13,6 +15,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "📦",
     description: "技能发现、安装、更新与管理",
     color: "#00d4ff",
+    nameI18nKey: "agentNameSkillsMgmt",
+    descI18nKey: "agentDescSkillsMgmt",
   },
   {
     slug: "web-development",
@@ -20,6 +24,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "🌐",
     description: "前端设计、组件生成、页面构建与部署",
     color: "#7c3aed",
+    nameI18nKey: "agentNameWebDev",
+    descI18nKey: "agentDescWebDev",
   },
   {
     slug: "web-search",
@@ -27,6 +33,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "🔍",
     description: "多平台数据搜索、信息聚合与内容抓取",
     color: "#10b981",
+    nameI18nKey: "agentNameWebSearch",
+    descI18nKey: "agentDescWebSearch",
   },
   {
     slug: "multi-platform",
@@ -34,6 +42,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "🔗",
     description: "跨平台 API 调用、社交媒体发布与消息推送",
     color: "#f59e0b",
+    nameI18nKey: "agentNameMultiPlatform",
+    descI18nKey: "agentDescMultiPlatform",
   },
   {
     slug: "code-execution",
@@ -41,6 +51,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "⚡",
     description: "代码运行、测试执行、构建部署与安全审计",
     color: "#ef4444",
+    nameI18nKey: "agentNameCodeExec",
+    descI18nKey: "agentDescCodeExec",
   },
   {
     slug: "file-processing",
@@ -48,6 +60,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "📁",
     description: "文件读写、格式转换、压缩打包与资源管理",
     color: "#ec4899",
+    nameI18nKey: "agentNameFileProc",
+    descI18nKey: "agentDescFileProc",
   },
   {
     slug: "communication",
@@ -55,6 +69,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "✉️",
     description: "邮件发送、通知推送、日程管理与团队协作",
     color: "#8b5cf6",
+    nameI18nKey: "agentNameComm",
+    descI18nKey: "agentDescComm",
   },
   {
     slug: "data-analysis",
@@ -62,6 +78,8 @@ export const agentSkillCategories: AgentSkillCategory[] = [
     icon: "📊",
     description: "数据查询、报表生成、趋势分析与可视化",
     color: "#06b6d4",
+    nameI18nKey: "agentNameDataAnalysis",
+    descI18nKey: "agentDescDataAnalysis",
   },
 ];
 

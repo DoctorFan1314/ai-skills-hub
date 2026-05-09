@@ -359,7 +359,7 @@ export default function SearchClient() {
                 inputRef.current?.focus();
               }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={t.common.closeSearch}
+              aria-label={t.common.clearSearch || "Clear search"}
             >
               <X className="h-5 w-5" />
             </button>

@@ -33,6 +33,8 @@ export default function TagsClient() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t.tags.searchPlaceholder}
+            role="searchbox"
+            aria-label={t.tags.searchPlaceholder}
             className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>

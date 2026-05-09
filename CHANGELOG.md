@@ -6,6 +6,50 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.5.1] — 2026-05-09
+
+### Security
+- **Open redirect fix** — Login and register pages now sanitize `returnUrl` to prevent open redirect via `://` in query params
+- **Admin variable shadowing** — Renamed `.map((t) => ...)` to `.map((tabItem) => ...)` to avoid shadowing the `t` i18n function
+- **Admin error feedback** — localStorage load failures now surface error messages instead of being silently swallowed
+
+### Accessibility
+- **Install command keyboard support** — Skill detail install command area now supports Enter/Space key activation with `role="button"`, `tabIndex`, and `onKeyDown`
+- **Mobile file tabs ARIA** — Skill detail mobile file tabs now use `role="tab"`, `aria-selected`, with active indicator styling
+- **Variable labels linked** — Prompt detail variable inputs now have `htmlFor`/`id` associations between labels and inputs
+- **Version history expand state** — Prompt detail version history button now has `aria-expanded` attribute
+- **Tags search input** — Added `role="searchbox"` and `aria-label` to tags page search input
+- **Guide copy button focus** — Copy button in guide page now visible on keyboard focus via `focus:opacity-100`
+
+### i18n
+- **Chinese colon fix (skills)** — Changed `：` to `: ` in skill detail developer label
+- **Chinese parentheses fix (prompts)** — Changed `（）` to `()` in prompt detail models heading
+- **Chinese parentheses fix (tags)** — Changed `（）` to `()` in tag detail load-more button
+
+### UX
+- **Not-found messages** — Skill and prompt detail pages now show bilingual "not found" messages instead of returning null
+- **Hardcoded color removal** — Install command background changed from `bg-[#0d1117]` to `bg-zinc-900 dark:bg-zinc-950` for theme support
+- **Compare error specificity** — Skill comparison page now shows which specific skill IDs are missing instead of a generic error
+- **Submit status link** — Submit success page now includes a link to `/submit/status`
+
+### SEO
+- **Search page noindex** — Added `robots: { index: false }` to prevent indexing of search results page
+- **Compare page noindex** — Added `robots: { index: false }` to prevent indexing of comparison page
+- **Prompts OG description truncation** — Prompt detail OG descriptions now capped at 160 characters
+- **Users canonical URL** — User profile pages now include canonical URLs via `alternates`
+- **Trending JSON-LD** — Trending page now includes ItemList structured data for rich search results
+
+### Performance
+- **Deterministic skeleton widths** — Loading skeleton bars now use deterministic widths instead of `Math.random()` to avoid hydration mismatch
+- **Not-found page bundle** — Replaced `mock-data` and `mock-agent-skills` imports with inline arrays to reduce bundle size
+- **Trending hover optimization** — Added `will-change-transform` to trending list items for smoother hover animations
+
+### Bug Fixes
+- **agent-skill-card closing tag** — Fixed `</div>` that should have been `</button>` (mismatched closing tag)
+- **Error page backHref removed** — All error.tsx files no longer pass non-existent `backHref` prop to `<ErrorFallback>`
+
+---
+
 ## [v2.5.0] — 2026-05-09
 
 ### Features

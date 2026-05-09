@@ -15,7 +15,7 @@ export function Hero() {
   }
 
   return (
-    <section id="hero-section" className="relative overflow-hidden">
+    <section id="hero-section" aria-labelledby="hero-heading" className="relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-purple-500/8 via-primary/3 to-transparent pointer-events-none" aria-hidden="true" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" aria-hidden="true" />
       <div className="relative mx-auto max-w-7xl px-4 py-20 lg:py-32 lg:px-8">
@@ -24,7 +24,7 @@ export function Hero() {
             <Zap className="h-3.5 w-3.5" />
             <span>{agentSkills.length}+ {t.home.heroBadge}</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6 hero-animate-2">
+          <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight mb-6 hero-animate-2">
             <span className="gradient-text">{t.agentSkills.heroTitle}</span>
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed hero-animate-2">

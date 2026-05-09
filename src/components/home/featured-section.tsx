@@ -78,23 +78,26 @@ export function FeaturedSection({ tab, onTabChange }: { tab: "agent" | "prompt";
         </div>
       </div>
 
-      {/* Tab content */}
-      <div
-        role="tabpanel"
-        id="tabpanel-agent"
-        aria-labelledby="tab-agent"
-        className={`grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ${tab === "agent" ? "tab-panel-enter" : "hidden"}`}
-      >
-        {trendingAgents.map((s) => <AgentSkillCard key={s.id} skill={s} />)}
-      </div>
-      <div
-        role="tabpanel"
-        id="tabpanel-prompt"
-        aria-labelledby="tab-prompt"
-        className={`grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ${tab === "prompt" ? "tab-panel-enter" : "hidden"}`}
-      >
-        {trendingPrompts.map((s) => <SkillCard key={s.id} skill={s} />)}
-      </div>
+      {/* Tab content - only render active tab to reduce DOM nodes */}
+      {tab === "agent" ? (
+        <div
+          role="tabpanel"
+          id="tabpanel-agent"
+          aria-labelledby="tab-agent"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-[tabFadeIn_0.3s_ease-out]"
+        >
+          {trendingAgents.map((s) => <AgentSkillCard key={s.id} skill={s} />)}
+        </div>
+      ) : (
+        <div
+          role="tabpanel"
+          id="tabpanel-prompt"
+          aria-labelledby="tab-prompt"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-[tabFadeIn_0.3s_ease-out]"
+        >
+          {trendingPrompts.map((s) => <SkillCard key={s.id} skill={s} />)}
+        </div>
+      )}
 
       {/* View all */}
       <div className="text-center mt-8">

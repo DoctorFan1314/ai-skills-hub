@@ -45,7 +45,14 @@ function CopyButton({ text, label, copiedLabel, failedLabel }: { text: string; l
 
 export default function SkillDetailClient({ id }: { id: string }) {
   const skill = getSkillById(id);
-  if (!skill) return null;
+  if (!skill) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
+        <p className="text-muted-foreground text-lg">Prompt not found / 未找到提示词</p>
+        <Link href="/prompts" className="text-primary mt-4 inline-block hover:underline">Back to Prompts / 返回提示词列表</Link>
+      </div>
+    );
+  }
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [likedIds, setLikedIds] = useUserStorage<string[]>(STORAGE_KEYS.likes, []);
   const [bookmarkedIds, setBookmarkedIds] = useUserStorage<string[]>(STORAGE_KEYS.bookmarks, []);
@@ -291,8 +298,8 @@ export default function SkillDetailClient({ id }: { id: string }) {
           <div className="grid sm:grid-cols-2 gap-4">
             {skill.variables.map((v) => (
               <div key={v.name}>
-                <label className="text-sm text-foreground mb-1.5 block">{v.name}{v.required && <span className="text-red-400 ml-1">*</span>}</label>
-                <Input placeholder={v.placeholder} value={variableValues[v.name] || ""} onChange={(e) => setVariableValues((prev) => ({ ...prev, [v.name]: e.target.value }))} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
+                <label htmlFor={`var-${v.name}`} className="text-sm text-foreground mb-1.5 block">{v.name}{v.required && <span className="text-red-400 ml-1">*</span>}</label>
+                <Input id={`var-${v.name}`} placeholder={v.placeholder} value={variableValues[v.name] || ""} onChange={(e) => setVariableValues((prev) => ({ ...prev, [v.name]: e.target.value }))} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
               </div>
             ))}
           </div>
@@ -367,7 +374,7 @@ export default function SkillDetailClient({ id }: { id: string }) {
 
       {/* Recommended Models */}
       <div className="glass-card p-6 mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-4">{t.promptDetail.models}（{t.promptDetail.modelsYear}）</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t.promptDetail.models} ({t.promptDetail.modelsYear})</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[600px]" aria-label={t.promptDetail.modelsTableLabel}>
             <caption className="sr-only">{t.promptDetail.modelsTableCaption}</caption>
@@ -411,6 +418,7 @@ export default function SkillDetailClient({ id }: { id: string }) {
           <button
             className="flex items-center justify-between w-full text-left"
             onClick={() => setShowVersions(!showVersions)}
+            aria-expanded={showVersions}
           >
             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <History className="h-5 w-5" />{t.promptDetail.versionHistory}

@@ -252,12 +252,12 @@ export function SettingsTab() {
             />
           </div>
           <div>
-            <label className="text-sm text-foreground mb-1.5 block">{t.settings.username}</label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} className="bg-secondary border-border text-foreground" />
+            <label htmlFor="settings-username" className="text-sm text-foreground mb-1.5 block">{t.settings.username}</label>
+            <Input id="settings-username" value={username} onChange={(e) => setUsername(e.target.value)} className="bg-secondary border-border text-foreground" />
           </div>
           <div>
-            <label className="text-sm text-foreground mb-1.5 block">{t.settings.bio}</label>
-            <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder={t.settings.bioPlaceholder} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
+            <label htmlFor="settings-bio" className="text-sm text-foreground mb-1.5 block">{t.settings.bio}</label>
+            <Textarea id="settings-bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder={t.settings.bioPlaceholder} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
           </div>
           <Button onClick={handleSaveProfile} className="bg-primary text-primary-foreground hover:bg-primary/90">{t.settings.saveProfile}</Button>
         </div>
@@ -268,16 +268,16 @@ export function SettingsTab() {
         <h3 className="text-lg font-semibold text-foreground mb-4">{t.settings.changePassword}</h3>
         <div className="space-y-4 max-w-md">
           <div>
-            <label className="text-sm text-foreground mb-1.5 block">{t.settings.currentPassword}</label>
-            <Input type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="bg-secondary border-border text-foreground" />
+            <label htmlFor="settings-current-pw" className="text-sm text-foreground mb-1.5 block">{t.settings.currentPassword}</label>
+            <Input id="settings-current-pw" type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="bg-secondary border-border text-foreground" />
           </div>
           <div>
-            <label className="text-sm text-foreground mb-1.5 block">{t.settings.newPassword}</label>
-            <Input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder={t.settings.passwordPlaceholder} className="bg-secondary border-border text-foreground" />
+            <label htmlFor="settings-new-pw" className="text-sm text-foreground mb-1.5 block">{t.settings.newPassword}</label>
+            <Input id="settings-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder={t.settings.passwordPlaceholder} className="bg-secondary border-border text-foreground" />
           </div>
           <div>
-            <label className="text-sm text-foreground mb-1.5 block">{t.settings.confirmPassword}</label>
-            <Input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} className="bg-secondary border-border text-foreground" />
+            <label htmlFor="settings-confirm-pw" className="text-sm text-foreground mb-1.5 block">{t.settings.confirmPassword}</label>
+            <Input id="settings-confirm-pw" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} className="bg-secondary border-border text-foreground" />
           </div>
           {pwError && <p className="text-sm text-red-400">{pwError}</p>}
           <Button onClick={handleChangePassword} variant="outline" className="border-border text-foreground hover:bg-secondary">{t.settings.changePassword}</Button>
@@ -298,6 +298,7 @@ export function SettingsTab() {
               <button
                 key={opt.key}
                 onClick={() => setTheme(opt.key)}
+                aria-pressed={theme === opt.key}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm transition-colors ${
                   theme === opt.key
                     ? "bg-primary/10 text-primary border-primary/30"

@@ -48,7 +48,7 @@ export default function TagDetailClient({ tag, prompts, agents }: { tag: string;
                 onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
                 className="px-6 py-2.5 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/30 transition-colors"
               >
-                {t.common.more}（{prompts.length - visibleCount}）
+                {t.common.more} ({prompts.length - visibleCount})
               </button>
             </div>
           )}

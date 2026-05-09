@@ -1,5 +1,5 @@
 "use client";
 import { ErrorFallback } from "@/components/shared/error-fallback";
 export default function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
-  return <ErrorFallback error={error} reset={reset} backHref="/tags" />;
+  return <ErrorFallback error={error} reset={reset} />;
 }

@@ -10,6 +10,11 @@ import { useToast } from "@/contexts/toast-context";
 import { useI18n } from "@/contexts/i18n-context";
 import { Loader2 } from "lucide-react";
 
+function safeReturnUrl(url: string | null): string {
+  if (!url || !url.startsWith("/") || url.includes("://")) return "/";
+  return url;
+}
+
 export default function RegisterClient() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -67,7 +72,7 @@ export default function RegisterClient() {
     }
     toast(t.auth.registerSuccess, "success");
     const returnUrl = searchParams.get("returnUrl");
-    router.push(returnUrl || "/");
+    router.push(safeReturnUrl(returnUrl));
   }
 
   return (
