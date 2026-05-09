@@ -47,6 +47,7 @@ export interface Skill {
   likes: number;
   isPremium?: boolean;
   previewLimit?: number;
+  author?: string;
 }
 
 export interface Category {
@@ -102,6 +103,8 @@ export interface Comment {
   parentId?: string;
   likes: number;
   likedBy: string[];
+  dislikes?: number;
+  dislikedBy?: string[];
 }
 
 export interface Submission {
@@ -159,6 +162,7 @@ export interface AgentSkill {
   featured: boolean;
   trending: boolean;
   difficulty?: "beginner" | "intermediate" | "advanced";
+  rating?: number;
   // New fields
   screenshots?: string[];
   dependencies?: { name: string; version: string }[];
@@ -191,6 +195,7 @@ export interface UserCollection {
   description: string;
   skillIds: string[];
   createdAt: string;
+  updatedAt?: string;
   userId: string;
   isPublic: boolean;
   coverImage?: string;

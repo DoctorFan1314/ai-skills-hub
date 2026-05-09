@@ -3,22 +3,24 @@ import { notFound } from "next/navigation";
 import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import AgentSkillDetailClient from "./client";
 import { JsonLd, generateSkillJsonLd, generateBreadcrumbJsonLd } from "@/components/shared/json-ld";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const skill = getAgentSkillById(id);
   if (!skill) return { title: "Skill Not Found — AI Skills Hub" };
+  const siteUrl = getSiteUrl();
   return {
     title: `${skill.name} — AI Skills Hub`,
     description: skill.description.split("\n").find(l => l && !l.startsWith("#") && !l.startsWith("-"))?.slice(0, 160) || "",
     openGraph: {
       title: `${skill.name} — AI Skills Hub`,
       description: skill.description.split("\n").find(l => l && !l.startsWith("#") && !l.startsWith("-"))?.slice(0, 300) || "",
-      url: `https://ai-skills-hub.vercel.app/skills/${id}`,
+      url: `${siteUrl}/skills/${id}`,
       type: "article",
     },
     twitter: { card: "summary_large_image", title: `${skill.name} — AI Skills Hub` },
-    alternates: { canonical: `https://ai-skills-hub.vercel.app/skills/${id}` },
+    alternates: { canonical: `${siteUrl}/skills/${id}` },
   };
 }
 
@@ -26,6 +28,8 @@ export default async function AgentSkillDetailPage({ params }: { params: Promise
   const { id } = await params;
   const skill = getAgentSkillById(id);
   if (!skill) notFound();
+
+  const siteUrl = getSiteUrl();
 
   const skillJsonLd = generateSkillJsonLd({
     id: skill.id,
@@ -42,8 +46,8 @@ export default async function AgentSkillDetailPage({ params }: { params: Promise
   });
 
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: "Home", url: "https://ai-skills-hub.vercel.app" },
-    { name: "Skills", url: "https://ai-skills-hub.vercel.app/skills" },
+    { name: "Home", url: siteUrl },
+    { name: "Skills", url: `${siteUrl}/skills` },
     { name: skill.name },
   ]);
 

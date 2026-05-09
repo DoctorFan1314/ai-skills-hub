@@ -1,8 +1,8 @@
 "use client";
 
-import { Star } from "lucide-react";
 import { testimonials } from "@/lib/mock-data";
 import { useI18n } from "@/contexts/i18n-context";
+import { StarRating } from "@/components/ui/star-rating";
 
 export function Testimonials() {
   const { t } = useI18n();
@@ -26,11 +26,7 @@ export function Testimonials() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-3">&ldquo;{item.content}&rdquo;</p>
-            <div className="flex gap-0.5" aria-label={`${t.comments.rating}: ${item.rating}/5`}>
-              {Array.from({ length: item.rating }).map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" aria-hidden="true" />
-              ))}
-            </div>
+            <StarRating value={item.rating} readonly size={14} />
           </div>
         ))}
       </div>

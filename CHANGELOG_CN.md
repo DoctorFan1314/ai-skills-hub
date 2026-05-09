@@ -6,6 +6,97 @@
 
 ---
 
+## [v2.5.0] — 2026-05-09
+
+### 新功能
+- **最近浏览区** — 个人中心活动时间线新增"最近浏览"模块，展示最近 10 个浏览过的技能/模板
+- **"最多点赞"排序** — 模板列表新增按点赞数排序选项
+- **Toast 自动消失** — Toast 通知自动消失（成功/信息 3 秒，错误 5 秒），追踪超时 ID，卸载时清理
+- **Toast 入场动画** — Toast 项添加 fade-in + slide-up 入场动画
+- **i18n 插值工具 (tFormat)** — 新增 `tFormat(key, {count: 5})` 占位符替换辅助函数
+- **共享 ErrorFallback 组件** — 10 个 error.tsx 文件统一使用一个可复用 `<ErrorFallback>` 组件
+- **共享 CopyButton 组件** — 统一的剪贴板复制按钮，带 i18n aria-label
+- **密码重置频率限制** — 重置尝试之间 60 秒冷却
+- **密码重置确认步骤** — 重置流程改为邮箱 → 确认 → 新密码三步 UI
+- **对比相同技能警告** — 两个对比槽位相同时显示 i18n 警告
+- **管理面板删除评论对话框** — `window.confirm()` 替换为样式化 `<Dialog>` 组件
+- **所有按钮加载动画** — 登录、注册、提交按钮显示 `<Loader2>` 旋转器替代 "..."
+- **useUserLocalStorage Hook** — 新通用 Hook，合并用户级 localStorage 与跨标签页同步
+- **Viewport 导出** — 根布局按 Next.js 16 API 导出 `viewport`（含亮/暗 themeColor）
+- **暗色模式滚动条样式** — 自定义细滚动条匹配暗色主题
+- **Z-index CSS 变量** — `--z-dropdown: 50`、`--z-overlay: 100`、`--z-toast: 110`、`--z-command: 120`
+- **亮色模式代码高亮** — 代码块适配亮/暗主题，不再始终使用暗色背景
+- **StarRating hover 预览** — 交互式星级评分鼠标悬停时显示预览
+
+### 安全
+- **密码重置身份验证** — 重置流程要求确认邮箱归属后才允许设新密码
+- **Admin 检查加固** — 管理页面重定向非管理员用户；`ADMIN_EMAILS` 改为命名常量
+
+### SEO
+- **统一站点 URL** — 新建 `getSiteUrl()` 辅助函数替代 8+ 文件中的硬编码 URL
+- **Viewport meta** — 添加独立 `viewport` 导出，含亮/暗 `themeColor`
+- **Robots.txt 屏蔽 /admin** — 管理和 API 路由禁止爬虫
+- **Sitemap 清理** — 移除需认证的 `/submit/status`
+- **JSON-LD 使用环境变量** — Organization 和 WebSite 结构化数据使用 `getSiteUrl()`
+
+### Bug 修复
+- **useLocalStorage 配额错误** — `QuotaExceededError` 记录警告而非静默导致 state/localStorage 不一致
+- **useLocalStorage 跨标签页删除** — 另一标签删除 key 后重置为 `initialValue`
+- **useLocalStorage SSR 保护** — 添加 `typeof window !== "undefined"` 检查防止 SSR 闪现
+- **useUserStorage 访客隔离** — 访客用户通过 sessionStorage 获取会话级 key，而非共享全局 key
+- **useCollections 登出清空** — 登出时 collections 状态重置
+- **useFollows 登出清空** — 登出时 following 状态重置
+- **useNotifications 闭包修复** — `addNotification` 使用 ref 避免过期闭包
+- **useNotifications 用户隔离偏好** — 通知偏好改为按用户存储
+- **useFilteredList 初始值** — 不再用 `useMemo([], [])` 冻结；URL 变化时更新
+- **formatDate 无效日期** — 返回原始字符串而非 "Invalid Date"
+- **频率限制 key 命名空间化** — 前缀改为 `"ai-skills-hub-rate-"` 替代裸 `"rate_limit_"`
+- **STORAGE_KEYS null 守卫** — 用户级 key 函数处理 null/undefined email
+- **theme.ts 分类颜色回退** — 未知分类 slug 使用默认颜色而非 undefined
+- **template.tsx hash 检查** — 带 hash 的路由切换不再滚到顶部
+- **分类 slug 映射** — `categoryToAgentCategory` 使用 slug 匹配替代硬编码中文
+- **非空断言移除** — 技能/模板详情页用 null 检查 + 提前返回替代 `!`
+- **mock 文件存储键** — 使用 `STORAGE_KEYS` 替代硬编码字符串
+- **i18n `<html lang>` 更新** — 语言切换更新 `document.documentElement.lang`
+- **主题 SSR 不匹配修复** — 初始主题状态使用 localStorage 延迟初始化
+
+### 无障碍
+- **TagChip 触摸目标** — 增加到 44px 最小高度
+- **通知"刚刚"** — < 60 秒显示本地化"刚刚"/"just now"
+- **ScrollToTop 隐藏状态** — 隐藏时添加 `aria-hidden` 和 `tabIndex={-1}`
+- **粒子背景 aria-hidden** — 装饰性 canvas 标记 `aria-hidden="true"`
+- **Newsletter 错误 alert** — 错误消息添加 `role="alert"`
+- **头像回退 aria-label** — 字母头像添加 `aria-label={username}`
+- **移动端 Sheet nav aria-label** — 移动端导航添加 `aria-label`
+- **Footer aria-label 修复** — 移除误导性 "Browse:" 前缀
+- **分类卡片焦点样式** — 内层 div 传播 focus-visible 环
+- **排行页 ARIA Tab** — 内容类型和排序按钮添加完整 Tab 语义
+- **灯箱无障碍** — 添加 `role="dialog"`、`aria-modal`、焦点陷阱、Escape 关闭
+- **评论用户名可链接** — 评论作者名链接到 `/users/[username]`
+- **Toast aria-live 修复** — 移除单项 `role="alert"`（与容器 `aria-live="polite"` 冲突）
+- **通知下拉焦点陷阱** — Tab/Shift+Tab 在下拉菜单项中循环
+
+### 性能
+- **Provider 记忆化** — 4 个 Context Provider 全部用 `useMemo` 记忆化 value
+- **unreadCount 改用 useMemo** — useNotifications 中替换 `useState` + `useEffect`
+- **useCommandPalette 死代码移除** — 删除未使用的 Hook
+- **getCommandItems 移至 lib/commands.ts** — 从 hooks 文件分离
+
+### UI 改进
+- **Toast 使用设计令牌** — `text-red-400` → `text-destructive`，颜色适配亮/暗主题
+- **Button default variant hover** — 所有按钮有 hover 反馈
+- **Dialog closeLabel 属性** — 关闭按钮文本可配置
+- **Testimonials 使用 StarRating** — 手动星星渲染替换为可复用组件
+- **版本历史 i18n** — "Latest" 和 "by" 字符串使用 i18n 键
+- **CSS ::selection 样式** — 自定义选中高亮使用主色调
+- **CSS scroll-padding-top** — 锚点不再落在固定导航栏下方
+- **合并 reduced-motion** — 3 个独立的 `@media (prefers-reduced-motion)` 块合并为 1 个
+- **glass-card blur 一致性** — 亮暗模式统一使用 `blur(16px)`
+- **错误状态 i18n 键** — `error.somethingWentWrong`、`error.tryAgain`、`error.backToHome`
+- **Suspense 包裹** — 分类、排行、标签页添加 Suspense + 骨架屏
+
+---
+
 ## [v2.4.0] — 2026-05-08
 
 ### 新功能

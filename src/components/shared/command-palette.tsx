@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ArrowRight, Command } from "lucide-react";
-import { getCommandItems } from "@/hooks/use-keyboard-shortcuts";
+import { getCommandItems } from "@/lib/commands";
 import { useI18n } from "@/contexts/i18n-context";
 
 export function CommandPalette() {
@@ -79,7 +79,7 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={handleClose} role="dialog" aria-modal="true" aria-label={t.commandPalette.searchPlaceholder}>
+    <div className="fixed inset-0 flex items-start justify-center pt-[15vh]" style={{ zIndex: "var(--z-command)" }} onClick={handleClose} role="dialog" aria-modal="true" aria-label={t.commandPalette.searchPlaceholder}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]" aria-hidden="true" />
       <div
         ref={containerRef}

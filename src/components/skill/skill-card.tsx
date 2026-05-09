@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { TagChip } from "@/components/ui/tag-chip";
 import { Star, Users, ArrowRight } from "lucide-react";
 import type { Skill } from "@/lib/types";
 import { COLORS } from "@/lib/theme";
@@ -11,7 +11,6 @@ import { useI18n } from "@/contexts/i18n-context";
 
 export function SkillCard({ skill }: { skill: Skill }) {
   const color = COLORS.category[skill.categorySlug] || COLORS.primary;
-  const router = useRouter();
   const { t } = useI18n();
 
   return (
@@ -37,16 +36,7 @@ export function SkillCard({ skill }: { skill: Skill }) {
         {skill.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
             {skill.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                role="link"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); router.push(`/tags/${encodeURIComponent(tag)}`); }}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); router.push(`/tags/${encodeURIComponent(tag)}`); } }}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground/80 border border-border hover:text-primary hover:border-primary/30 transition-colors cursor-pointer"
-              >
-                {tag}
-              </span>
+              <TagChip key={tag} tag={tag} className="text-[10px]" />
             ))}
           </div>
         )}

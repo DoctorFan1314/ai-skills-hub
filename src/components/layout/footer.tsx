@@ -56,7 +56,7 @@ export function Footer() {
             </div>
           </div>
           {footerSections.map((section) => (
-            <nav key={section.id} aria-label={`${t.footer.browse}: ${section.title}`}>
+            <nav key={section.id} aria-label={section.title}>
               <h3 className="text-sm font-medium text-foreground mb-4">{section.title}</h3>
               <ul className="space-y-2.5">
                 {section.links.map((link) => (

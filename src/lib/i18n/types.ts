@@ -8,6 +8,7 @@ export interface Dictionary {
     more: string; all: string; viewAll: string;
     or: string; closeSearch: string; toggleTheme: string; switchLanguage: string;
     openNavigation: string; navigationMenu: string; close: string; backToTop: string;
+    navigation: string;
     popular: string;
     // New keys
     report: string; reportSubmitted: string; reportReason: string; reportSpam: string;
@@ -27,6 +28,7 @@ export interface Dictionary {
     edited: string;
     passwordWeak: string; passwordFair: string; passwordGood: string; passwordStrong: string; passwordVeryStrong: string;
     loadMore: string; remaining: string;
+    justNow: string;
   };
   home: {
     featuredTitle: string; featuredSubtitle: string;
@@ -42,7 +44,7 @@ export interface Dictionary {
   };
   prompts: {
     title: string; subtitle: string; filterAll: string; sortBy: string;
-    sortPopular: string; sortRating: string; sortNewest: string;
+    sortPopular: string; sortRating: string; sortNewest: string; sortMostLiked: string;
     usageCount: string; viewDetail: string; difficulty: string; version: string;
     notFound: string; backToList: string; searchPlaceholder: string;
     emptySearch: string;
@@ -82,6 +84,8 @@ export interface Dictionary {
     collectionDevTools: string; collectionProductivity: string;
     collectionDataTools: string;
     trending: string;
+    versionLatest: string;
+    versionBy: string;
   };
   categories: { title: string; subtitle: string; viewAll: string; exploreSkill: string;
     nameContent: string; descContent: string;
@@ -118,6 +122,7 @@ export interface Dictionary {
     notifications: string;
     joinedAt: string; noFavorites: string; noLikes: string; noSubmissions: string;
     noComments: string; noHistory: string; browseSkills: string;
+    recentlyViewed: string; recentlyViewedDesc: string;
     recentActivity: string; noActivity: string; noActivityDesc: string;
     likedLabel: string; bookmarkedLabel: string; commentedLabel: string;
     submittedLabel: string; viewedLabel: string; copiedLabel: string;
@@ -212,6 +217,7 @@ export interface Dictionary {
     oauthRegisterComingSoon: string; registerWithGoogle: string; registerWithGithub: string;
     confirmPassword: string; confirmPasswordPlaceholder: string; passwordMismatch: string;
     resetPassword: string; resetPasswordDesc: string; resetPasswordSuccess: string;
+    resetPasswordConfirm: string; resetPasswordRateLimit: string;
     emailNotFound: string; setNewPassword: string;
     loginRedirect: string; sessionExpired: string;
   };
@@ -222,6 +228,7 @@ export interface Dictionary {
   };
   error: {
     title: string; description: string; retry: string;
+    backToHome: string;
   };
   commandPalette: {
     searchPlaceholder: string; noResults: string;
@@ -302,7 +309,7 @@ export interface Dictionary {
     noAccess: string; noAccessDesc: string; backHome: string;
     reviewNotePlaceholder: string; adminSubtitle: string;
     noComments: string; skillPrefix: string;
-    adminSecurityNote: string; confirmDeleteComment: string;
+    adminSecurityNote: string; confirmDeleteComment: string; confirmDeleteCommentDesc: string;
   };
   search: {
     title: string; subtitle: string; placeholder: string;
@@ -318,6 +325,7 @@ export interface Dictionary {
     higher: string; downloads: string; stars: string; author: string;
     description: string; category: string; tags: string; version: string;
     license: string; installCommand: string; noSkillsSelected: string;
+    sameSkillWarning: string;
   };
   notificationPrefs: {
     title: string; description: string;

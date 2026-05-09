@@ -4,19 +4,24 @@ import Link from "next/link";
 import { categories } from "@/lib/categories";
 import { getSkillsByCategory } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
+import { agentSkillCategories } from "@/lib/agent-skill-categories";
 import { SkillCard } from "@/components/skill/skill-card";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { ArrowRight } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 
-const categoryToAgentCategory: Record<string, string[]> = {
-  content: ["通讯协作", "文件处理"],
-  coding: ["Web 开发", "代码执行"],
-  thinking: ["Skills 管理"],
-  data: ["数据分析"],
-  productivity: ["Web 搜索", "多平台交互"],
-  creative: ["文件处理"],
+const categoryToAgentCategorySlugs: Record<string, string[]> = {
+  content: ["communication", "file-processing"],
+  coding: ["web-development", "code-execution"],
+  thinking: ["skills-management"],
+  data: ["data-analysis"],
+  productivity: ["web-search", "multi-platform"],
+  creative: ["file-processing"],
 };
+
+function getAgentCategoryNames(slugs: string[]): string[] {
+  return slugs.map((slug) => agentSkillCategories.find((c) => c.slug === slug)?.name).filter(Boolean) as string[];
+}
 
 export default function CategoriesClient() {
   const { t } = useI18n();
@@ -29,8 +34,9 @@ export default function CategoriesClient() {
       <div className="space-y-12">
         {categories.map((cat) => {
           const catSkills = getSkillsByCategory(cat.slug);
-          const agentCats = categoryToAgentCategory[cat.slug] || [];
-          const catAgentSkills = agentSkills.filter((s) => agentCats.includes(s.category));
+          const agentCats = categoryToAgentCategorySlugs[cat.slug] || [];
+          const agentCatNames = getAgentCategoryNames(agentCats);
+          const catAgentSkills = agentSkills.filter((s) => agentCatNames.includes(s.category));
           const total = catSkills.length + catAgentSkills.length;
           return (
             <section key={cat.slug}>

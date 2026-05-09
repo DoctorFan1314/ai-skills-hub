@@ -368,6 +368,38 @@ ai-skills-hub/
 | Prose 暗色模式覆写 | ✅ | Markdown 使用设计令牌 |
 | 7 个新错误边界 | ✅ | 分类、排行、标签、搜索、个人中心、指南、用户 |
 | 3 个新加载骨架屏 | ✅ | 模板、分类、标签/[tag] |
+| 最近浏览区 | ✅ | 个人中心活动时间线展示最近 10 个浏览项 |
+| 最多点赞排序 | ✅ | 模板列表新增按点赞数排序 |
+| Toast 自动消失 | ✅ | 3 秒/5 秒自动消失，卸载时清理超时 |
+| Toast 入场动画 | ✅ | fade-in + slide-up 入场动画 |
+| i18n 插值工具 | ✅ | `tFormat(key, {count})` 占位符替换 |
+| 共享 ErrorFallback | ✅ | 10 个 error.tsx 统一可复用组件 |
+| 共享 CopyButton | ✅ | 统一剪贴板复制按钮，带 i18n aria-label |
+| 密码重置频率限制 | ✅ | 60 秒冷却期 |
+| 对比相同技能警告 | ✅ | 两个槽位相同时显示警告 |
+| 管理面板删除对话框 | ✅ | window.confirm() 替换为 Dialog 组件 |
+| 按钮加载动画 | ✅ | Loader2 旋转器替代 "..." |
+| useUserLocalStorage Hook | ✅ | 通用用户级 localStorage + 跨标签页同步 |
+| Viewport 导出 | ✅ | 独立 viewport + 亮/暗 themeColor |
+| 暗色滚动条 | ✅ | 自定义细滚动条匹配暗色主题 |
+| Z-index CSS 变量 | ✅ | --z-dropdown、--z-overlay、--z-toast、--z-command |
+| 亮色代码高亮 | ✅ | 代码块适配亮/暗主题 |
+| StarRating hover 预览 | ✅ | 鼠标悬停预览评分 |
+| 密码重置身份验证 | ✅ | 要求确认邮箱归属 |
+| 统一站点 URL | ✅ | getSiteUrl() 替代 8+ 处硬编码 |
+| Robots.txt 屏蔽 /admin | ✅ | 管理和 API 路由禁止爬虫 |
+| Toast aria-live 修复 | ✅ | 移除 role="alert" 与 aria-live="polite" 冲突 |
+| TagChip 44px 目标 | ✅ | WCAG 合规移动端触摸目标 |
+| 通知"刚刚" | ✅ | < 60 秒显示本地化文本 |
+| ScrollToTop 无障碍 | ✅ | 隐藏时 aria-hidden + tabIndex=-1 |
+| 评论用户名可链接 | ✅ | 作者名链接到 /users/[username] |
+| 灯箱无障碍 | ✅ | role="dialog"、焦点陷阱、Escape 关闭 |
+| 排行页 ARIA Tab | ✅ | role="tablist"、role="tab"、aria-selected |
+| 4 个 Provider 记忆化 | ✅ | auth、i18n、toast、theme 全部 useMemo |
+| glass-card blur 一致 | ✅ | 亮暗模式统一 blur(16px) |
+| 合并 reduced-motion | ✅ | 3 个 @media 块合并为 1 个 |
+| CSS ::selection | ✅ | 自定义选中高亮 |
+| CSS scroll-padding-top | ✅ | 锚点不再落在导航栏下方 |
 
 ---
 

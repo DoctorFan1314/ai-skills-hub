@@ -99,7 +99,7 @@ export default function TrendingClient() {
       </div>
 
       {/* Content type filter */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div role="tablist" aria-label={t.trending.title + " - " + (t.common.categories || "Content type")} className="flex flex-wrap gap-2 mb-4">
         {([
           { key: "all" as ContentTab, label: t.agentSkills.filterAll, icon: null },
           { key: "agent" as ContentTab, label: t.home.tabAgent, icon: <Zap className="h-3.5 w-3.5" /> },
@@ -107,6 +107,9 @@ export default function TrendingClient() {
         ]).map((ct) => (
           <button
             key={ct.key}
+            role="tab"
+            aria-selected={contentTab === ct.key}
+            tabIndex={contentTab === ct.key ? 0 : -1}
             onClick={() => setContentTab(ct.key)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               contentTab === ct.key
@@ -120,10 +123,13 @@ export default function TrendingClient() {
       </div>
 
       {/* Sort tabs */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div role="tablist" aria-label={t.prompts.sortBy || "Sort"} className="flex flex-wrap gap-2 mb-8">
         {TABS.map((tabItem) => (
           <button
             key={tabItem.key}
+            role="tab"
+            aria-selected={tab === tabItem.key}
+            tabIndex={tab === tabItem.key ? 0 : -1}
             onClick={() => setTab(tabItem.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
               tab === tabItem.key

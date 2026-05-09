@@ -6,6 +6,99 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.5.0] — 2026-05-09
+
+### Features
+- **Recently Viewed section** — Profile activity timeline now shows last 10 viewed skills/prompts with links
+- **"Most Liked" sort on prompts** — New sort option by like count on the prompts listing page
+- **Toast auto-dismiss** — Toasts auto-dismiss after 3s (success/info) or 5s (error); tracks timeout IDs, cleans up on unmount
+- **Toast entry animation** — Toast items now animate in with fade-in + slide-up
+- **i18n interpolation (tFormat)** — New `tFormat(key, {count: 5})` helper for placeholder replacement
+- **Shared ErrorFallback component** — All 10 error.tsx files now use a single reusable `<ErrorFallback>` component
+- **Shared CopyButton component** — Unified clipboard copy button with i18n aria-labels
+- **Password reset rate limiting** — 60-second cooldown between reset attempts
+- **Password reset confirmation step** — Reset flow now has email → confirm → new password 3-step UI
+- **Compare same-skill warning** — Shows i18n warning when both comparison slots have the same skill
+- **Prompt sort by "Most Liked"** — New sort option `mostLiked` on prompts page
+- **Admin delete comment dialog** — Replaced `window.confirm()` with styled `<Dialog>` component
+- **Loading spinners on all buttons** — Login, register, and submit buttons now show `<Loader2>` spinners instead of "..."
+- **useUserLocalStorage hook** — New generic hook combining user-scoped localStorage with cross-tab sync
+- **Viewport export** — Root layout now exports `viewport` per Next.js 16 API (theme-color for light/dark)
+- **Dark mode scrollbar styling** — Custom thin scrollbars matching the dark theme
+- **Z-index CSS variables** — `--z-dropdown: 50`, `--z-overlay: 100`, `--z-toast: 110`, `--z-command: 120`
+- **Light mode syntax highlighting** — Code blocks now adapt to light/dark theme instead of always using dark
+- **StarRating hover preview** — Interactive star rating shows hover preview before clicking
+
+### Security
+- **Password reset verification** — Reset flow now requires confirming email ownership before allowing new password
+- **Admin check hardened** — Admin page redirects non-admin users; `ADMIN_EMAILS` is a named constant
+
+### SEO
+- **Centralized site URL** — New `getSiteUrl()` helper replaces hardcoded `https://ai-skills-hub.vercel.app` across 8+ files
+- **Viewport meta** — Added separate `viewport` export with `themeColor` for light/dark modes
+- **Robots.txt blocks /admin** — Admin and API routes now disallowed for crawlers
+- **Sitemap cleanup** — Removed `/submit/status` (requires auth) from sitemap
+- **JSON-LD uses env var** — Organization and WebSite structured data use `getSiteUrl()`
+
+### Bug Fixes
+- **useLocalStorage quota error** — `QuotaExceededError` now logs warning instead of silently creating state/localStorage mismatch
+- **useLocalStorage cross-tab deletion** — Deleting a key in another tab now resets to `initialValue`
+- **useLocalStorage SSR guard** — Added `typeof window !== "undefined"` check to prevent SSR flash
+- **useUserStorage guest isolation** — Guest users now get session-scoped keys via sessionStorage, not a shared global key
+- **useCollections clears on logout** — Collections state resets when user logs out
+- **useFollows clears on logout** — Following state resets when user logs out
+- **useNotifications closure fix** — `addNotification` now uses ref for `isTypeEnabled` to avoid stale closure
+- **useNotifications user-scoped prefs** — Notification preferences now stored per-user
+- **useFilteredList initial values** — No longer frozen with `useMemo([], [])`; updates when URL changes
+- **formatDate invalid dates** — Returns raw string instead of "Invalid Date" for malformed dates
+- **rate limit keys namespaced** — Now prefixed with `"ai-skills-hub-rate-"` instead of bare `"rate_limit_"`
+- **STORAGE_KEYS null guard** — User-scoped key functions handle null/undefined email gracefully
+- **theme.ts category fallback** — Unknown category slugs now get a default color instead of undefined
+- **template.tsx hash check** — Route changes with hash no longer scroll to top
+- **categories slug mapping** — `categoryToAgentCategory` now uses slug-based matching from agent-skill-categories.ts
+- **Non-null assertions removed** — Skill/prompt detail pages now guard against null with early return
+- **Storage keys in mock files** — `mock-agent-skills.ts` and `mock-data.ts` use `STORAGE_KEYS` instead of hardcoded strings
+- **i18n `<html lang>` update** — Language switch now updates `document.documentElement.lang`
+- **Theme SSR mismatch fix** — Initial theme state uses lazy initializer from localStorage to avoid hydration mismatch
+- **Theme no transition on initial load** — CSS transition only applied on user-initiated theme changes
+
+### Accessibility
+- **TagChip touch target** — Increased to 44px minimum height for mobile accessibility
+- **NotificationBell "just now"** — Shows localized "just now"/"刚刚" instead of bare "ago" for < 60s
+- **ScrollToTop hidden state** — Adds `aria-hidden` and `tabIndex={-1}` when hidden to prevent screen reader access
+- **ParticleBackground aria-hidden** — Decorative canvas marked `aria-hidden="true"`
+- **Newsletter error alert** — Error messages now have `role="alert"` for screen readers
+- **Avatar fallback aria-label** — Letter-initial avatars now have `aria-label={username}`
+- **Mobile Sheet nav aria-label** — Mobile navigation `<nav>` has `aria-label`
+- **Footer aria-label fix** — Removed misleading "Browse:" prefix from footer nav labels
+- **Category card focus styles** — Inner div now propagates focus-visible ring
+- **Trending page ARIA tabs** — Content type and sort buttons now use `role="tablist"`/`role="tab"`/`aria-selected`
+- **Lightbox a11y** — Added `role="dialog"`, `aria-modal`, focus trap, Escape close, descriptive alt text
+- **Comment usernames linked** — Comment author names now link to `/users/[username]`
+- **Toast aria-live fix** — Removed `role="alert"` from items (conflicts with container's `aria-live="polite"`)
+- **NotificationBell focus trap** — Tab/Shift+Tab now cycles within dropdown menu items
+
+### Performance
+- **Provider memoization** — All 4 context providers (auth, i18n, toast, theme) now memoize their value with `useMemo`
+- **unreadCount as useMemo** — Replaced `useState` + `useEffect` with `useMemo` in useNotifications
+- **Dead useCommandPalette hook removed** — Unused hook deleted from use-keyboard-shortcuts.ts
+- **getCommandItems moved to lib/commands.ts** — Separated from hooks file
+
+### UI Improvements
+- **Toast uses design tokens** — `text-red-400` → `text-destructive`, colors adapt to light/dark theme
+- **Button default variant hover** — All buttons now have hover feedback (not just those inside `<a>` tags)
+- **Dialog closeLabel prop** — Close button text is now configurable (default "Close")
+- **Testimonials use StarRating** — Replaced manual star rendering with reusable component
+- **Version timeline i18n** — "Latest" and "by" strings now use i18n keys
+- **CSS ::selection styling** — Custom selection highlight using primary color
+- **CSS scroll-padding-top** — Anchors no longer land under the fixed navbar
+- **Consolidated reduced-motion** — Merged 3 separate `@media (prefers-reduced-motion)` blocks into one
+- **glass-card blur consistency** — Light and dark mode now both use `blur(16px)`
+- **i18n keys for error states** — `error.somethingWentWrong`, `error.tryAgain`, `error.backToHome`
+- **Suspense wrappers** — Categories, trending, tags pages now wrapped in Suspense with skeletons
+
+---
+
 ## [v2.4.0] — 2026-05-08
 
 ### Features

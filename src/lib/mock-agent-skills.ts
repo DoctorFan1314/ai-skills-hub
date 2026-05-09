@@ -1,4 +1,5 @@
 import type { AgentSkill } from "./types";
+import { STORAGE_KEYS } from "./storage-keys";
 
 export const agentSkills: AgentSkill[] = [
   {
@@ -12,6 +13,7 @@ export const agentSkills: AgentSkill[] = [
     developer: "vercel-labs",
     downloads: 24300,
     stars: 8200,
+    rating: 4.2,
     lastUpdated: "2026-04-30",
     collection: "Vercel Agent Toolkit",
     category: "Skills 管理",
@@ -209,6 +211,7 @@ export default async function findSkills(query: string) {
     developer: "anthropics",
     downloads: 18700,
     stars: 6500,
+    rating: 4.5,
     lastUpdated: "2026-04-28",
     collection: "Anthropic Agent Suite",
     category: "Web 开发",
@@ -311,6 +314,7 @@ export default function LoginPage() {
     developer: "inference-sh",
     downloads: 15200,
     stars: 4800,
+    rating: 3.8,
     lastUpdated: "2026-04-25",
     collection: "Inference.sh Toolkit",
     category: "Web 搜索",
@@ -416,6 +420,7 @@ export default async function webSearch(query: string, options?: {
     developer: "community",
     downloads: 8300,
     stars: 2000,
+    rating: 4.7,
     lastUpdated: "2026-04-20",
     collection: "社区精选",
     category: "多平台交互",
@@ -515,6 +520,7 @@ export default async function agentReach(platform: string, action: string, param
     developer: "community",
     downloads: 12100,
     stars: 3400,
+    rating: 4.1,
     lastUpdated: "2026-04-22",
     collection: "开发者工具",
     category: "代码执行",
@@ -606,6 +612,7 @@ Execution time: 0.12s`,
     developer: "community",
     downloads: 9800,
     stars: 2800,
+    rating: 3.9,
     lastUpdated: "2026-04-18",
     collection: "效率工具",
     category: "文件处理",
@@ -699,6 +706,7 @@ Preview (first 2 records):
     developer: "community",
     downloads: 6500,
     stars: 1800,
+    rating: 4.6,
     lastUpdated: "2026-04-15",
     collection: "效率工具",
     category: "通讯协作",
@@ -782,6 +790,7 @@ Status: Delivered`,
     developer: "community",
     downloads: 11400,
     stars: 3100,
+    rating: 4.3,
     lastUpdated: "2026-04-26",
     collection: "数据工具",
     category: "数据分析",
@@ -865,7 +874,7 @@ export function getAgentSkillById(id: string): AgentSkill | undefined {
   // Check localStorage for user-published skills (client-side only)
   if (typeof window !== "undefined") {
     try {
-      const stored = localStorage.getItem("ai-skills-hub-published-skills");
+      const stored = localStorage.getItem(STORAGE_KEYS.publishedSkills);
       if (stored) {
         const published: AgentSkill[] = JSON.parse(stored);
         return published.find((s) => s.id === id);
@@ -880,7 +889,7 @@ export function getAgentSkillById(id: string): AgentSkill | undefined {
 export function getPublishedSkills(): AgentSkill[] {
   if (typeof window === "undefined") return [];
   try {
-    const stored = localStorage.getItem("ai-skills-hub-published-skills");
+    const stored = localStorage.getItem(STORAGE_KEYS.publishedSkills);
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];

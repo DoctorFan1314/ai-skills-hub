@@ -44,7 +44,8 @@ function CopyButton({ text, label, copiedLabel, failedLabel }: { text: string; l
 }
 
 export default function SkillDetailClient({ id }: { id: string }) {
-  const skill = getSkillById(id)!;
+  const skill = getSkillById(id);
+  if (!skill) return null;
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [likedIds, setLikedIds] = useUserStorage<string[]>(STORAGE_KEYS.likes, []);
   const [bookmarkedIds, setBookmarkedIds] = useUserStorage<string[]>(STORAGE_KEYS.bookmarks, []);

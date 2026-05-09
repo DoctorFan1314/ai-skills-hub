@@ -51,25 +51,21 @@ export function useFilteredList<T>({
   const searchParams = useSearchParams();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Stable references for initial values (only read from URL once)
-  const initialQuery = useMemo(() => searchParams.get(queryKey) || "", []);
-  const initialSort = useMemo(() =>
-    validSorts.includes(searchParams.get(sortKey) || "")
-      ? searchParams.get(sortKey)!
-      : defaultSort,
-    [],
-  );
-  const initialFilters = useMemo(() => {
-    const init: Record<string, string> = {};
-    for (const f of filters) {
-      init[f.key] = searchParams.get(f.key) || f.defaultValue;
+  // Read initial values from URL (use ref to compute only once)
+  const initialRef = useRef<{ query: string; sort: string; filters: Record<string, string> } | null>(null);
+  if (initialRef.current === null) {
+    const q = searchParams.get(queryKey) || "";
+    const s = validSorts.includes(searchParams.get(sortKey) || "") ? searchParams.get(sortKey)! : defaultSort;
+    const f: Record<string, string> = {};
+    for (const filt of filters) {
+      f[filt.key] = searchParams.get(filt.key) || filt.defaultValue;
     }
-    return init;
-  }, []);
+    initialRef.current = { query: q, sort: s, filters: f };
+  }
 
-  const [query, setQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState(initialSort);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>(initialFilters);
+  const [query, setQuery] = useState(initialRef.current.query);
+  const [sortBy, setSortBy] = useState(initialRef.current.sort);
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(initialRef.current.filters);
   const [visibleCount, setVisibleCount] = useState(pageSize);
 
   // Use a ref to always have the latest filter values for URL sync

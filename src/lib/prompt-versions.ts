@@ -28,7 +28,7 @@ export function initVersionForSkill(skill: Skill): void {
     id: `${skill.id}-v0`,
     skillId: skill.id,
     version: skill.version,
-    changelog: "初始版本",
+    changelog: "Initial version",
     updatedAt: skill.lastUpdated,
   };
   localStorage.setItem(key, JSON.stringify([initial]));

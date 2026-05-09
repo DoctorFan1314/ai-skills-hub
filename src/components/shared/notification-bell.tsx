@@ -37,7 +37,7 @@ function getNotificationIcon(type: Notification["type"]) {
   }
 }
 
-function timeAgo(dateStr: string, agoText: string): string {
+function timeAgo(dateStr: string, agoText: string, justNowText: string): string {
   const now = Date.now();
   const date = new Date(dateStr).getTime();
   const diff = now - date;
@@ -49,7 +49,7 @@ function timeAgo(dateStr: string, agoText: string): string {
   if (days > 0) return `${days}d ${agoText}`;
   if (hours > 0) return `${hours}h ${agoText}`;
   if (minutes > 0) return `${minutes}m ${agoText}`;
-  return `${agoText}`;
+  return justNowText;
 }
 
 export function NotificationBell() {
@@ -97,6 +97,22 @@ export function NotificationBell() {
       } else if (e.key === "Enter" && activeIdx >= 0 && notifications[activeIdx]) {
         e.preventDefault();
         handleNotificationClick(notifications[activeIdx]);
+      } else if (e.key === "Tab") {
+        // Trap focus within the dropdown
+        e.preventDefault();
+        const focusableEls = menuRef.current?.querySelectorAll<HTMLElement>(
+          'button[role="menuitem"], button[aria-label]'
+        );
+        if (!focusableEls || focusableEls.length === 0) return;
+        const focusable = Array.from(focusableEls);
+        const currentIdx = focusable.indexOf(document.activeElement as HTMLElement);
+        if (e.shiftKey) {
+          const prev = currentIdx <= 0 ? focusable.length - 1 : currentIdx - 1;
+          focusable[prev]?.focus();
+        } else {
+          const next = currentIdx >= focusable.length - 1 ? 0 : currentIdx + 1;
+          focusable[next]?.focus();
+        }
       }
     },
     [open, notifications, activeIdx],
@@ -228,7 +244,7 @@ export function NotificationBell() {
                       {notification.message}
                     </p>
                     <p className="text-[10px] text-muted-foreground/50 mt-1">
-                      {timeAgo(notification.timestamp, t.common.ago)}
+                      {timeAgo(notification.timestamp, t.common.ago, t.common.justNow)}
                     </p>
                   </div>
                 </button>

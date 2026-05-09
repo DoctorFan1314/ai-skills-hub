@@ -10,7 +10,10 @@ export function useFollows() {
   followingRef.current = following;
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setFollowing([]);
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.follows(user.email));
       if (raw) setFollowing(JSON.parse(raw));

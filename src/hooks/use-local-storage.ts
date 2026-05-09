@@ -3,7 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [value, setValue] = useState<T>(initialValue);
+  const [value, setValue] = useState<T>(() => {
+    if (typeof window === "undefined") return initialValue;
+    try {
+      const item = localStorage.getItem(key);
+      if (item !== null) return JSON.parse(item);
+    } catch { /* ignore parse errors */ }
+    return initialValue;
+  });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -17,17 +24,21 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   // Cross-tab sync: listen for storage events
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key && e.newValue !== null) {
-        try {
-          setValue(JSON.parse(e.newValue));
-        } catch {
-          setValue(e.newValue as T);
+      if (e.key === key) {
+        if (e.newValue === null) {
+          setValue(initialValue);
+        } else {
+          try {
+            setValue(JSON.parse(e.newValue));
+          } catch {
+            setValue(e.newValue as T);
+          }
         }
       }
     };
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [key]);
+  }, [key, initialValue]);
 
   const setStoredValue = useCallback(
     (updater: T | ((prev: T) => T)) => {
@@ -35,7 +46,11 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         const next = typeof updater === "function" ? (updater as (prev: T) => T)(prev) : updater;
         try {
           localStorage.setItem(key, JSON.stringify(next));
-        } catch { /* quota exceeded */ }
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "QuotaExceededError") {
+            console.error(`[useLocalStorage] Quota exceeded for key "${key}". Consider clearing old data.`);
+          }
+        }
         return next;
       });
     },

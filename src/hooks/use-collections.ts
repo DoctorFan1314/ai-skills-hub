@@ -4,15 +4,33 @@ import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { useAuth } from "@/contexts/auth-context";
 import type { UserCollection } from "@/lib/types";
 
+function isValidCollection(item: unknown): item is UserCollection {
+  if (!item || typeof item !== "object") return false;
+  const obj = item as Record<string, unknown>;
+  return (
+    typeof obj.id === "string" &&
+    typeof obj.name === "string" &&
+    Array.isArray(obj.skillIds)
+  );
+}
+
 export function useCollections() {
   const { user } = useAuth();
   const [collections, setCollections] = useState<UserCollection[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setCollections([]);
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.collections(user.email));
-      if (raw) setCollections(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setCollections(parsed.filter(isValidCollection));
+        }
+      }
     } catch { /* ignore */ }
   }, [user]);
 
@@ -24,6 +42,7 @@ export function useCollections() {
       description,
       skillIds: [],
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       userId: user.email,
       isPublic,
       coverImage: options?.coverImage,
@@ -42,7 +61,7 @@ export function useCollections() {
     setCollections(prev => {
       const updated = prev.map(c =>
         c.id === collectionId && !c.skillIds.includes(skillId)
-          ? { ...c, skillIds: [...c.skillIds, skillId] }
+          ? { ...c, skillIds: [...c.skillIds, skillId], updatedAt: new Date().toISOString() }
           : c
       );
       localStorage.setItem(STORAGE_KEYS.collections(user.email), JSON.stringify(updated));
@@ -55,7 +74,7 @@ export function useCollections() {
     setCollections(prev => {
       const updated = prev.map(c =>
         c.id === collectionId
-          ? { ...c, skillIds: c.skillIds.filter(id => id !== skillId) }
+          ? { ...c, skillIds: c.skillIds.filter(id => id !== skillId), updatedAt: new Date().toISOString() }
           : c
       );
       localStorage.setItem(STORAGE_KEYS.collections(user.email), JSON.stringify(updated));
@@ -76,7 +95,7 @@ export function useCollections() {
     if (!user) return;
     setCollections(prev => {
       const updated = prev.map(c =>
-        c.id === collectionId ? { ...c, ...updates } : c
+        c.id === collectionId ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
       );
       localStorage.setItem(STORAGE_KEYS.collections(user.email), JSON.stringify(updated));
       return updated;

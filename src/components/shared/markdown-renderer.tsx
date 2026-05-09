@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, memo } from "react";
+import { memo } from "react";
 import dynamic from "next/dynamic";
 import DOMPurify from "dompurify";
-import { Copy, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/shared/copy-button";
 
 const LazySyntaxHighlighter = dynamic(
   () => import("./lazy-syntax-highlighter"),
@@ -23,23 +22,6 @@ export const codeTheme: Record<string, React.CSSProperties> = {
   "hljs-params": { color: "#e6edf3" },
 };
 
-export function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <Button
-      size="sm"
-      variant="ghost"
-      className="text-muted-foreground hover:text-foreground h-7 px-2"
-      onClick={async () => {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-    >
-      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-    </Button>
-  );
-}
 
 function InlineMarkdown({ text }: { text: string }) {
   const parts = text.split(/(\*\*.*?\*\*|`[^`]+`)/g);

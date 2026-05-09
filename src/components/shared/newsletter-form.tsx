@@ -128,7 +128,7 @@ export function NewsletterForm() {
       <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
         <Send className="h-4 w-4 mr-2" />{t.footer.subscribe}
       </Button>
-      {error && <p className="text-xs text-red-400 sm:col-span-2">{error}</p>}
+      {error && <p className="text-xs text-red-400 sm:col-span-2" role="alert">{error}</p>}
     </form>
   );
 }

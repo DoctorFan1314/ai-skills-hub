@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { zh } from "@/lib/i18n/zh";
 import { en } from "@/lib/i18n/en";
@@ -14,12 +14,14 @@ interface I18nContextValue {
   lang: Lang;
   setLang: (lang: Lang) => void;
   t: Dictionary;
+  tFormat: (key: string, vars: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nContextValue>({
   lang: "zh",
   setLang: () => {},
   t: zh,
+  tFormat: (key) => key,
 });
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -34,6 +36,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     } catch { /* ignore */ }
   }, []);
 
+  // Update <html lang> on language change
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const setLang = useCallback((newLang: Lang) => {
     setLangState(newLang);
     try {
@@ -41,10 +48,20 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     } catch { /* ignore */ }
   }, []);
 
+  const tFormat = useCallback((key: string, vars: Record<string, string | number>) => {
+    let result = key;
+    for (const [k, v] of Object.entries(vars)) {
+      result = result.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+    }
+    return result;
+  }, []);
+
   const t = dictionaries[lang];
 
+  const value = useMemo(() => ({ lang, setLang, t, tFormat }), [lang, setLang, t, tFormat]);
+
   return (
-    <I18nContext.Provider value={{ lang, setLang, t }}>
+    <I18nContext.Provider value={value}>
       {children}
     </I18nContext.Provider>
   );

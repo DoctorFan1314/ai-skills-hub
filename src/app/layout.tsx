@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -11,8 +11,18 @@ import { I18nProvider } from "@/contexts/i18n-context";
 import { Toaster } from "@/components/ui/toast";
 import { ScrollToTop } from "@/components/shared/scroll-to-top";
 import { HtmlLangUpdater } from "@/components/shared/html-lang-updater";
+import { getSiteUrl } from "@/lib/site-url";
 
 import { CommandPalette } from "@/components/shared/command-palette";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +34,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ai-skills-hub.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
     template: "%s | AI Skills Hub",
@@ -35,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
     description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install.",
-    url: "https://ai-skills-hub.vercel.app",
+    url: siteUrl,
     siteName: "AI Skills Hub",
     type: "website",
     locale: "en_US",
@@ -49,10 +61,10 @@ export const metadata: Metadata = {
     images: ["/og.png"],
   },
   alternates: {
-    canonical: "https://ai-skills-hub.vercel.app",
+    canonical: siteUrl,
     languages: {
-      "zh-CN": "https://ai-skills-hub.vercel.app",
-      "en-US": "https://ai-skills-hub.vercel.app",
+      "zh-CN": siteUrl,
+      "en-US": siteUrl,
     },
   },
 };

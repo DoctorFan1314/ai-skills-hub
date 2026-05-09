@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { useAuth } from "@/contexts/auth-context";
 import type { Notification } from "@/lib/types";
@@ -9,7 +9,7 @@ export type NotificationType = "comment_reply" | "skill_update" | "submission_st
 const ALL_TYPES: NotificationType[] = ["comment_reply", "skill_update", "submission_status", "like", "follow", "system"];
 
 function loadPreferences(email?: string): Record<NotificationType, boolean> {
-  const key = email ? STORAGE_KEYS.notificationPrefs(email) : "ai-skills-hub-notification-prefs";
+  const key = email ? STORAGE_KEYS.notificationPrefs(email) : "ai-skills-hub-notification-prefs-guest";
   try {
     const raw = localStorage.getItem(key);
     if (raw) {
@@ -27,7 +27,7 @@ function loadPreferences(email?: string): Record<NotificationType, boolean> {
 }
 
 function savePreferences(prefs: Record<NotificationType, boolean>, email?: string) {
-  const key = email ? STORAGE_KEYS.notificationPrefs(email) : "ai-skills-hub-notification-prefs";
+  const key = email ? STORAGE_KEYS.notificationPrefs(email) : "ai-skills-hub-notification-prefs-guest";
   try {
     localStorage.setItem(key, JSON.stringify(prefs));
   } catch { /* ignore */ }
@@ -36,17 +36,21 @@ function savePreferences(prefs: Record<NotificationType, boolean>, email?: strin
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [preferences, setPreferences] = useState<Record<NotificationType, boolean>>(() => loadPreferences(user?.email));
 
-  // Derive unreadCount from notifications
-  useEffect(() => {
-    setUnreadCount(notifications.filter(n => !n.read).length);
-  }, [notifications]);
+  // Ref to always have the latest preferences for closures
+  const prefsRef = useRef(preferences);
+  prefsRef.current = preferences;
+
+  // Derive unreadCount from notifications using useMemo
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
   // Load from localStorage
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.notifications(user.email));
       if (raw) {
@@ -56,12 +60,10 @@ export function useNotifications() {
     } catch { /* ignore */ }
   }, [user]);
 
-  // Load preferences from localStorage (user-scoped)
+  // Load preferences from localStorage (user-scoped) — only on user change
   useEffect(() => {
-    if (user) {
-      setPreferences(loadPreferences(user.email));
-    }
-  }, [user]);
+    setPreferences(loadPreferences(user?.email));
+  }, [user?.email]);
 
   const updatePreference = useCallback((type: NotificationType, enabled: boolean) => {
     setPreferences(prev => {
@@ -72,8 +74,8 @@ export function useNotifications() {
   }, [user]);
 
   const isTypeEnabled = useCallback((type: NotificationType): boolean => {
-    return preferences[type] !== false;
-  }, [preferences]);
+    return prefsRef.current[type] !== false;
+  }, []);
 
   const markAsRead = useCallback((id: string) => {
     if (!user) return;
@@ -101,7 +103,7 @@ export function useNotifications() {
 
   const addNotification = useCallback((notification: Omit<Notification, "id" | "timestamp" | "read" | "userId">) => {
     if (!user) return;
-    if (!isTypeEnabled(notification.type)) return;
+    if (!prefsRef.current[notification.type]) return;
     const newNotif: Notification = {
       ...notification,
       id: crypto.randomUUID(),
@@ -114,7 +116,7 @@ export function useNotifications() {
       localStorage.setItem(STORAGE_KEYS.notifications(user.email), JSON.stringify(updated));
       return updated;
     });
-  }, [user, isTypeEnabled]);
+  }, [user]);
 
   return { notifications, unreadCount, markAsRead, markAllRead, clearAll, addNotification, preferences, updatePreference, isTypeEnabled };
 }

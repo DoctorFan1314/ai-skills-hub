@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import ts from "react-syntax-highlighter/dist/esm/languages/hljs/typescript";
 import json from "react-syntax-highlighter/dist/esm/languages/hljs/json";
@@ -30,7 +30,7 @@ SyntaxHighlighter.registerLanguage("java", java);
 SyntaxHighlighter.registerLanguage("go", go);
 SyntaxHighlighter.registerLanguage("rust", rust);
 
-const codeTheme: Record<string, React.CSSProperties> = {
+const darkTheme: Record<string, React.CSSProperties> = {
   "hljs": { background: "#0d1117", color: "#e6edf3", padding: "1rem", borderRadius: "0 0 0.5rem 0.5rem", overflow: "auto" },
   "hljs-keyword": { color: "#ff7b72" },
   "hljs-string": { color: "#a5d6ff" },
@@ -42,7 +42,32 @@ const codeTheme: Record<string, React.CSSProperties> = {
   "hljs-params": { color: "#e6edf3" },
 };
 
+const lightTheme: Record<string, React.CSSProperties> = {
+  "hljs": { background: "#f6f8fa", color: "#24292f", padding: "1rem", borderRadius: "0 0 0.5rem 0.5rem", overflow: "auto" },
+  "hljs-keyword": { color: "#cf222e" },
+  "hljs-string": { color: "#0a3069" },
+  "hljs-number": { color: "#0550ae" },
+  "hljs-built_in": { color: "#953800" },
+  "hljs-comment": { color: "#6e7781" },
+  "hljs-title": { color: "#8250df" },
+  "hljs-attr": { color: "#0550ae" },
+  "hljs-params": { color: "#24292f" },
+};
+
 export default function LazySyntaxHighlighter({ code, language }: { code: string; language: string }) {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const codeTheme = isDark ? darkTheme : lightTheme;
+
   return (
     <SyntaxHighlighter language={language || "text"} style={codeTheme} customStyle={{ margin: 0, fontSize: "0.875rem" }}>
       {code}

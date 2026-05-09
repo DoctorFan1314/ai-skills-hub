@@ -369,6 +369,39 @@ ai-skills-hub/
 | Prose dark mode overrides | ✅ | Markdown uses project design tokens in dark mode |
 | 7 new error boundaries | ✅ | categories, trending, tags, search, profile, guide, users |
 | 3 new loading skeletons | ✅ | prompts, categories, tags/[tag] pages |
+| Recently Viewed section | ✅ | Profile activity timeline shows last 10 viewed items |
+| Most Liked sort | ✅ | New sort option by like count on prompts page |
+| Toast auto-dismiss | ✅ | Auto-dismiss after 3s/5s with timeout cleanup on unmount |
+| Toast entry animation | ✅ | Fade-in + slide-up animation on toast appearance |
+| i18n interpolation | ✅ | `tFormat(key, {count})` helper for placeholder replacement |
+| Shared ErrorFallback | ✅ | Reusable component across all 10 error.tsx files |
+| Shared CopyButton | ✅ | Unified clipboard copy with i18n aria-labels |
+| Password reset rate limit | ✅ | 60-second cooldown between reset attempts |
+| Compare same-skill warning | ✅ | Warning when both comparison slots have the same skill |
+| Admin delete dialog | ✅ | Replaced window.confirm() with styled Dialog component |
+| Button loading spinners | ✅ | Loader2 spinners on login/register/submit buttons |
+| useUserLocalStorage hook | ✅ | Generic user-scoped localStorage with cross-tab sync |
+| Viewport export | ✅ | Separate viewport with theme-color for light/dark |
+| Dark mode scrollbars | ✅ | Custom thin scrollbars matching the dark theme |
+| Z-index CSS variables | ✅ | --z-dropdown, --z-overlay, --z-toast, --z-command scale |
+| Light mode syntax | ✅ | Code blocks adapt to light/dark theme |
+| StarRating hover preview | ✅ | Interactive stars show hover state before click |
+| Password reset verification | ✅ | Requires email ownership confirmation before reset |
+| Centralized site URL | ✅ | getSiteUrl() helper replaces 8+ hardcoded URLs |
+| Robots.txt blocks /admin | ✅ | Admin and API routes disallowed for crawlers |
+| Sitemap auth cleanup | ✅ | Removed /submit/status from sitemap |
+| Toast aria-live fix | ✅ | Removed role="alert" conflict with aria-live="polite" |
+| TagChip 44px targets | ✅ | WCAG-compliant touch targets for mobile |
+| Notification "just now" | ✅ | Localized text for notifications < 60 seconds |
+| ScrollToTop a11y | ✅ | aria-hidden + tabIndex=-1 when hidden |
+| Comment usernames linked | ✅ | Author names link to /users/[username] |
+| Lightbox a11y | ✅ | role="dialog", focus trap, Escape close, aria-modal |
+| Trending ARIA tabs | ✅ | role="tablist", role="tab", aria-selected with keyboard nav |
+| All 4 providers memoized | ✅ | auth, i18n, toast, theme context values use useMemo |
+| Light/dark blur consistent | ✅ | glass-card uses blur(16px) in both themes |
+| Consolidated reduced-motion | ✅ | 3 @media blocks merged into 1 |
+| CSS ::selection | ✅ | Custom selection highlight using primary color |
+| CSS scroll-padding-top | ✅ | Anchors no longer land under fixed navbar |
 
 ---
 

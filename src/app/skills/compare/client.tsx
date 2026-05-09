@@ -7,9 +7,9 @@ import { getAgentSkillById } from "@/lib/mock-agent-skills";
 import { useI18n } from "@/contexts/i18n-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Star, Terminal, Copy, Check, Trophy, Scale, FileCode } from "lucide-react";
+import { ArrowLeft, Download, Star, Terminal, Trophy, Scale, FileCode } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
-import { useState } from "react";
+import { CopyButton } from "@/components/shared/copy-button";
 import type { AgentSkill } from "@/lib/types";
 
 function StatCell({ label, val1, val2, higher }: { label: string; val1: string; val2: string; higher?: "left" | "right" }) {
@@ -37,19 +37,6 @@ function StatCell({ label, val1, val2, higher }: { label: string; val1: string; 
         )}
       </td>
     </tr>
-  );
-}
-
-function CopyBtn({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
-      aria-label="Copy"
-    >
-      {copied ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
-    </button>
   );
 }
 
@@ -92,7 +79,7 @@ function SkillColumn({ skill }: { skill: AgentSkill }) {
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d1117] border border-border">
           <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <code className="text-xs text-foreground font-mono flex-1 truncate">{skill.installCommand}</code>
-          <CopyBtn text={skill.installCommand} />
+          <CopyButton text={skill.installCommand} className="ml-1 text-muted-foreground hover:text-foreground transition-colors" size={12} />
         </div>
       </div>
     </div>
@@ -127,6 +114,21 @@ function CompareContent() {
       <div className="mx-auto max-w-4xl px-4 py-20 text-center">
         <h2 className="text-2xl font-bold text-foreground mb-4">{t.compare.title}</h2>
         <p className="text-muted-foreground mb-6">{t.compare.noSkillsSelected}</p>
+        <Link href="/skills">
+          <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t.compare.backToSkills}
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (ids[0] === ids[1]) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-20 text-center">
+        <h2 className="text-2xl font-bold text-foreground mb-4">{t.compare.title}</h2>
+        <p className="text-muted-foreground mb-6">{t.compare.sameSkillWarning}</p>
         <Link href="/skills">
           <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />

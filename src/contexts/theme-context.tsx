@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 
 type Theme = "dark" | "light" | "system";
@@ -23,16 +23,27 @@ function resolveTheme(theme: Theme): "dark" | "light" {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("dark");
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || "dark";
+    }
+    return "dark";
+  });
+  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() => {
+    if (typeof window !== "undefined") {
+      const stored = (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || "dark";
+      return resolveTheme(stored);
+    }
+    return "dark";
+  });
+  const isInitialRef = useRef(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.theme) as Theme | null;
-    const initial = stored || "dark";
-    setThemeState(initial);
-    const resolved = resolveTheme(initial);
+    const resolved = resolveTheme(theme);
     setResolvedTheme(resolved);
-    applyTheme(resolved);
+    // Don't apply transition on initial load
+    applyTheme(resolved, true);
+    isInitialRef.current = false;
   }, []);
 
   useEffect(() => {
@@ -41,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (theme === "system") {
         const resolved = getSystemTheme();
         setResolvedTheme(resolved);
-        applyTheme(resolved);
+        applyTheme(resolved, false);
       }
     };
     mq.addEventListener("change", handler);
@@ -53,31 +64,37 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.theme, newTheme);
     const resolved = resolveTheme(newTheme);
     setResolvedTheme(resolved);
-    applyTheme(resolved);
+    applyTheme(resolved, false);
   }, []);
 
+  const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme, setTheme]);
+
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-function applyTheme(resolved: "dark" | "light") {
+function applyTheme(resolved: "dark" | "light", isInitial: boolean) {
   const root = document.documentElement;
   const isDark = resolved === "dark";
-  // Smooth the color change
-  root.style.transition = "background-color 0.3s, color 0.3s, border-color 0.3s";
+  // Only apply transition on explicit user-initiated theme change, not on initial load
+  if (!isInitial) {
+    root.style.transition = "background-color 0.3s, color 0.3s, border-color 0.3s";
+  }
   if (isDark) {
     root.classList.add("dark");
   } else {
     root.classList.remove("dark");
   }
   document.documentElement.style.colorScheme = isDark ? "dark" : "light";
-  // Remove transition after it completes to avoid interfering with other animations
-  setTimeout(() => {
-    root.style.transition = "";
-  }, 350);
+  if (!isInitial) {
+    // Remove transition after it completes to avoid interfering with other animations
+    setTimeout(() => {
+      root.style.transition = "";
+    }, 350);
+  }
 }
 
 export function useTheme() {

@@ -11,10 +11,15 @@ export function formatNumber(n: number): string {
   return n.toString();
 }
 
-export function formatDate(dateStr: string, locale: string): string {
-  // Handle "2026.04" (dot-separated year.month) by converting to ISO
-  const normalized = dateStr.replace(/^(\d{4})\.(\d{2})(?:\.(\d{2}))?$/, (_, y, m, d) => d ? `${y}-${m}-${d}` : `${y}-${m}-01`);
-  return new Date(normalized).toLocaleDateString(locale);
+export function formatDate(dateStr: string, locale: string = "zh-CN"): string {
+  try {
+    const normalized = dateStr.replace(/\./g, "-");
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) return dateStr; // Return raw string if invalid
+    return date.toLocaleDateString(locale, { year: "numeric", month: "2-digit", day: "2-digit" });
+  } catch {
+    return dateStr;
+  }
 }
 
 export function getDifficultyLabel(difficulty: string, t: { prompts: { difficultyEasy: string; difficultyMedium: string; difficultyHard: string } }): string {
@@ -27,7 +32,7 @@ export function getDifficultyLabel(difficulty: string, t: { prompts: { difficult
 }
 
 export function canPerformAction(action: string, cooldownMs: number = 3000): boolean {
-  const key = `rate_limit_${action}`;
+  const key = `ai-skills-hub-rate-${action}`;
   const last = localStorage.getItem(key);
   if (last && Date.now() - parseInt(last) < cooldownMs) return false;
   localStorage.setItem(key, String(Date.now()));

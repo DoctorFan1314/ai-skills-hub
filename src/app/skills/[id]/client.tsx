@@ -12,7 +12,8 @@ import {
   Share2, BadgeCheck, UserPlus, UserCheck, AlertTriangle, Image as ImageIcon,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
-import { MarkdownRenderer, CopyButton, codeTheme } from "@/components/shared/markdown-renderer";
+import { MarkdownRenderer, codeTheme } from "@/components/shared/markdown-renderer";
+import { CopyButton } from "@/components/shared/copy-button";
 import { ReportModal } from "@/components/skill/report-modal";
 import { Lightbox } from "@/components/skill/lightbox";
 import { CollectionPicker } from "@/components/skill/collection-picker";
@@ -70,7 +71,8 @@ async function downloadAll(skill: NonNullable<ReturnType<typeof getAgentSkillByI
 }
 
 export default function AgentSkillDetailClient({ id }: { id: string }) {
-  const skill = getAgentSkillById(id)!;
+  const skill = getAgentSkillById(id);
+  if (!skill) return null;
   const { t } = useI18n();
   const { toast } = useToast();
   const { user } = useAuth();

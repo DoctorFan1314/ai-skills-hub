@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import { useI18n } from "@/contexts/i18n-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
-import { Mail, KeyRound } from "lucide-react";
+import { Mail, KeyRound, Loader2 } from "lucide-react";
 
 export default function LoginClient() {
   const [email, setEmail] = useState("");
@@ -25,12 +25,13 @@ export default function LoginClient() {
 
   // Forgot password dialog state
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotStep, setForgotStep] = useState<"email" | "reset">("email");
+  const [forgotStep, setForgotStep] = useState<"email" | "confirm" | "reset">("email");
   const [forgotEmail, setForgotEmail] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [forgotError, setForgotError] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +67,15 @@ export default function LoginClient() {
       setForgotError(t.auth.fillAllFields);
       return;
     }
+    // Rate limiting: check cooldown
+    const lastReset = parseInt(localStorage.getItem(STORAGE_KEYS.lastPasswordReset) || "0", 10);
+    const elapsed = Date.now() - lastReset;
+    if (elapsed < 60000) {
+      const remaining = Math.ceil((60000 - elapsed) / 1000);
+      setResetCooldown(remaining);
+      setForgotError(t.auth.resetPasswordRateLimit.replace("{seconds}", String(remaining)));
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.users);
       const users: { email: string }[] = raw ? JSON.parse(raw) : [];
@@ -74,10 +84,14 @@ export default function LoginClient() {
         setForgotError(t.auth.emailNotFound);
         return;
       }
-      setForgotStep("reset");
+      setForgotStep("confirm");
     } catch {
       setForgotError(t.auth.emailNotFound);
     }
+  }
+
+  function handleConfirmReset() {
+    setForgotStep("reset");
   }
 
   async function handleResetPassword() {
@@ -101,6 +115,8 @@ export default function LoginClient() {
       setForgotError(t.auth.emailNotFound);
       return;
     }
+    // Record last password reset timestamp for rate limiting
+    try { localStorage.setItem(STORAGE_KEYS.lastPasswordReset, String(Date.now())); } catch { /* ignore */ }
     toast(t.auth.resetPasswordSuccess, "success");
     setForgotOpen(false);
   }
@@ -126,7 +142,7 @@ export default function LoginClient() {
               <Input id="password" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             </div>
             {error && <p role="alert" className="text-sm text-red-400 text-center">{error}</p>}
-            <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{loading ? "..." : t.auth.loginNow}</Button>
+            <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.auth.loginNow}</Button>
           </form>
           {/* OAuth buttons removed — not yet available */}
           <p className="text-center text-sm text-muted-foreground mt-6">
@@ -142,12 +158,14 @@ export default function LoginClient() {
             <DialogTitle className="flex items-center gap-2">
               {forgotStep === "email" ? (
                 <><Mail className="h-5 w-5 text-primary" />{t.auth.resetPassword}</>
+              ) : forgotStep === "confirm" ? (
+                <><Mail className="h-5 w-5 text-primary" />{t.auth.resetPassword}</>
               ) : (
                 <><KeyRound className="h-5 w-5 text-primary" />{t.auth.setNewPassword}</>
               )}
             </DialogTitle>
             <DialogDescription>
-              {forgotStep === "email" ? t.auth.resetPasswordDesc : t.auth.setNewPassword}
+              {forgotStep === "email" ? t.auth.resetPasswordDesc : forgotStep === "confirm" ? t.auth.resetPasswordConfirm.replace("{email}", forgotEmail) : t.auth.setNewPassword}
             </DialogDescription>
           </DialogHeader>
 
@@ -170,6 +188,19 @@ export default function LoginClient() {
                 <Button onClick={handleVerifyEmail} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-10">
                   {t.common.confirm}
                 </Button>
+              </>
+            ) : forgotStep === "confirm" ? (
+              <>
+                <p className="text-sm text-muted-foreground">{t.auth.resetPasswordConfirm.replace("{email}", forgotEmail)}</p>
+                {forgotError && <p className="text-sm text-red-400">{forgotError}</p>}
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setForgotStep("email")} className="flex-1 border-border text-foreground hover:bg-secondary h-10">
+                    {t.common.back || "Back"}
+                  </Button>
+                  <Button onClick={handleConfirmReset} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-10">
+                    {t.common.confirm}
+                  </Button>
+                </div>
               </>
             ) : (
               <>
@@ -198,7 +229,7 @@ export default function LoginClient() {
                 </div>
                 {forgotError && <p className="text-sm text-red-400">{forgotError}</p>}
                 <Button onClick={handleResetPassword} disabled={forgotLoading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-10">
-                  {forgotLoading ? "..." : t.auth.resetPassword}
+                  {forgotLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.auth.resetPassword}
                 </Button>
               </>
             )}

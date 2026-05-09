@@ -37,6 +37,8 @@ export function ActivityTimeline() {
     activities = raw ? JSON.parse(raw) : [];
   } catch { /* ignore */ }
 
+  const recentlyViewed = activities.filter((a) => a.type === "view").slice(0, 10);
+
   if (activities.length === 0) {
     return (
       <div className="glass-card p-8 text-center">
@@ -49,6 +51,31 @@ export function ActivityTimeline() {
 
   return (
     <div>
+      {/* Recently Viewed Section */}
+      {recentlyViewed.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t.profile.recentlyViewed}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{t.profile.recentlyViewedDesc}</p>
+          <div className="space-y-2">
+            {recentlyViewed.map((activity) => (
+              <div key={activity.id} className="glass-card p-3 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground truncate">
+                    {activity.targetTitle || activity.skillId}
+                  </p>
+                </div>
+                <time className="text-xs text-muted-foreground shrink-0">
+                  {new Date(activity.timestamp).toLocaleDateString(locale)}
+                </time>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <h2 className="text-lg font-semibold text-foreground mb-4">{t.profile.recentActivity}</h2>
       <div className="space-y-3">
         {activities.slice(0, visibleCount).map((activity) => {

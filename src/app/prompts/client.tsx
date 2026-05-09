@@ -52,7 +52,7 @@ export default function PromptsClient() {
       { key: "diff", defaultValue: "__all__", allValue: "__all__", label: t.prompts.difficulty },
     ],
     defaultSort: "trending",
-    validSorts: ["trending", "rating", "newest"],
+    validSorts: ["trending", "rating", "newest", "liked"],
     basePath: "/prompts",
     pageSize: PAGE_SIZE,
     filterFn: (item, q, filters) => {
@@ -75,6 +75,7 @@ export default function PromptsClient() {
     sortFn: (a, b, sort) => {
       if (sort === "rating") return b.rating - a.rating;
       if (sort === "newest") return b.lastUpdated.localeCompare(a.lastUpdated);
+      if (sort === "liked") return (b.likes || 0) - (a.likes || 0);
       return b.usageCount - a.usageCount;
     },
   });
@@ -133,7 +134,7 @@ export default function PromptsClient() {
           </div>
           <div className="flex flex-wrap items-center gap-2 md:ml-auto" role="radiogroup" aria-label={t.prompts.sortBy}>
             <span className="text-sm text-muted-foreground">{t.prompts.sortBy}：</span>
-            {([{ key: "trending" as const, label: t.prompts.sortPopular }, { key: "rating" as const, label: t.prompts.sortRating }, { key: "newest" as const, label: t.prompts.sortNewest }]).map((s) => (
+            {([{ key: "trending" as const, label: t.prompts.sortPopular }, { key: "rating" as const, label: t.prompts.sortRating }, { key: "newest" as const, label: t.prompts.sortNewest }, { key: "liked" as const, label: t.prompts.sortMostLiked }]).map((s) => (
               <button key={s.key} role="radio" aria-checked={sortBy === s.key} onClick={() => setSortBy(s.key)} className={`px-3 py-1 text-sm rounded-md transition-colors ${sortBy === s.key ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
                 {s.label}
               </button>

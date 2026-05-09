@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/contexts/i18n-context";
 
 interface VersionEntry {
   version: string;
@@ -14,6 +15,7 @@ interface VersionTimelineProps {
 }
 
 export function VersionTimeline({ versions }: VersionTimelineProps) {
+  const { t } = useI18n();
   return (
     <div className="glass-card p-6">
       <div className="relative">
@@ -42,13 +44,13 @@ export function VersionTimeline({ versions }: VersionTimelineProps) {
                   </span>
                   {i === 0 && (
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
-                      Latest
+                      {t.agentSkills.versionLatest}
                     </Badge>
                   )}
                   <span className="text-xs text-muted-foreground ml-auto">{v.date}</span>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{v.changelog}</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">by {v.author}</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">{t.agentSkills.versionBy} {v.author}</p>
               </div>
             </div>
           ))}

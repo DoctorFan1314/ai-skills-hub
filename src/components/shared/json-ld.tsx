@@ -1,3 +1,5 @@
+import { getSiteUrl } from "@/lib/site-url";
+
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
     <script
@@ -63,26 +65,28 @@ export function generateBreadcrumbJsonLd(items: { name: string; url?: string }[]
 }
 
 export function generateOrganizationJsonLd() {
+  const siteUrl = getSiteUrl();
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "AI Skills Hub",
-    "url": "https://ai-skills-hub.vercel.app",
+    "url": siteUrl,
     "description": "Discover executable Agent Skills and high-quality Prompt Templates",
     "sameAs": [],
   };
 }
 
 export function generateWebSiteJsonLd() {
+  const siteUrl = getSiteUrl();
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "AI Skills Hub",
-    "url": "https://ai-skills-hub.vercel.app",
+    "url": siteUrl,
     "description": "Agent Skills Marketplace + Prompt Template Platform",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://ai-skills-hub.vercel.app/search?q={search_term_string}",
+      "target": `${siteUrl}/search?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };

@@ -4,9 +4,10 @@ import { agentSkills } from "@/lib/mock-agent-skills";
 import { categories } from "@/lib/categories";
 import { agentSkillCategories } from "@/lib/agent-skill-categories";
 import { getAllTags } from "@/lib/tag-utils";
+import { getSiteUrl } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://ai-skills-hub.vercel.app";
+  const base = getSiteUrl();
 
   const staticPages = [
     { url: base, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 1 },

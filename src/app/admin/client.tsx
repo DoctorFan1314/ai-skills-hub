@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type { Submission, Comment } from "@/lib/types";
-import { Shield, Users, BarChart3, MessageSquare, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
+import { Shield, Users, BarChart3, MessageSquare, CheckCircle, XCircle, Clock, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const ADMIN_EMAILS = ["admin@aiskillshub.com"];
 
@@ -23,6 +24,7 @@ export default function AdminClient() {
   const [users, setUsers] = useState<{ email: string; username: string; role?: string }[]>([]);
   const [reviewNote, setReviewNote] = useState<Record<string, string>>({});
   const [visibleCommentCount, setVisibleCommentCount] = useState(20);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const TABS = [
     { key: "pending" as const, label: t.admin.pendingSubmissions, icon: <Clock className="h-4 w-4" /> },
@@ -89,13 +91,19 @@ export default function AdminClient() {
   }
 
   function handleDeleteComment(id: string) {
-    if (!window.confirm(t.admin.confirmDeleteComment || "Are you sure you want to delete this comment?")) return;
+    setDeleteConfirmId(id);
+  }
+
+  function confirmDeleteComment() {
+    if (!deleteConfirmId) return;
+    const id = deleteConfirmId;
     setComments((prev) => prev.filter((c) => c.id !== id));
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.allComments);
       const list: Comment[] = raw ? JSON.parse(raw) : [];
       localStorage.setItem(STORAGE_KEYS.allComments, JSON.stringify(list.filter((c) => c.id !== id)));
     } catch { /* ignore */ }
+    setDeleteConfirmId(null);
   }
 
   const pendingSubs = submissions.filter((s) => s.status === "pending");
@@ -293,6 +301,24 @@ export default function AdminClient() {
           )}
         </div>
       )}
+
+      {/* Delete Comment Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t.admin.confirmDeleteComment || "Delete Comment"}</DialogTitle>
+            <DialogDescription>{t.admin.confirmDeleteCommentDesc || "Are you sure you want to delete this comment? This action cannot be undone."}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => setDeleteConfirmId(null)} className="border-border text-foreground hover:bg-secondary">
+              {t.common.cancel || "Cancel"}
+            </Button>
+            <Button onClick={confirmDeleteComment} className="bg-red-600 text-white hover:bg-red-700">
+              {t.common.delete || "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

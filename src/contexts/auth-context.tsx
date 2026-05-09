@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 
 interface User {
@@ -274,8 +274,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [getUsers, saveUsers],
   );
 
+  const value = useMemo(
+    () => ({ user, loaded, login, register, logout, updateProfile, changePassword, resetPassword }),
+    [user, loaded, login, register, logout, updateProfile, changePassword, resetPassword],
+  );
+
   return (
-    <AuthContext.Provider value={{ user, loaded, login, register, logout, updateProfile, changePassword, resetPassword }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

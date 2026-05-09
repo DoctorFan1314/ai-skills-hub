@@ -197,7 +197,7 @@ export function Navbar() {
                   {user.avatar ? (
                     <Image src={user.avatar} alt={user.username} width={32} height={32} className="h-8 w-8 rounded-full object-cover" unoptimized />
                   ) : (
-                    user.username.charAt(0).toUpperCase()
+                    <span aria-label={user.username}>{user.username.charAt(0).toUpperCase()}</span>
                   )}
                 </div>
               </Link>
@@ -231,7 +231,7 @@ export function Navbar() {
                       {user.avatar ? (
                         <Image src={user.avatar} alt={user.username} width={40} height={40} className="h-10 w-10 rounded-full object-cover" unoptimized />
                       ) : (
-                        user.username.charAt(0).toUpperCase()
+                        <span aria-label={user.username}>{user.username.charAt(0).toUpperCase()}</span>
                       )}
                     </div>
                     <span className="text-sm font-medium text-foreground truncate">{user.username}</span>
@@ -260,7 +260,7 @@ export function Navbar() {
                   />
                 </div>
               </div>
-              <nav className="flex flex-col gap-1">
+              <nav className="flex flex-col gap-1" aria-label={t.common.navigationMenu}>
                 {navLinks.map((link) => (
                   <Link key={link.href} href={link.href} onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary">
                     {link.label}

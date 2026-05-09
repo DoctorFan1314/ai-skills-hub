@@ -2,6 +2,7 @@ export const COLORS = {
   primary: "#00d4ff",
   primaryHover: "#00d4ff99",
   muted: "#8b949e",
+  defaultCategoryColor: "#6e7781",
   category: {
     content: "#00d4ff",
     coding: "#7c3aed",

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import { useI18n } from "@/contexts/i18n-context";
+import { Loader2 } from "lucide-react";
 
 export default function RegisterClient() {
   const [username, setUsername] = useState("");
@@ -112,7 +113,7 @@ export default function RegisterClient() {
               <Input id="confirmPassword" type="password" autoComplete="new-password" placeholder={t.auth.confirmPasswordPlaceholder} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
             </div>
             {error && <p role="alert" className="text-sm text-red-400 text-center">{error}</p>}
-            <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{loading ? "..." : t.auth.registerNow}</Button>
+            <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.auth.registerNow}</Button>
           </form>
           {/* OAuth buttons removed — not yet available */}
           <p className="text-center text-sm text-muted-foreground mt-6">

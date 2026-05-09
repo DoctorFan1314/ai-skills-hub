@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 
 interface Toast {
   id: string;
@@ -11,7 +11,7 @@ interface Toast {
 
 interface ToastContextValue {
   toasts: Toast[];
-  toast: (message: string, type?: Toast["type"]) => void;
+  toast: (message: string, type?: Toast["type"], duration?: number) => void;
   dismiss: (id: string) => void;
 }
 
@@ -19,11 +19,22 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  // Cleanup all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   const toast = useCallback(
-    (message: string, type: Toast["type"] = "info") => {
+    (message: string, type: Toast["type"] = "info", duration?: number) => {
       const id = crypto.randomUUID();
       const now = Date.now();
+      const autoDismiss = duration ?? (type === "error" ? 5000 : 3000);
+
       setToasts((prev) => {
         // Only suppress if an identical message was added less than 500ms ago
         const recentDuplicate = prev.some((t) => t.message === message && t.createdAt && now - t.createdAt < 500);
@@ -32,20 +43,32 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         // Keep at most 5 toasts, remove earliest
         return next.length > 5 ? next.slice(next.length - 5) : next;
       });
-      setTimeout(() => {
+
+      const timeout = setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 3000);
+        timeoutsRef.current.delete(id);
+      }, autoDismiss);
+      timeoutsRef.current.set(id, timeout);
     },
     [],
   );
 
   const dismiss = useCallback(
-    (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id)),
+    (id: string) => {
+      const timeout = timeoutsRef.current.get(id);
+      if (timeout) {
+        clearTimeout(timeout);
+        timeoutsRef.current.delete(id);
+      }
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    },
     [],
   );
 
+  const value = useMemo(() => ({ toasts, toast, dismiss }), [toasts, toast, dismiss]);
+
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismiss }}>
+    <ToastContext.Provider value={value}>
       {children}
     </ToastContext.Provider>
   );

@@ -10,6 +10,7 @@ import { canPerformAction } from "@/lib/utils";
 import type { Comment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
 import { Star, ThumbsUp, MessageSquare, Pencil, Trash2, X, Check, Bold, Italic, Code, List, Reply } from "lucide-react";
 import { StarRating } from "@/components/ui/star-rating";
 
@@ -250,7 +251,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-medium text-foreground">{c.username}</p>
+                    <Link href={`/users/${encodeURIComponent(c.username)}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">{c.username}</Link>
                     <div className="flex items-center gap-2">
                       {c.rating && (
                         <StarRating value={c.rating} readonly size={12} />
@@ -346,7 +347,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
                           </div>
                         )}
                         <div>
-                          <p className="text-xs font-medium text-foreground">{r.username}</p>
+                          <Link href={`/users/${encodeURIComponent(r.username)}`} className="text-xs font-medium text-foreground hover:text-primary transition-colors">{r.username}</Link>
                           <time className="text-[10px] text-muted-foreground">{new Date(r.createdAt).toLocaleDateString(locale)}</time>
                         </div>
                       </div>
