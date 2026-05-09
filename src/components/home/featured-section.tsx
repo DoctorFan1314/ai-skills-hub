@@ -84,6 +84,7 @@ export function FeaturedSection({ tab, onTabChange }: { tab: "agent" | "prompt";
           role="tabpanel"
           id="tabpanel-agent"
           aria-labelledby="tab-agent"
+          tabIndex={0}
           className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-[tabFadeIn_0.3s_ease-out]"
         >
           {trendingAgents.map((s) => <AgentSkillCard key={s.id} skill={s} />)}
@@ -93,6 +94,7 @@ export function FeaturedSection({ tab, onTabChange }: { tab: "agent" | "prompt";
           role="tabpanel"
           id="tabpanel-prompt"
           aria-labelledby="tab-prompt"
+          tabIndex={0}
           className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-[tabFadeIn_0.3s_ease-out]"
         >
           {trendingPrompts.map((s) => <SkillCard key={s.id} skill={s} />)}

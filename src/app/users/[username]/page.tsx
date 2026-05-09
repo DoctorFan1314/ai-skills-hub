@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import UserProfileClient from "./client";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
   const { username } = await params;
   const decoded = decodeURIComponent(username);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aiskillshub.com";
+  const siteUrl = getSiteUrl();
   return {
     title: `@${decoded} — AI Skills Hub`,
     description: `View ${decoded}'s profile, published skills, and contributions on AI Skills Hub`,

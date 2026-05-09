@@ -115,7 +115,7 @@ ai-skills-hub/
 │   └── lib/
 │       ├── types.ts                  # TypeScript 类型定义
 │       ├── mock-data.ts              # Prompt 模板数据（28个模板 + 10条评价）
-│       ├── mock-agent-skills.ts      # Agent 技能数据（8个技能）
+│       ├── mock-agent-skills.ts      # Agent 技能数据（29个技能）
 │       ├── categories.ts             # Prompt 分类定义（6个分类）
 │       ├── agent-skill-categories.ts  # Agent 技能分类定义（8个分类）
 │       ├── i18n/
@@ -178,7 +178,7 @@ ai-skills-hub/
 | 功能 | 状态 | 说明 |
 |------|------|------|
 | 安全响应头 | ✅ | next.config.ts 添加 X-Frame-Options、X-Content-Type-Options、Referrer-Policy |
-| 中间件路由保护 | ✅ | src/middleware.ts 为 admin/profile 路由设置 cache-control 头 |
+| 代理路由保护 | ✅ | src/proxy.ts 为 admin/profile 路由设置 cache-control 头（Next.js 16 规范） |
 | 开放重定向修复 | ✅ | safeReturnUrl() 验证防止 `://` 开放重定向 |
 | 明文密码移除 | ✅ | 认证仅使用哈希比对，移除明文密码回退 |
 | StarRating 键盘导航 | ✅ | ArrowLeft/ArrowRight 导航、focus-visible 环、hover 缩放 |
@@ -195,7 +195,7 @@ ai-skills-hub/
 | tFormat 优化 | ✅ | replaceAll() 替代 RegExp；开发模式未解析变量警告 |
 | CreateDropdown 触摸修复 | ✅ | 移除 onMouseEnter（触摸设备不兼容） |
 | AgentSkillCard 语义按钮 | ✅ | 从 `<div role="button">` 改为 `<button>` |
-| Profile 缓存保护 | ✅ | 通过中间件为 profile/admin 路由设置 Cache-Control: no-store |
+| Profile 缓存保护 | ✅ | 通过 proxy 为 profile/admin 路由设置 Cache-Control: no-store |
 | useCollections loaded 状态 | ✅ | 添加 loaded 状态追踪初始化 |
 | .env.example | ✅ | 创建环境变量模板文件 |
 | ES2022 目标 | ✅ | tsconfig.json 目标从 ES2017 升级到 ES2022 |

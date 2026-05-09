@@ -72,14 +72,6 @@ async function downloadAll(skill: NonNullable<ReturnType<typeof getAgentSkillByI
 
 export default function AgentSkillDetailClient({ id }: { id: string }) {
   const skill = getAgentSkillById(id);
-  if (!skill) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-        <p className="text-muted-foreground text-lg">Skill not found / 未找到技能</p>
-        <Link href="/skills" className="text-primary mt-4 inline-block hover:underline">Back to Skills / 返回技能列表</Link>
-      </div>
-    );
-  }
   const { t } = useI18n();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -102,6 +94,15 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [showReport]);
+
+  if (!skill) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center">
+        <p className="text-muted-foreground text-lg">Skill not found / 未找到技能</p>
+        <Link href="/skills" className="text-primary mt-4 inline-block hover:underline">Back to Skills / 返回技能列表</Link>
+      </div>
+    );
+  }
 
   function handleShare() {
     const shareUrl = typeof window !== "undefined" ? window.location.href : "";
@@ -142,11 +143,7 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
   const currentFile = activeFile || fileNames[0] || "";
   const followingAuthor = isFollowing(skill.developer);
 
-  const mockVersions = [
-    { version: skill.version, date: skill.lastUpdated, changelog: "Current version", author: skill.developer },
-    { version: "1.0.0", date: "2026-01-15", changelog: "Initial release", author: skill.developer },
-  ];
-  const versions = skill.versions && skill.versions.length > 0 ? skill.versions : mockVersions;
+  const versions = skill.versions && skill.versions.length > 0 ? skill.versions : null;
 
   const tabs = [
     { key: "intro" as const, label: t.agentSkills.skillIntro },
@@ -533,7 +530,13 @@ export default function AgentSkillDetailClient({ id }: { id: string }) {
       {/* Tab: Version History */}
       {activeTab === "versions" && (
         <div role="tabpanel" id="detail-tabpanel-versions" aria-labelledby="detail-tab-versions" className="max-w-2xl">
-          <VersionTimeline versions={versions} />
+          {versions ? (
+            <VersionTimeline versions={versions} />
+          ) : (
+            <div className="glass-card p-6 text-center">
+              <p className="text-sm text-muted-foreground">No version history available</p>
+            </div>
+          )}
         </div>
       )}
 

@@ -115,7 +115,7 @@ ai-skills-hub/
 │   └── lib/
 │       ├── types.ts                  # TypeScript type definitions
 │       ├── mock-data.ts              # Prompt mock data (28 templates + 10 reviews)
-│       ├── mock-agent-skills.ts      # Agent Skills mock data (8 skills)
+│       ├── mock-agent-skills.ts      # Agent Skills mock data (29 skills)
 │       ├── categories.ts             # Prompt category definitions (6 categories)
 │       ├── agent-skill-categories.ts  # Agent Skill category definitions (8 categories)
 │       ├── i18n/
@@ -179,7 +179,7 @@ ai-skills-hub/
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Security headers | ✅ | X-Frame-Options, X-Content-Type-Options, Referrer-Policy in next.config.ts |
-| Middleware route protection | ✅ | src/middleware.ts for admin/profile cache-control headers |
+| Proxy route protection | ✅ | src/proxy.ts for admin/profile cache-control headers (Next.js 16 convention) |
 | Open redirect fix | ✅ | safeReturnUrl() validation prevents open redirect via `://` in query params |
 | Plaintext password removed | ✅ | Auth uses hash-only comparison; plaintext fallback removed |
 | StarRating keyboard nav | ✅ | ArrowLeft/ArrowRight navigation, focus-visible ring, hover scale |
@@ -196,7 +196,7 @@ ai-skills-hub/
 | tFormat optimization | ✅ | replaceAll() instead of RegExp; dev-mode warning for unresolved vars |
 | CreateDropdown touch fix | ✅ | Removed onMouseEnter (touch incompatible) |
 | AgentSkillCard semantic button | ✅ | Changed from `<div role="button">` to `<button>` |
-| Profile cache protection | ✅ | Cache-Control: no-store via middleware for profile/admin routes |
+| Profile cache protection | ✅ | Cache-Control: no-store via proxy for profile/admin routes |
 | useCollections loaded state | ✅ | Added `loaded` state for tracking initialization |
 | .env.example | ✅ | Environment variable template file created |
 | ES2022 target | ✅ | tsconfig.json target upgraded from ES2017 to ES2022 |

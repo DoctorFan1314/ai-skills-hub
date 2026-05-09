@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Search, Menu, X, Sun, Moon, Languages, ChevronDown, TrendingUp, Tags, BookOpen, LayoutGrid, Bell } from "lucide-react";
+import { Search, Menu, X, Sun, Moon, Languages, ChevronDown, TrendingUp, Tags, BookOpen, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -13,7 +13,6 @@ import { useToast } from "@/contexts/toast-context";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
 
-import { useNotifications } from "@/hooks/use-notifications";
 import { NotificationBell } from "@/components/shared/notification-bell";
 
 export function Navbar() {
@@ -28,7 +27,6 @@ export function Navbar() {
   const { toast } = useToast();
   const { resolvedTheme, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
-  const { unreadCount } = useNotifications();
 
   const navLinks = [
     { href: "/", label: t.common.home },
@@ -90,6 +88,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
+              aria-current={pathname === link.href ? "page" : undefined}
               className={`px-3 py-2 text-sm transition-colors rounded-md hover:bg-secondary ${link.highlight ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
             >
               {link.label}
@@ -178,16 +177,7 @@ export function Navbar() {
           </Button>
 
           {user && (
-            <Link href="/profile?tab=notifications">
-              <Button variant="ghost" size="icon-sm" className="relative text-muted-foreground hover:text-foreground" aria-label={t.common.notifications}>
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center font-medium">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
+            <NotificationBell />
           )}
 
           <div className="hidden md:flex items-center gap-2">

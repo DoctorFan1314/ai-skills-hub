@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { categories } from "@/lib/categories";
+import { categories, categoryToAgentCategorySlugs } from "@/lib/categories";
 import { getSkillsByCategory } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
 import { agentSkillCategories } from "@/lib/agent-skill-categories";
@@ -9,15 +9,6 @@ import { SkillCard } from "@/components/skill/skill-card";
 import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { ArrowRight } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
-
-const categoryToAgentCategorySlugs: Record<string, string[]> = {
-  content: ["communication", "file-processing"],
-  coding: ["web-development", "code-execution"],
-  thinking: ["skills-management"],
-  data: ["data-analysis"],
-  productivity: ["web-search", "multi-platform"],
-  creative: ["file-processing"],
-};
 
 function getAgentCategoryNames(slugs: string[]): string[] {
   return slugs.map((slug) => agentSkillCategories.find((c) => c.slug === slug)?.name).filter(Boolean) as string[];

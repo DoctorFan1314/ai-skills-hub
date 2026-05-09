@@ -4,11 +4,16 @@ import { useAuth } from "@/contexts/auth-context";
 
 // Module-level guest ID, shared across all useUserLocalStorage instances in the same tab.
 // Each tab gets its own unique guest ID so different tabs don't collide.
-const guestId = crypto.randomUUID();
+// Lazy-initialized to avoid SSR crash on Node < 19 where crypto.randomUUID may not exist.
+let _guestId: string | null = null;
+function getGuestId(): string {
+  if (!_guestId) _guestId = crypto.randomUUID();
+  return _guestId;
+}
 
 export function useUserLocalStorage<T>(key: string, initialValue: T, serialize = JSON.stringify, deserialize = JSON.parse) {
   const { user } = useAuth();
-  const userKey = user ? `${key}-${user.email}` : `${key}-guest-${guestId}`;
+  const userKey = user ? `${key}-${user.email}` : `${key}-guest-${getGuestId()}`;
   const [value, setValue] = useState<T>(initialValue);
   const [loaded, setLoaded] = useState(false);
 
@@ -16,11 +21,15 @@ export function useUserLocalStorage<T>(key: string, initialValue: T, serialize =
   const initialValueRef = useRef(initialValue);
   initialValueRef.current = initialValue;
 
+  // Ref for deserialize to avoid re-triggering useEffect when caller passes inline function
+  const deserializeRef = useRef(deserialize);
+  deserializeRef.current = deserialize;
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(userKey);
       if (raw !== null) {
-        setValue(deserialize(raw));
+        setValue(deserializeRef.current(raw));
       } else {
         setValue(initialValueRef.current);
       }
@@ -28,7 +37,7 @@ export function useUserLocalStorage<T>(key: string, initialValue: T, serialize =
       setValue(initialValueRef.current);
     }
     setLoaded(true);
-  }, [userKey, deserialize]);
+  }, [userKey]);
 
   const set = useCallback((updater: T | ((prev: T) => T)): boolean => {
     let success = true;
@@ -59,7 +68,7 @@ export function useUserLocalStorage<T>(key: string, initialValue: T, serialize =
     const handler = (e: StorageEvent) => {
       if (e.key === userKey) {
         try {
-          setValue(e.newValue !== null ? deserialize(e.newValue) : initialValueRef.current);
+          setValue(e.newValue !== null ? deserializeRef.current(e.newValue) : initialValueRef.current);
         } catch {
           setValue(initialValueRef.current);
         }
@@ -67,7 +76,7 @@ export function useUserLocalStorage<T>(key: string, initialValue: T, serialize =
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [userKey, deserialize]);
+  }, [userKey]);
 
   return { value, set, remove, loaded };
 }

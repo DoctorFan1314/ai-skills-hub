@@ -45,14 +45,6 @@ function CopyButton({ text, label, copiedLabel, failedLabel }: { text: string; l
 
 export default function SkillDetailClient({ id }: { id: string }) {
   const skill = getSkillById(id);
-  if (!skill) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
-        <p className="text-muted-foreground text-lg">Prompt not found / 未找到提示词</p>
-        <Link href="/prompts" className="text-primary mt-4 inline-block hover:underline">Back to Prompts / 返回提示词列表</Link>
-      </div>
-    );
-  }
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [likedIds, setLikedIds] = useUserStorage<string[]>(STORAGE_KEYS.likes, []);
   const [bookmarkedIds, setBookmarkedIds] = useUserStorage<string[]>(STORAGE_KEYS.bookmarks, []);
@@ -101,6 +93,15 @@ export default function SkillDetailClient({ id }: { id: string }) {
     initVersionForSkill(skill);
     setVersions(getVersions(skill.id));
   }, [skill]);
+
+  if (!skill) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
+        <p className="text-muted-foreground text-lg">Prompt not found / 未找到提示词</p>
+        <Link href="/prompts" className="text-primary mt-4 inline-block hover:underline">Back to Prompts / 返回提示词列表</Link>
+      </div>
+    );
+  }
 
   const color = COLORS.category[skill.categorySlug] || COLORS.primary;
   const relatedSkills = getRelatedSkills(skill);

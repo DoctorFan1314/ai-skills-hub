@@ -6,6 +6,64 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.7.0] — 2026-05-09
+
+### Agent Skills Marketplace (21 new skills)
+- **21 new real-world open-source skills** added (8→29 total), all MIT/Apache-2.0 licensed:
+  - **AI Frameworks**: LangChain, CrewAI, LlamaIndex, Semantic Kernel, Pydantic AI, Guidance, Haystack, Letta
+  - **Data Tools**: Vanna, Plotly Dash, Chroma, Qdrant
+  - **ML Tools**: HuggingFace Transformers, Mem0, Gradio, Streamlit
+  - **Research Tools**: GPT Researcher, Jina Reader
+  - **Web Frameworks**: FastAPI, Screenshot-to-Code
+  - **Developer Tools**: Aider
+- Each skill includes: full README, file templates, install commands, demo I/O, tags, license info
+- Categories: Research, Data Analysis, Productivity, Web Development, DevOps, Design, Content Creation
+- Collections: AI Frameworks, Data Tools, Research Tools, ML Tools, ML Models, Web Frameworks, AI Infrastructure, Enterprise SDKs, Developer Tools, Content Tools
+
+### Hooks Reliability (4 fixes)
+- **useUserLocalStorage SSR fix** — `crypto.randomUUID()` lazy-initialized to avoid SSR crash
+- **useCollections persist fix** — localStorage writes moved from setState updaters to `useEffect` watchers
+- **useFollows persist fix** — Same pattern + cross-tab sync guard via `skipPersistRef`
+- **useUserLocalStorage deserialize** — Wrapped in `useRef`, removed from useEffect deps
+
+### Rules of Hooks (2 fixes)
+- **prompts/[id] hooks order** — All hooks moved before `if (!skill) return` early exit
+- **skills/[id] hooks order** — Same fix, plus replaced fake mockVersions fallback with "No version history available"
+
+### UX (5 fixes)
+- **not-found page real IDs** — Replaced broken POPULAR_SKILLS/PROMPTS with real IDs from mock data
+- **CommentSection replyMap** — `useMemo` Map replaces triple filter for O(1) reply lookups
+- **CommentSection locale colon** — `：` → locale-aware `:` via `locale.startsWith("zh")`
+- **SkillCard React.memo** — Wrapped with `React.memo()` for grid rendering performance
+- **AgentSkillCard React.memo** — Same optimization for agent skill grid
+
+### Performance (4 fixes)
+- **SkillCard memoization** — `React.memo()` prevents unnecessary re-renders in grid
+- **AgentSkillCard memoization** — Same optimization
+- **CommentSection replyMap** — Pre-computed `Map<parentId, Comment[]>` via `useMemo`
+- **FeaturedSection tabIndex** — Both tabpanel divs now focusable for keyboard users
+
+### Accessibility (6 fixes)
+- **Lightbox focus trap** — Proper cycling through close/prev/next button refs
+- **CopyButton timeout cleanup** — useRef + useEffect cleanup prevents memory leaks
+- **SettingsTab clear data** — Also clears notificationPrefs, follows, collections, notifications
+- **SettingsTab focus-visible** — Ring added to notification toggle switches
+- **Navbar aria-current** — Active nav links marked with `aria-current="page"`
+- **Navbar theme icons** — Pure CSS `dark:block`/`dark:hidden` instead of JS ternary (avoids hydration mismatch)
+
+### i18n (2 fixes)
+- **formatRelativeTime locale** — Accepts `locale` param, uses `Intl.RelativeTimeFormat`
+- **AgentSkillCard locale** — Passes `locale` from `useLocale()` to `formatRelativeTime`
+
+### Infrastructure
+- **template.tsx deleted** — Was `"use client"` causing 1-2s black screen on first navigation; removed entirely
+- **proxy.ts rename** — `middleware.ts` → `proxy.ts` per Next.js 16 convention
+- **layout.tsx scroll** — `data-scroll-behavior="smooth"` on `<html>` instead of CSS property
+- **categories mapping extracted** — `categoryToAgentCategorySlugs` moved to `src/lib/categories.ts`
+- **users/[username] siteUrl** — Replaced hardcoded URL with `getSiteUrl()`
+
+---
+
 ## [v2.6.0] — 2026-05-09
 
 ### Security

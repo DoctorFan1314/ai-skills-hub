@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import { useI18n } from "@/contexts/i18n-context";
@@ -134,6 +134,17 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [visibleCommentCount, setVisibleCommentCount] = useState(10);
+
+  // Pre-compute reply map to avoid triple filter on every render
+  const replyMap = useMemo(() => {
+    const map = new Map<string, Comment[]>();
+    comments.filter(c => c.parentId).forEach(r => {
+      const list = map.get(r.parentId!) || [];
+      list.push(r);
+      map.set(r.parentId!, list);
+    });
+    return map;
+  }, [comments]);
 
   // Load comments from global store
   useEffect(() => {
@@ -313,7 +324,7 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
           </div>
         )}
         <div className="flex items-center gap-1">
-          <span className="text-sm text-muted-foreground mr-2">{t.comments.rating}：</span>
+          <span className="text-sm text-muted-foreground mr-2">{t.comments.rating}{locale.startsWith("zh") ? "：" : ":"}</span>
           <StarRating value={rating} onChange={setRating} />
           {rating > 0 && <span className="text-xs text-muted-foreground ml-1">{rating}/5</span>}
         </div>
@@ -402,9 +413,9 @@ export function CommentSection({ skillId, skillTitle }: { skillId: string; skill
               </div>
 
               {/* Replies */}
-              {comments.filter((r) => r.parentId === c.id).length > 0 && (
+              {(replyMap.get(c.id) || []).length > 0 && (
                 <div className="ml-8 pl-4 border-l-2 border-border/50 space-y-3 mt-2">
-                  {comments.filter((r) => r.parentId === c.id).map((r) => (
+                  {(replyMap.get(c.id) || []).map((r) => (
                     <div key={r.id} className="pt-2">
                       <div className="flex items-center gap-3 mb-1">
                         {r.avatar ? (

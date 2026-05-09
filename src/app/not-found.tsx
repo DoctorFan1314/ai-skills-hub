@@ -9,17 +9,17 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/contexts/i18n-context";
 
 const POPULAR_SKILLS = [
-  { id: "web-scraper", name: "Web Scraper", description: "Scrape and extract web data" },
-  { id: "code-executor", name: "Code Executor", description: "Execute code in a sandboxed environment" },
-  { id: "data-analyst", name: "Data Analyst", description: "Analyze and visualize data" },
-  { id: "doc-writer", name: "Doc Writer", description: "Generate documentation automatically" },
+  { id: "find-skills", name: "Find Skills", description: "Discover & Install Agent Skills" },
+  { id: "frontend-design", name: "Frontend Design", description: "Create production-grade frontend interfaces" },
+  { id: "web-search", name: "Web Search", description: "Search and extract web content" },
+  { id: "agent-reach", name: "Agent Reach", description: "Interact with 13+ platforms" },
 ];
 
 const POPULAR_PROMPTS = [
-  { id: "blog-writer", title: "Blog Writer", subtitle: "Write SEO-optimized blog posts" },
-  { id: "code-review", title: "Code Review", subtitle: "Review code for bugs and improvements" },
-  { id: "translate", title: "Translator", subtitle: "Translate text between languages" },
-  { id: "email-drafter", title: "Email Drafter", subtitle: "Draft professional emails" },
+  { id: "xiaohongshu-notes", title: "小红书笔记生成器", subtitle: "生成高质量小红书笔记" },
+  { id: "weekly-report", title: "周报生成器", subtitle: "自动生成结构化周报" },
+  { id: "code-review", title: "代码审查专家", subtitle: "专业代码审查报告" },
+  { id: "meeting-summary", title: "会议纪要生成器", subtitle: "自动生成会议纪要" },
 ];
 
 export default function NotFound() {

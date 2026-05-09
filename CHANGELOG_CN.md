@@ -6,6 +6,64 @@
 
 ---
 
+## [v2.7.0] — 2026-05-09
+
+### Agent 技能市场（21 个新技能）
+- **21 个真实开源技能** 新增（8→29 个），全部 MIT/Apache-2.0 许可证：
+  - **AI 框架**：LangChain、CrewAI、LlamaIndex、Semantic Kernel、Pydantic AI、Guidance、Haystack、Letta
+  - **数据工具**：Vanna、Plotly Dash、Chroma、Qdrant
+  - **ML 工具**：HuggingFace Transformers、Mem0、Gradio、Streamlit
+  - **研究工具**：GPT Researcher、Jina Reader
+  - **Web 框架**：FastAPI、Screenshot-to-Code
+  - **开发工具**：Aider
+- 每个技能包含：完整 README、文件模板、安装命令、演示输入/输出、标签、许可证信息
+- 分类：研究、数据分析、生产力、Web 开发、DevOps、设计、内容创作
+- 合集：AI 框架、数据工具、研究工具、ML 工具、ML 模型、Web 框架、AI 基础设施、企业 SDK、开发工具、内容工具
+
+### Hooks 可靠性（4 项修复）
+- **useUserLocalStorage SSR 修复** — `crypto.randomUUID()` 延迟初始化避免 SSR 崩溃
+- **useCollections 持久化修复** — localStorage 写入从 setState 更新器移至 `useEffect` 监听器
+- **useFollows 持久化修复** — 同一模式 + `skipPersistRef` 跨标签页同步保护
+- **useUserLocalStorage 反序列化** — 包裹在 `useRef` 中，从 useEffect 依赖中移除
+
+### Hooks 规则（2 项修复）
+- **prompts/[id] hooks 顺序** — 所有 hooks 移至 `if (!skill) return` 早返回之前
+- **skills/[id] hooks 顺序** — 同一修复，另将假的 mockVersions 回退替换为"暂无版本历史"
+
+### 用户体验（5 项修复）
+- **404 页真实 ID** — 用 mock 数据中的真实 ID 替换了损坏的 POPULAR_SKILLS/PROMPTS
+- **CommentSection replyMap** — `useMemo` Map 替代三次 filter，O(1) 回复查找
+- **CommentSection locale 冒号** — `：` → 通过 `locale.startsWith("zh")` 实现 locale 感知
+- **SkillCard React.memo** — 使用 `React.memo()` 包裹提升网格渲染性能
+- **AgentSkillCard React.memo** — 同样的优化
+
+### 性能（4 项修复）
+- **SkillCard 记忆化** — `React.memo()` 防止网格中不必要的重渲染
+- **AgentSkillCard 记忆化** — 同样的优化
+- **CommentSection replyMap** — 通过 `useMemo` 预计算 `Map<parentId, Comment[]>`
+- **FeaturedSection tabIndex** — 两个 tabpanel div 现在可聚焦支持键盘用户
+
+### 无障碍（6 项修复）
+- **Lightbox 焦点陷阱** — 通过 close/prev/next 按钮 ref 实现正确的循环焦点
+- **CopyButton 超时清理** — useRef + useEffect cleanup 防止内存泄漏
+- **SettingsTab 清除数据** — 同时清除 notificationPrefs、follows、collections、notifications
+- **SettingsTab focus-visible** — 通知切换开关添加焦点环
+- **Navbar aria-current** — 活动导航链接标记 `aria-current="page"`
+- **Navbar 主题图标** — 纯 CSS `dark:block`/`dark:hidden` 替代 JS 三元（避免水合不匹配）
+
+### 国际化（2 项修复）
+- **formatRelativeTime locale** — 接受 `locale` 参数，使用 `Intl.RelativeTimeFormat`
+- **AgentSkillCard locale** — 从 `useLocale()` 传入 `locale` 到 `formatRelativeTime`
+
+### 基础设施
+- **template.tsx 已删除** — `"use client"` 导致首次导航 1-2 秒黑屏；完全移除
+- **proxy.ts 重命名** — `middleware.ts` → `proxy.ts`，符合 Next.js 16 规范
+- **layout.tsx 滚动** — `<html>` 上使用 `data-scroll-behavior="smooth"` 替代 CSS 属性
+- **categories 映射提取** — `categoryToAgentCategorySlugs` 移至 `src/lib/categories.ts`
+- **users/[username] siteUrl** — 硬编码 URL 替换为 `getSiteUrl()`
+
+---
+
 ## [v2.6.0] — 2026-05-09
 
 ### 安全

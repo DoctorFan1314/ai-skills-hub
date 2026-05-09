@@ -8,8 +8,9 @@ import type { Skill } from "@/lib/types";
 import { COLORS } from "@/lib/theme";
 import { getDifficultyLabel, formatNumber } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
+import React from "react";
 
-export function SkillCard({ skill }: { skill: Skill }) {
+export const SkillCard = React.memo(function SkillCard({ skill }: { skill: Skill }) {
   const color = COLORS.category[skill.categorySlug] || COLORS.primary;
   const { t } = useI18n();
   const router = useRouter();
@@ -21,6 +22,7 @@ export function SkillCard({ skill }: { skill: Skill }) {
       className="glass-card glass-card-hover p-5 h-full cursor-pointer group flex flex-col"
       onClick={() => router.push(`/prompts/${skill.id}`)}
       onKeyDown={(e) => { if (e.key === "Enter") router.push(`/prompts/${skill.id}`); }}
+      aria-label={`${skill.title} - ${skill.subtitle}`}
     >
       <div className="flex items-start justify-between mb-3">
         <Badge
@@ -58,4 +60,4 @@ export function SkillCard({ skill }: { skill: Skill }) {
       </div>
     </div>
   );
-}
+});

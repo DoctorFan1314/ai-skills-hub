@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { categories } from "@/lib/categories";
+import { categories, categoryToAgentCategorySlugs } from "@/lib/categories";
 import { getSkillsByCategory } from "@/lib/mock-data";
 import { agentSkills } from "@/lib/mock-agent-skills";
 import { SkillCard } from "@/components/skill/skill-card";
@@ -9,15 +9,6 @@ import { AgentSkillCard } from "@/components/agent-skill/agent-skill-card";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { useI18n } from "@/contexts/i18n-context";
 import { getCategoryI18n, getAgentCategoryI18n } from "@/lib/categories";
-
-const categoryToAgentCategorySlugs: Record<string, string[]> = {
-  content: ["communication", "file-processing"],
-  coding: ["web-development", "code-execution"],
-  thinking: ["skills-management"],
-  data: ["data-analysis"],
-  productivity: ["web-search", "multi-platform"],
-  creative: ["file-processing"],
-};
 
 export default function CategoryDetailClient({ slug }: { slug: string }) {
   const { t } = useI18n();

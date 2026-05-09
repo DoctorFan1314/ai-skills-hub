@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Copy, Check } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 
@@ -13,11 +13,20 @@ interface CopyButtonProps {
 export function CopyButton({ text, label, className = "", size = 14 }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const { t } = useI18n();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch { /* ignore */ }
   };
   return (

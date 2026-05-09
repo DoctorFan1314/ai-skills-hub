@@ -39,7 +39,7 @@ export function canPerformAction(action: string, cooldownMs: number = 3000): boo
   return true;
 }
 
-export function formatRelativeTime(dateStr: string): string {
+export function formatRelativeTime(dateStr: string, locale: string = "en-US"): string {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return dateStr;
   const now = Date.now();
@@ -51,10 +51,22 @@ export function formatRelativeTime(dateStr: string): string {
   const days = Math.floor(hours / 24);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
-  if (years > 0) return `${years}y ago`;
-  if (months > 0) return `${months}mo ago`;
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
+
+  try {
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    if (years > 0) return rtf.format(-years, "year");
+    if (months > 0) return rtf.format(-months, "month");
+    if (days > 0) return rtf.format(-days, "day");
+    if (hours > 0) return rtf.format(-hours, "hour");
+    if (minutes > 0) return rtf.format(-minutes, "minute");
+    return rtf.format(0, "second");
+  } catch {
+    // Fallback for environments without Intl support
+    if (years > 0) return `${years}y ago`;
+    if (months > 0) return `${months}mo ago`;
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return "just now";
+  }
 }

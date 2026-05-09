@@ -19,13 +19,16 @@ export function Lightbox({ src, screenshots, onClose, onNavigate, closeLabel = "
   const currentIdx = src ? screenshots.indexOf(src) : -1;
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const prevRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
 
   // Save and restore focus + body scroll lock
   useEffect(() => {
     if (src) {
       previousFocusRef.current = document.activeElement as HTMLElement;
       document.body.style.overflow = "hidden";
-      setTimeout(() => containerRef.current?.focus(), 50);
+      setTimeout(() => closeRef.current?.focus(), 50);
     } else {
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
@@ -56,9 +59,22 @@ export function Lightbox({ src, screenshots, onClose, onNavigate, closeLabel = "
       } else if (e.key === "ArrowLeft") {
         if (showNav) handlePrev();
       } else if (e.key === "Tab") {
-        // Focus trap: keep focus within lightbox
+        // Proper focus trap: cycle through close, prev, next buttons
         e.preventDefault();
-        containerRef.current?.focus();
+        const focusable: HTMLButtonElement[] = [];
+        if (closeRef.current) focusable.push(closeRef.current);
+        if (showNav && prevRef.current) focusable.push(prevRef.current);
+        if (showNav && nextRef.current) focusable.push(nextRef.current);
+        if (focusable.length === 0) return;
+        const currentFocus = document.activeElement;
+        const idx = focusable.indexOf(currentFocus as HTMLButtonElement);
+        if (e.shiftKey) {
+          const prev = idx <= 0 ? focusable.length - 1 : idx - 1;
+          focusable[prev]?.focus();
+        } else {
+          const next = idx >= focusable.length - 1 ? 0 : idx + 1;
+          focusable[next]?.focus();
+        }
       }
     }
     document.addEventListener("keydown", handleKey);
@@ -83,6 +99,7 @@ export function Lightbox({ src, screenshots, onClose, onNavigate, closeLabel = "
     >
       <div className="relative max-w-[90vw] max-h-[90vh]">
         <button
+          ref={closeRef}
           onClick={onClose}
           aria-label={closeLabel}
           className="absolute -top-10 right-0 text-white/70 hover:text-white p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -91,6 +108,7 @@ export function Lightbox({ src, screenshots, onClose, onNavigate, closeLabel = "
         </button>
         {showNav && (
           <button
+            ref={prevRef}
             onClick={(e) => { e.stopPropagation(); handlePrev(); }}
             className="absolute left-2 sm:-left-10 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 min-w-[44px] min-h-[44px] flex items-center justify-center z-10"
             aria-label={prevLabel}
@@ -105,6 +123,7 @@ export function Lightbox({ src, screenshots, onClose, onNavigate, closeLabel = "
         />
         {showNav && (
           <button
+            ref={nextRef}
             onClick={(e) => { e.stopPropagation(); handleNext(); }}
             className="absolute right-2 sm:-right-10 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-2 min-w-[44px] min-h-[44px] flex items-center justify-center z-10"
             aria-label={nextLabel}

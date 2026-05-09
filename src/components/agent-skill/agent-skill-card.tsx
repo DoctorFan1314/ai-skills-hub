@@ -7,11 +7,14 @@ import type { AgentSkill } from "@/lib/types";
 import { formatNumber, formatRelativeTime } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { useLocale } from "@/hooks/use-locale";
 import { TagChip } from "@/components/ui/tag-chip";
+import React from "react";
 
-export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }: { skill: AgentSkill; compareMode?: boolean; selected?: boolean; onToggleSelect?: (id: string) => void }) {
+export const AgentSkillCard = React.memo(function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }: { skill: AgentSkill; compareMode?: boolean; selected?: boolean; onToggleSelect?: (id: string) => void }) {
   const { copied, copy } = useCopyToClipboard();
   const { t } = useI18n();
+  const locale = useLocale();
 
   const preventLinkNav = compareMode ? (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); onToggleSelect?.(skill.id); } : undefined;
 
@@ -100,7 +103,7 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
           <Star className="h-3 w-3" />
           {formatNumber(skill.stars)}
         </span>
-        <span className="text-muted-foreground/60">{formatRelativeTime(skill.lastUpdated)}</span>
+        <span className="text-muted-foreground/60">{formatRelativeTime(skill.lastUpdated, locale)}</span>
       </div>
 
       <button
@@ -119,4 +122,4 @@ export function AgentSkillCard({ skill, compareMode, selected, onToggleSelect }:
       </button>
     </div>
   );
-}
+});

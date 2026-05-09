@@ -46,6 +46,15 @@ export const categories: Category[] = [
   },
 ];
 
+export const categoryToAgentCategorySlugs: Record<string, string[]> = {
+  content: ["communication", "file-processing"],
+  coding: ["web-development", "code-execution"],
+  thinking: ["skills-management"],
+  data: ["data-analysis"],
+  productivity: ["web-search", "multi-platform"],
+  creative: ["file-processing"],
+};
+
 // NOTE: The i18n maps below are derived from the categories array slugs.
 // If you add a category to the array above, you must also add its i18n keys
 // to the dictionaries (zh/en) AND to the maps below. This dual-maintenance

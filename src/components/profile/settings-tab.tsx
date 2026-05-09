@@ -134,6 +134,15 @@ export function SettingsTab() {
       }
     }
     toRemove.forEach((k) => localStorage.removeItem(k));
+    // Also clear user-scoped keys that use dynamic names
+    if (user) {
+      [
+        STORAGE_KEYS.notificationPrefs(user.email),
+        STORAGE_KEYS.follows(user.email),
+        STORAGE_KEYS.collections(user.email),
+        STORAGE_KEYS.notifications(user.email),
+      ].forEach((k) => localStorage.removeItem(k));
+    }
     setShowClearConfirm(false);
     toast(t.settings.dataCleared, "success");
   }
@@ -337,7 +346,7 @@ export function SettingsTab() {
                 role="switch"
                 aria-checked={preferences[item.type] !== false}
                 onClick={() => updatePreference(item.type, !(preferences[item.type] !== false))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   preferences[item.type] !== false ? "bg-primary" : "bg-secondary border border-border"
                 }`}
               >
