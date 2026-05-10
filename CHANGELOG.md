@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v2.7.1] — 2026-05-10
+
+### Agent Skills Cleanup
+- **Removed 21 non-skill entries** — LangChain, CrewAI, FastAPI, etc. without SKILL.md removed from skills marketplace (29→8)
+- **Added SKILL.md** — All 8 remaining skills now include a SKILL.md in their files object with trigger conditions and feature descriptions
+- **Fixed mock-agent-skills.ts** — Cleaned up orphaned code from failed edits, restored file validity
+- **Updated docs** — README/README_CN skill count reverted to 8
+
+---
+
 ## [v2.7.0] — 2026-05-09
 
 ### Agent Skills Marketplace (21 new skills)

@@ -115,7 +115,7 @@ ai-skills-hub/
 │   └── lib/
 │       ├── types.ts                  # TypeScript type definitions
 │       ├── mock-data.ts              # Prompt mock data (28 templates + 10 reviews)
-│       ├── mock-agent-skills.ts      # Agent Skills mock data (29 skills)
+│       ├── mock-agent-skills.ts      # Agent Skills mock data (8 skills)
 │       ├── categories.ts             # Prompt category definitions (6 categories)
 │       ├── agent-skill-categories.ts  # Agent Skill category definitions (8 categories)
 │       ├── i18n/
