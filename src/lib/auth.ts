@@ -1,0 +1,94 @@
+import { createHmac, randomBytes, pbkdf2Sync, timingSafeEqual } from 'crypto';
+import type { DBUser } from './db';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'oortapi-default-secret-change-in-production';
+const JWT_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
+const TOKEN_NAME = 'oortapi_token';
+
+// --- JWT helpers ---
+
+function base64url(data: string): string {
+  return Buffer.from(data).toString('base64url');
+}
+
+function base64urlDecode(data: string): string {
+  return Buffer.from(data, 'base64url').toString('utf-8');
+}
+
+export interface JWTPayload {
+  userId: number;
+  email: string;
+  role: 'user' | 'admin';
+  exp: number;
+}
+
+export function signToken(payload: Omit<JWTPayload, 'exp'>): string {
+  const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const now = Math.floor(Date.now() / 1000);
+  const body = base64url(JSON.stringify({ ...payload, exp: now + JWT_EXPIRY }));
+  const signature = createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${signature}`;
+}
+
+export function verifyToken(token: string): JWTPayload | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const [header, body, signature] = parts;
+    const expectedSig = createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+
+    if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) return null;
+
+    const payload: JWTPayload = JSON.parse(base64urlDecode(body));
+    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export { TOKEN_NAME };
+
+// --- Password hashing (PBKDF2) ---
+
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_KEYLEN = 64;
+const PBKDF2_DIGEST = 'sha512';
+
+export function hashPassword(password: string, salt: string): string {
+  return pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEYLEN, PBKDF2_DIGEST).toString('hex');
+}
+
+export function generateSalt(): string {
+  return randomBytes(32).toString('hex');
+}
+
+export function verifyPassword(password: string, hash: string, salt: string): boolean {
+  const computed = hashPassword(password, salt);
+  return timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computed, 'hex'));
+}
+
+// --- Cookie helper for API routes ---
+
+export function getTokenFromCookie(cookieHeader: string | null): string | null {
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${TOKEN_NAME}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export function setTokenCookie(token: string): string {
+  return `${TOKEN_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${JWT_EXPIRY}`;
+}
+
+export function clearTokenCookie(): string {
+  return `${TOKEN_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+}
+
+// --- Generate API Key ---
+
+export function generateApiKey(): string {
+  const random = randomBytes(32).toString('hex');
+  return `sk-oort-${random}`;
+}

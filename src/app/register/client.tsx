@@ -64,10 +64,10 @@ export default function RegisterClient() {
       return;
     }
     setLoading(true);
-    const ok = await register(username, email, password);
+    const result = await register(username, email, password);
     setLoading(false);
-    if (!ok) {
-      setError(t.auth.emailExists);
+    if (!result.success) {
+      setError(result.error || t.auth.emailExists);
       return;
     }
     toast(t.auth.registerSuccess, "success");

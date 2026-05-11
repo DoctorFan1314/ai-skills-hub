@@ -1,35 +1,35 @@
 export const STORAGE_KEYS = {
-  users: "ai-skills-hub-users",
-  session: "ai-skills-hub-session",
-  theme: "ai-skills-hub-theme",
-  language: "ai-skills-hub-language",
-  allComments: "ai-skills-hub-all-comments",
-  allSubmissions: "ai-skills-hub-all-submissions",
-  newsletter: "ai-skills-hub-newsletter",
+  users: "oortapi-users",
+  session: "oortapi-session",
+  theme: "oortapi-theme",
+  language: "oortapi-language",
+  allComments: "oortapi-all-comments",
+  allSubmissions: "oortapi-all-submissions",
+  newsletter: "oortapi-newsletter",
   // User-scoped keys
-  likes: (email: string) => `ai-skills-hub-likes-${email || "anonymous"}`,
-  bookmarks: (email: string) => `ai-skills-hub-bookmarks-${email || "anonymous"}`,
-  submissions: (email: string) => `ai-skills-hub-submissions-${email || "anonymous"}`,
-  comments: (email: string) => `ai-skills-hub-comments-${email || "anonymous"}`,
-  activity: (email: string) => `ai-skills-hub-activity-${email || "anonymous"}`,
+  likes: (email: string) => `oortapi-likes-${email || "anonymous"}`,
+  bookmarks: (email: string) => `oortapi-bookmarks-${email || "anonymous"}`,
+  submissions: (email: string) => `oortapi-submissions-${email || "anonymous"}`,
+  comments: (email: string) => `oortapi-comments-${email || "anonymous"}`,
+  activity: (email: string) => `oortapi-activity-${email || "anonymous"}`,
   // Agent skill comments (per-skill)
-  skillComments: (skillId: string) => `ai-skills-hub-skill-comments-${skillId}`,
+  skillComments: (skillId: string) => `oortapi-skill-comments-${skillId}`,
   // Published agent skills
-  publishedSkills: "ai-skills-hub-published-skills",
+  publishedSkills: "oortapi-published-skills",
   // Published prompt templates
-  publishedPrompts: "ai-skills-hub-published-prompts",
+  publishedPrompts: "oortapi-published-prompts",
   // Notifications
-  notifications: (email: string) => `ai-skills-hub-notifications-${email || "anonymous"}`,
+  notifications: (email: string) => `oortapi-notifications-${email || "anonymous"}`,
   // Collections
-  collections: (email: string) => `ai-skills-hub-collections-${email || "anonymous"}`,
+  collections: (email: string) => `oortapi-collections-${email || "anonymous"}`,
   // Follows
-  follows: (email: string) => `ai-skills-hub-follows-${email || "anonymous"}`,
+  follows: (email: string) => `oortapi-follows-${email || "anonymous"}`,
   // Reports
-  reports: "ai-skills-hub-reports",
+  reports: "oortapi-reports",
   // Recent searches
-  recentSearches: "ai-skills-hub-recent-searches",
+  recentSearches: "oortapi-recent-searches",
   // Last password reset timestamp (for rate limiting)
-  lastPasswordReset: "ai-skills-hub-last-pw-reset",
+  lastPasswordReset: "oortapi-last-pw-reset",
   // Notification preferences (user-scoped)
-  notificationPrefs: (email: string) => `ai-skills-hub-notification-prefs-${email || "anonymous"}`,
+  notificationPrefs: (email: string) => `oortapi-notification-prefs-${email || "anonymous"}`,
 } as const;

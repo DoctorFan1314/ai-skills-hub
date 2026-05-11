@@ -1,10 +1,8 @@
-# AI Skills Hub — Agent Skills Marketplace + Prompt Template Platform
+# OortAPI — Unified AI API Relay Platform
 
 > **[中文文档](README_CN.md)**
 
-> Discover executable Agent Skills and high-quality Prompt Templates · One-click install · Give AI real action power
-
-Compatible with ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama and other mainstream platforms.
+> One API key to access OpenAI, Anthropic, Google, Meta, DeepSeek, and more. OpenAI-compatible format, smart routing, per-token billing.
 
 ---
 
@@ -20,8 +18,9 @@ Compatible with ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ol
 ### 2. Install & Run
 
 ```bash
-# Enter project directory
-cd ai-skills-hub
+# Clone the repo
+git clone https://github.com/yourname/oortapi.git
+cd oortapi
 
 # Install dependencies
 npm install
@@ -35,12 +34,90 @@ Open http://localhost:3000 in your browser.
 ### 3. Production Build
 
 ```bash
-# Build
 npm run build
-
-# Start production server
 npm start
 ```
+
+---
+
+## API Usage
+
+All endpoints are OpenAI-compatible. Replace `https://api.openai.com` with your OortAPI base URL and use your OortAPI key.
+
+### Chat Completions (Streaming)
+
+```bash
+curl https://your-domain.com/api/v1/chat/completions \
+  -H "Authorization: Bearer sk-oort-your-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": true
+  }'
+```
+
+### Using with OpenAI SDK (Python)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-oort-your-key",
+    base_url="https://your-domain.com/api/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
+### Using with OpenAI SDK (Node.js)
+
+```javascript
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "sk-oort-your-key",
+  baseURL: "https://your-domain.com/api/v1",
+});
+
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+console.log(response.choices[0].message.content);
+```
+
+### List Models
+
+```bash
+curl https://your-domain.com/api/v1/models \
+  -H "Authorization: Bearer sk-oort-your-key"
+```
+
+### Check Balance
+
+```bash
+curl https://your-domain.com/api/v1/billing/balance \
+  -H "Authorization: Bearer sk-oort-your-key"
+```
+
+---
+
+## Supported Models
+
+| Provider | Models |
+|----------|--------|
+| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
+| Anthropic | claude-3.5-sonnet, claude-3-opus, claude-3-haiku |
+| Google | gemini-pro, gemini-pro-vision |
+| Meta | llama-3.1-70b, llama-3.1-8b |
+| DeepSeek | deepseek-chat, deepseek-coder |
+
+> Model availability depends on configured channels. Admin can add/remove models via the dashboard.
 
 ---
 
@@ -50,224 +127,136 @@ npm start
 |-------|------------|
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
+| Database | SQLite (better-sqlite3) |
+| Auth | JWT + httpOnly cookies |
 | Styling | Tailwind CSS v4 |
 | UI Library | shadcn/ui (Base UI) |
-| Icons | Lucide React |
-| Code Highlight | react-syntax-highlighter |
-| File Download | JSZip + file-saver |
-| Data | Local Mock Data (migratable to Supabase) |
-| Deployment | Vercel (recommended) |
+| Charts | Recharts |
+| Password Hashing | PBKDF2 |
+| Deployment | Vercel / Docker / VPS |
 
 ---
 
 ## Project Structure
 
 ```
-ai-skills-hub/
+oortapi/
 ├── src/
-│   ├── app/                          # Next.js App Router pages
-│   │   ├── layout.tsx                # Root layout (fonts, Navbar, Footer, particle bg)
-│   │   ├── page.tsx                  # Homepage (Skills-first)
-│   │   ├── globals.css               # Global styles + CSS variables + utilities
-│   │   ├── skills/                   # Agent Skills marketplace
-│   │   │   ├── page.tsx              # Skill list (search, filter, sort)
-│   │   │   └── [id]/page.tsx         # Skill detail (intro/files/feedback tabs)
-│   │   ├── prompts/                  # Prompt Templates
-│   │   │   ├── page.tsx              # Prompt list
-│   │   │   └── [id]/page.tsx         # Prompt detail
-│   │   ├── categories/
-│   │   │   ├── page.tsx              # Category browse (Prompt)
-│   │   │   └── [slug]/page.tsx       # Category detail
-│   │   ├── trending/page.tsx         # Trending (Prompt)
-│   │   ├── tags/                     # Tag cloud (Prompt)
-│   │   ├── guide/page.tsx            # Beginner guide
-│   │   ├── submit/page.tsx           # Submit prompt template
-│   │   ├── login/page.tsx            # Login
-│   │   └── register/page.tsx         # Register
+│   ├── app/
+│   │   ├── api/                        # Backend API routes
+│   │   │   ├── v1/
+│   │   │   │   ├── chat/completions/   # Chat completions (streaming)
+│   │   │   │   ├── completions/        # Text completions
+│   │   │   │   ├── images/generations/ # Image generation
+│   │   │   │   ├── embeddings/         # Text embeddings
+│   │   │   │   ├── models/             # Model listing
+│   │   │   │   └── billing/            # Balance & usage
+│   │   │   ├── auth/                   # Login, register, profile
+│   │   │   └── dashboard/              # Stats, keys, channels CRUD
+│   │   ├── dashboard/                  # User dashboard pages
+│   │   │   ├── page.tsx                # Overview (stats + charts)
+│   │   │   ├── keys/page.tsx           # API key management
+│   │   │   ├── usage/page.tsx          # Usage analytics
+│   │   │   ├── billing/page.tsx        # Billing & balance
+│   │   │   ├── channels/page.tsx       # Channel management (admin)
+│   │   │   └── settings/page.tsx       # Account settings
+│   │   ├── resources/                  # Skills, prompts, categories
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   └── layout.tsx
+│   ├── lib/
+│   │   ├── db.ts                       # SQLite connection (lazy singleton)
+│   │   ├── schema.sql                  # Database schema
+│   │   ├── auth.ts                     # JWT + password hashing
+│   │   ├── api-gateway.ts              # Unified gateway logic
+│   │   ├── channel-manager.ts          # Smart channel routing
+│   │   ├── billing-engine.ts           # Per-token billing
+│   │   └── rate-limiter.ts             # Rate limiting
 │   ├── components/
-│   │   ├── ui/                       # shadcn/ui components
-│   │   ├── layout/
-│   │   │   ├── navbar.tsx            # Top navigation bar
-│   │   │   └── footer.tsx            # Footer
-│   │   ├── home/
-│   │   │   ├── hero.tsx              # Hero section
-│   │   │   ├── category-cards.tsx    # Six category entry cards (i18n-aware)
-│   │   │   ├── featured-section.tsx  # Tab switcher (Agent/Prompt)
-│   │   │   └── testimonials.tsx      # User testimonials
-│   │   ├── agent-skill/
-│   │   │   └── agent-skill-card.tsx  # Agent skill marketplace card
-│   │   ├── skills/
-│   │   │   ├── create-dropdown.tsx   # New button + dropdown menu
-│   │   │   ├── create-from-github.tsx # Github import wizard (Skill)
-│   │   │   ├── create-from-upload.tsx # Upload form (Skill)
-│   │   │   ├── create-from-github-prompt.tsx # Github import wizard (Prompt)
-│   │   │   └── create-from-upload-prompt.tsx # Upload form (Prompt)
-│   │   └── shared/
-│   │       ├── particle-bg.tsx       # Particle background animation
-│   │       └── scroll-to-top.tsx     # Scroll-to-top floating button
-│   ├── contexts/
-│   │   ├── toast-context.tsx         # Toast notification system
-│   │   ├── auth-context.tsx          # Auth context (localStorage-based)
-│   │   ├── theme-context.tsx         # Theme context (dark/light)
-│   │   └── i18n-context.tsx          # i18n context (zh/en)
-│   └── lib/
-│       ├── types.ts                  # TypeScript type definitions
-│       ├── mock-data.ts              # Prompt mock data (28 templates + 10 reviews)
-│       ├── mock-agent-skills.ts      # Agent Skills mock data (8 skills)
-│       ├── categories.ts             # Prompt category definitions (6 categories)
-│       ├── agent-skill-categories.ts  # Agent Skill category definitions (8 categories)
-│       ├── i18n/
-│       │   ├── types.ts              # Dictionary type
-│       │   ├── zh.ts                 # Chinese translations
-│       │   └── en.ts                 # English translations
-│       ├── theme.ts                  # Color/theme constants
-│       └── utils.ts                  # Utility functions
-├── public/                           # Static assets
+│   │   ├── dashboard/                  # Dashboard UI components
+│   │   ├── home/                       # Homepage components
+│   │   └── ...
+│   └── contexts/
+│       ├── auth-context.tsx            # JWT-based auth
+│       └── ...
+├── data/                               # SQLite database (gitignored)
 ├── package.json
-├── tsconfig.json
-└── components.json                   # shadcn/ui config
+└── ...
 ```
 
 ---
 
-## Pages
+## Dashboard
 
-### Homepage `/`
-- Hero section: Skills-focused title + inline trust stats + CTA smooth-scrolls to Tab section
-- **Featured Section**: Tab switcher ("Agent Skills" | "Prompt Templates") with 6 trending cards per tab
-- Six core direction category cards
-- User testimonials (6 curated reviews)
+After registering, users get access to a full dashboard:
 
-### Agent Skills Marketplace `/skills`
-- Full-text search (name, title, description, triggers, tags)
-- Sort by downloads / stars / newest
-- Filter by collection and category
-- Marketplace-grade cards: avatar, author, description, tags, stats, install command
-- **New Skill** button with dropdown: Quick Create (Github import) or Custom Create (file upload)
-
-### Agent Skill Detail `/skills/[id]`
-- **Tab 1 — Skill Intro**: Left 80% README markdown rendering + Right 20% source/install sidebar (install command, download, metadata table)
-- **Tab 2 — Skill Files**: File tree sidebar with file sizes, syntax-highlighted code viewer, per-file download, zip download all
-- **Tab 3 — Feedback**: Comment input + community reviews with star ratings, likes, and reply support
-
-### Prompt Templates `/prompts`
-- Search, filter, sort prompt templates
-- Category, difficulty, sort options
-- **New Template** button with dropdown: Quick Create (Github import) or Custom Create (manual form)
-
-### Prompt Detail `/prompts/[id]`
-- Online/Local prompt versions
-- Variable fill form
-- Before/After comparison
-- Usage instructions
-
-### Other Pages
-- `/categories` — Category browse (Prompt)
-- `/categories/[slug]` — Category detail
-- `/trending` — Trending prompts
-- `/tags` — Tag cloud with search filter
-- `/guide` — Beginner guide + prompt engineering tips
-- `/submit` — Submit prompt template
-- `/login` / `/register` — Auth (localStorage-based)
+- **Overview** — Today's calls, success rate, cost, latency, 7-day chart
+- **API Keys** — Create/manage keys with per-key rate limits
+- **Usage** — Detailed call history with pagination
+- **Billing** — Balance display and transaction history
+- **Channels** — Admin: configure AI provider channels with smart routing
 
 ---
 
-## Features
+## Channel Management (Admin)
 
-### Core
-- **Agent Skills Marketplace** — Search, filter, sort; 3-tab detail page (intro, files, feedback); file download (single + zip)
-- **Prompt Templates** — 28 templates with category/difficulty/sort filters; variable fill form; one-click copy
-- **Quick Create** — Import skills/templates from GitHub repo, or upload local files
-- **Skill Comparison** — Side-by-side compare at `/skills/compare`
+Admins can configure upstream AI provider channels:
 
-### User System
-- **Auth** — Login/register with password strength meter, forgot password, session expiry, return-URL redirect
-- **Profile** — Custom avatar upload & crop, URL-based tabs (`?tab=settings`), activity timeline, stats dashboard
-- **Social** — Like, bookmark, follow authors, collections, public user profiles (`/users/[username]`)
-- **Comments** — Markdown, star ratings, reply/threading, edit/delete, pagination
-- **Notifications** — Bell icon with unread badge, dropdown, type filters, per-user preferences
-
-### UX & Design
-- **Dark/Light Theme** — System default + manual toggle, glass-card blur, CSS variable tokens
-- **i18n** — 100% Chinese/English, 300+ keys, category names localized, dynamic `<html lang>`
-- **Responsive** — Mobile-first with Sheet drawer nav, 44px touch targets
-- **Command Palette** — Ctrl+K global search with keyboard navigation
-- **Unified Search** — `/search` page with autocomplete, recent history, fuzzy matching
-- **Onboarding Tour** — 3-step guided tour for first-time visitors
-- **Loading & Transitions** — Skeleton screens, page fade-in, stagger animations
-
-### Technical
-- **SEO** — Per-page metadata, OG images, canonical URLs, sitemap, robots.txt, JSON-LD structured data
-- **Accessibility** — ARIA roles/labels, keyboard navigation, focus-visible, reduced-motion, skip-to-content
-- **Security** — XSS sanitization, rate limiting, password hashing with salt, open redirect prevention, admin dual-check
-- **Performance** — Dynamic imports, memoized filtering, canvas animation scoped to homepage, cross-tab localStorage sync
+- **Multi-provider support** — Add OpenAI, Anthropic, Google, etc. as channels
+- **Weighted routing** — Set channel weights for load balancing
+- **Automatic failover** — Channels with 3 consecutive failures are temporarily disabled
+- **Model mapping** — Map requested model names to actual provider model names
+- **Priority system** — Higher priority channels are preferred
 
 ---
 
-## Data Structure
+## Environment Variables
 
-### AgentSkill
-
-```typescript
-interface AgentSkill {
-  id: string;              // Unique identifier
-  name: string;            // Skill name (e.g., "web-scraper")
-  title: string;           // Display title
-  description: string;     // One-line description
-  avatar: string;          // Avatar emoji/icon
-  author: string;          // Author name
-  developer: string;       // Developer name
-  downloads: number;       // Download count
-  stars: number;           // Star count
-  lastUpdated: string;     // Last update date
-  collection: string;      // Collection name
-  category: string;        // Category name
-  installCommand: string;  // CLI install command
-  readme: string;          // Markdown README
-  license: string;         // License (MIT, Apache-2.0, etc.)
-  version: string;         // Version string
-  files: Record<string, string>;  // filename → content
-  demoInput: string;       // Demo input
-  demoOutput: string;      // Demo output
-  triggers: string[];      // Trigger examples
-  tags: string[];          // Tags
-  featured: boolean;       // Featured flag
-  trending: boolean;       // Trending flag
-}
-```
-
-### Skill (Prompt Template)
-
-```typescript
-interface Skill {
-  id: string;              // Unique identifier
-  title: string;           // Title
-  subtitle: string;        // One-line description
-  category: string;        // Category name
-  difficulty: "beginner" | "intermediate" | "advanced";
-  rating: number;          // Rating (0-5)
-  usageCount: number;      // Usage count
-  promptOnline: string;    // Online prompt
-  promptLocal: string;     // Local prompt
-  // ... see src/lib/types.ts for all fields
-}
+```bash
+# Optional
+DATABASE_PATH=./data/oortapi.db    # SQLite database path
+JWT_SECRET=your-secret-key          # JWT signing secret (auto-generated if not set)
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 
 ---
 
 ## Deployment
 
-### Vercel (Recommended)
+### Vercel
+
+> Note: SQLite requires a persistent filesystem. For Vercel, use a VPS or Docker deployment instead.
+
+### Docker
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
+docker build -t oortapi .
+docker run -p 3000:3000 -v ./data:/app/data oortapi
 ```
 
-Or connect the GitHub repo to [Vercel](https://vercel.com) for automatic deployment.
+### VPS
+
+```bash
+npm run build
+npm start
+```
+
+Use a process manager like PM2 for production:
+
+```bash
+pm2 start npm --name oortapi -- start
+```
+
+---
+
+## Resource Center
+
+The original AI Skills Hub features are preserved under `/resources/`:
+
+- Agent Skills marketplace
+- Prompt Templates
+- Categories, Trending, Tags
+- Beginner Guide
 
 ---
 
@@ -279,68 +268,6 @@ Licensed under the [Apache License, Version 2.0](LICENSE).
 
 ## Disclaimer
 
-**AI Skills Hub is a learning and educational project for studying modern web development technologies. It is not a production service, does not provide real commercial functionality, and should not be relied upon for any professional, commercial, or mission-critical use.**
+**OortAPI is a learning and educational project for studying modern full-stack web development. It is not a production service and should not be relied upon for any commercial or mission-critical use.**
 
-### No Warranty
-
-This software is provided "AS IS", WITHOUT WARRANTY OF ANY KIND, express or implied. See the [Apache License 2.0](LICENSE) for full details including Sections 7 (Disclaimer of Warranty) and 8 (Limitation of Liability).
-
-### Project Nature
-
-This is a **frontend learning project** built to demonstrate how to construct full-stack applications with Next.js, Tailwind CSS, shadcn/ui, and other modern web technologies. All functionality is for demonstration purposes only.
-
-### Mock Data Disclaimer
-
-**All data displayed in this project is entirely fictional and auto-generated.** This includes but is not limited to:
-
-- Prompt templates, agent skills, and their descriptions
-- User reviews, testimonials, comments, and ratings
-- Download counts, star counts, usage statistics
-- Author names, developer names, and avatars
-- Collection names and category descriptions
-- Demo input/output examples
-
-**None of the above data represents real users, real products, real reviews, or real business metrics.** Any resemblance to actual persons, products, or events is purely coincidental.
-
-### Third-Party Trademarks
-
-The following are registered trademarks of their respective companies. This project has no affiliation, authorization, sponsorship, endorsement, or partnership with any of them. References are for identification and educational purposes only:
-
-- ChatGPT, OpenAI — OpenAI, Inc.
-- Claude, Anthropic — Anthropic, PBC
-- Grok, xAI — xAI Corp.
-- DeepSeek — DeepSeek
-- Qwen, Alibaba — Alibaba Group
-- Llama, Meta — Meta Platforms, Inc.
-- Vercel, Next.js — Vercel Inc.
-- GitHub, npm — GitHub, Inc. (Microsoft)
-
-Any brand names, product names, or company names used in mock data (including but not limited to author fields, collection names, install commands, and demo output) are **entirely fictional and do not represent real endorsements or associations**. Mock install commands (e.g., `npx skills add @...`) are non-functional and should not be executed.
-
-### AI Output Disclaimer
-
-- The prompt templates and agent skills provided are **examples for learning purposes only** and do not guarantee accuracy, safety, or suitability of AI model outputs
-- AI-generated content may contain errors, bias, or inappropriate information — users should judge independently
-- Users bear full responsibility for any consequences from using prompt templates or agent skills
-
-### Third-Party Services
-
-This project may reference or interact with third-party APIs or services. Users should comply with the relevant terms of service. This project is not responsible for the behavior, availability, or accuracy of any third-party services.
-
-### No Data Collection
-
-This project does not collect, transmit, or store any user data on external servers. All user interactions (including login, bookmarks, likes, and newsletter subscriptions) are stored locally in the browser's `localStorage` only and are never sent to any server.
-
-### Limitation of Liability
-
-In no event shall the authors, contributors, or copyright holders be liable for any direct, indirect, incidental, special, exemplary, or consequential damages arising out of the use of this software.
-
----
-
-> If this project helps you, a Star is appreciated. Nothing more, nothing less — no warranties expressed or implied.
-
-### Acknowledgments
-
-This project was built with the assistance of **MiMo V2.5-pro** model via **Claude Code**.
-
-Special thanks to the **Xiaomi MiMo Orbit — Million Token Creator Incentive Program** for supporting this project. MiMo's strong reasoning capabilities and code generation efficiency provided the core momentum for rapid development.
+This software is provided "AS IS", WITHOUT WARRANTY OF ANY KIND. See [Apache License 2.0](LICENSE) for full details.

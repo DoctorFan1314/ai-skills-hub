@@ -2,18 +2,22 @@
 
 import { useState } from "react";
 import { Hero } from "@/components/home/hero";
-import { FeaturedSection } from "@/components/home/featured-section";
-import { CategoryCards } from "@/components/home/category-cards";
-import { Testimonials } from "@/components/home/testimonials";
+import { Features } from "@/components/home/features";
+import { ModelWall } from "@/components/home/model-wall";
+import { PlatformStats } from "@/components/home/platform-stats";
+import { ResourceHub } from "@/components/home/resource-hub";
+import { useI18n } from "@/contexts/i18n-context";
 
 export function HomeContent() {
-  const [tab, setTab] = useState<"agent" | "prompt">("agent");
+  const { lang } = useI18n();
+
   return (
     <>
       <Hero />
-      <FeaturedSection tab={tab} onTabChange={setTab} />
-      <CategoryCards tab={tab} />
-      <Testimonials />
+      <Features lang={lang} />
+      <ModelWall lang={lang} />
+      <PlatformStats lang={lang} />
+      <ResourceHub lang={lang} />
     </>
   );
 }

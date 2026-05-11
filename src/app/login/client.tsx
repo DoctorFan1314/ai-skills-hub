@@ -46,10 +46,10 @@ export default function LoginClient() {
       return;
     }
     setLoading(true);
-    const ok = await login(email, password);
+    const result = await login(email, password);
     setLoading(false);
-    if (!ok) {
-      setError(t.auth.emailOrPasswordError);
+    if (!result.success) {
+      setError(result.error || t.auth.emailOrPasswordError);
       return;
     }
     toast(t.auth.loginSuccess, "success");
@@ -81,18 +81,7 @@ export default function LoginClient() {
       setForgotError(t.auth.resetPasswordRateLimit.replace("{seconds}", String(remaining)));
       return;
     }
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.users);
-      const users: { email: string }[] = raw ? JSON.parse(raw) : [];
-      const exists = users.some((u) => u.email === forgotEmail.trim());
-      if (!exists) {
-        setForgotError(t.auth.emailNotFound);
-        return;
-      }
-      setForgotStep("confirm");
-    } catch {
-      setForgotError(t.auth.emailNotFound);
-    }
+    setForgotStep("confirm");
   }
 
   function handleConfirmReset() {

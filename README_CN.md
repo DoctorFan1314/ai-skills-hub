@@ -1,10 +1,8 @@
-# AI Skills Hub — Agent 技能市场 + Prompt 模板平台
+# OortAPI — 统一 AI API 中转平台
 
 > **[English](README.md)**
 
-> 发现可执行的 Agent 技能和高质量 Prompt 模板 · 一键安装 · 赋予 AI 真正的行动力
-
-完美适配 ChatGPT · Claude · Grok · DeepSeek · Qwen · LM Studio · Ollama 等主流平台。
+> 一个 API Key 访问 OpenAI、Anthropic、Google、Meta、DeepSeek 等主流 AI 服务。OpenAI 兼容格式，智能路由，按量计费。
 
 ---
 
@@ -20,8 +18,9 @@
 ### 2. 安装与运行
 
 ```bash
-# 进入项目目录
-cd ai-skills-hub
+# 克隆仓库
+git clone https://github.com/yourname/oortapi.git
+cd oortapi
 
 # 安装依赖
 npm install
@@ -35,12 +34,90 @@ npm run dev
 ### 3. 构建生产版本
 
 ```bash
-# 构建
 npm run build
-
-# 启动生产服务器
 npm start
 ```
+
+---
+
+## API 使用
+
+所有端点均兼容 OpenAI 格式。将 `https://api.openai.com` 替换为 OortAPI 基础地址，使用你的 OortAPI Key 即可。
+
+### 聊天补全（流式）
+
+```bash
+curl https://your-domain.com/api/v1/chat/completions \
+  -H "Authorization: Bearer sk-oort-your-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "你好！"}],
+    "stream": true
+  }'
+```
+
+### 使用 OpenAI SDK（Python）
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-oort-your-key",
+    base_url="https://your-domain.com/api/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "你好！"}]
+)
+print(response.choices[0].message.content)
+```
+
+### 使用 OpenAI SDK（Node.js）
+
+```javascript
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "sk-oort-your-key",
+  baseURL: "https://your-domain.com/api/v1",
+});
+
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "你好！" }],
+});
+console.log(response.choices[0].message.content);
+```
+
+### 获取模型列表
+
+```bash
+curl https://your-domain.com/api/v1/models \
+  -H "Authorization: Bearer sk-oort-your-key"
+```
+
+### 查询余额
+
+```bash
+curl https://your-domain.com/api/v1/billing/balance \
+  -H "Authorization: Bearer sk-oort-your-key"
+```
+
+---
+
+## 支持的模型
+
+| 服务商 | 模型 |
+|--------|------|
+| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
+| Anthropic | claude-3.5-sonnet, claude-3-opus, claude-3-haiku |
+| Google | gemini-pro, gemini-pro-vision |
+| Meta | llama-3.1-70b, llama-3.1-8b |
+| DeepSeek | deepseek-chat, deepseek-coder |
+
+> 模型可用性取决于已配置的渠道。管理员可通过控制台添加/移除模型。
 
 ---
 
@@ -50,225 +127,136 @@ npm start
 |------|------|
 | 框架 | Next.js 16 (App Router) |
 | 语言 | TypeScript |
+| 数据库 | SQLite (better-sqlite3) |
+| 认证 | JWT + httpOnly cookie |
 | 样式 | Tailwind CSS v4 |
-| 组件库 | shadcn/ui (基于 Base UI) |
-| 图标 | Lucide React |
-| 代码高亮 | react-syntax-highlighter |
-| 文件下载 | JSZip + file-saver |
-| 数据 | 本地 Mock 数据（可迁移至 Supabase） |
-| 部署 | Vercel（推荐） |
+| 组件库 | shadcn/ui (Base UI) |
+| 图表 | Recharts |
+| 密码哈希 | PBKDF2 |
+| 部署 | Vercel / Docker / VPS |
 
 ---
 
 ## 项目结构
 
 ```
-ai-skills-hub/
+oortapi/
 ├── src/
-│   ├── app/                          # Next.js App Router 页面
-│   │   ├── layout.tsx                # 根布局（字体、Navbar、Footer、粒子背景）
-│   │   ├── page.tsx                  # 首页（技能优先）
-│   │   ├── globals.css               # 全局样式 + CSS 变量 + 工具类
-│   │   ├── skills/                   # Agent 技能市场
-│   │   │   ├── page.tsx              # 技能列表（搜索、筛选、排序）
-│   │   │   └── [id]/page.tsx         # 技能详情（介绍/文件/反馈三栏）
-│   │   ├── prompts/                  # Prompt 模板
-│   │   │   ├── page.tsx              # 模板列表
-│   │   │   └── [id]/page.tsx         # 模板详情
-│   │   ├── categories/
-│   │   │   ├── page.tsx              # 分类浏览（Prompt）
-│   │   │   └── [slug]/page.tsx       # 分类详情
-│   │   ├── trending/page.tsx         # 排行榜（Prompt）
-│   │   ├── tags/                     # 标签云（Prompt）
-│   │   ├── guide/page.tsx            # 新手指南
-│   │   ├── submit/page.tsx           # 提交 Prompt 模板
-│   │   ├── login/page.tsx            # 登录
-│   │   └── register/page.tsx         # 注册
+│   ├── app/
+│   │   ├── api/                        # 后端 API 路由
+│   │   │   ├── v1/
+│   │   │   │   ├── chat/completions/   # 聊天补全（流式）
+│   │   │   │   ├── completions/        # 文本补全
+│   │   │   │   ├── images/generations/ # 图像生成
+│   │   │   │   ├── embeddings/         # 文本嵌入
+│   │   │   │   ├── models/             # 模型列表
+│   │   │   │   └── billing/            # 余额与用量
+│   │   │   ├── auth/                   # 登录、注册、个人信息
+│   │   │   └── dashboard/              # 统计、密钥、渠道 CRUD
+│   │   ├── dashboard/                  # 用户控制台页面
+│   │   │   ├── page.tsx                # 概览（统计+图表）
+│   │   │   ├── keys/page.tsx           # API 密钥管理
+│   │   │   ├── usage/page.tsx          # 用量分析
+│   │   │   ├── billing/page.tsx        # 账单与余额
+│   │   │   ├── channels/page.tsx       # 渠道管理（管理员）
+│   │   │   └── settings/page.tsx       # 账户设置
+│   │   ├── resources/                  # 技能、模板、分类
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   └── layout.tsx
+│   ├── lib/
+│   │   ├── db.ts                       # SQLite 连接（延迟初始化）
+│   │   ├── schema.sql                  # 数据库 Schema
+│   │   ├── auth.ts                     # JWT + 密码哈希
+│   │   ├── api-gateway.ts              # 统一网关逻辑
+│   │   ├── channel-manager.ts          # 智能渠道路由
+│   │   ├── billing-engine.ts           # 按量计费引擎
+│   │   └── rate-limiter.ts             # 速率限制
 │   ├── components/
-│   │   ├── ui/                       # shadcn/ui 组件
-│   │   ├── layout/
-│   │   │   ├── navbar.tsx            # 顶部导航栏
-│   │   │   └── footer.tsx            # 页脚
-│   │   ├── home/
-│   │   │   ├── hero.tsx              # Hero 区域
-│   │   │   ├── category-cards.tsx    # 六大入口卡片（i18n）
-│   │   │   ├── featured-section.tsx  # Tab 切换区（Agent/Prompt）
-│   │   │   └── testimonials.tsx      # 用户评价
-│   │   ├── agent-skill/
-│   │   │   └── agent-skill-card.tsx  # Agent 技能卡片
-│   │   ├── skills/
-│   │   │   ├── create-dropdown.tsx   # 新建按钮+下拉菜单
-│   │   │   ├── create-from-github.tsx # Github 导入向导（技能）
-│   │   │   ├── create-from-upload.tsx # 本地上传表单（技能）
-│   │   │   ├── create-from-github-prompt.tsx # Github 导入向导（模板）
-│   │   │   └── create-from-upload-prompt.tsx # 本地上传表单（模板）
-│   │   └── shared/
-│   │       ├── particle-bg.tsx       # 粒子背景动画
-│   │       └── scroll-to-top.tsx     # 回到顶部浮动按钮
-│   ├── contexts/
-│   │   ├── toast-context.tsx         # Toast 通知系统
-│   │   ├── auth-context.tsx          # 认证上下文（基于 localStorage）
-│   │   ├── theme-context.tsx         # 主题上下文（暗色/亮色）
-│   │   └── i18n-context.tsx          # 国际化上下文（中/英）
-│   ├── hooks/
-│   │   └── use-keyboard-shortcuts.ts # 命令面板快捷键
-│   └── lib/
-│       ├── types.ts                  # TypeScript 类型定义
-│       ├── mock-data.ts              # Prompt 模板数据（28个模板 + 10条评价）
-│       ├── mock-agent-skills.ts      # Agent 技能数据（8个技能）
-│       ├── categories.ts             # Prompt 分类定义（6个分类）
-│       ├── agent-skill-categories.ts  # Agent 技能分类定义（8个分类）
-│       ├── i18n/
-│       │   ├── types.ts              # Dictionary 类型
-│       │   ├── zh.ts                 # 中文翻译
-│       │   └── en.ts                 # 英文翻译
-│       ├── theme.ts                  # 颜色/主题常量
-│       └── utils.ts                  # 工具函数
-├── public/                           # 静态资源
+│   │   ├── dashboard/                  # 控制台 UI 组件
+│   │   ├── home/                       # 首页组件
+│   │   └── ...
+│   └── contexts/
+│       ├── auth-context.tsx            # 基于 JWT 的认证
+│       └── ...
+├── data/                               # SQLite 数据库（已 gitignore）
 ├── package.json
-├── tsconfig.json
-└── components.json                   # shadcn/ui 配置
+└── ...
 ```
 
 ---
 
-## 页面说明
+## 控制台
 
-### 首页 `/`
-- Hero 区域：技能优先的标题 + 内联信任统计 + CTA 平滑滚动到 Tab 区
-- **核心 Tab 切换区**：「Agent 技能」|「Prompt 模板」双 Tab，每个展示 6 张热门卡片
-- 探索核心方向：六大入口卡片
-- 用户真实反馈（6 条精选评价）
+注册后用户可访问完整控制台：
 
-### Agent 技能市场 `/skills`
-- 全文搜索（名称、标题、描述、触发词、标签）
-- 按下载量 / 星标 / 最新排序
-- 按合集和分类筛选
-- 市场级卡片：头像、作者、描述、标签、统计、安装命令
-- **新建 Skill** 按钮，hover 弹出下拉菜单：快速创建（Github 导入）或自定义创建（本地上传）
-
-### Agent 技能详情 `/skills/[id]`
-- **Tab 1 — 技能介绍**：左侧 80% README 渲染 + 右侧 20% 来源/安装侧边栏（安装命令、下载、元数据表）
-- **Tab 2 — 技能文件**：左侧文件树（含文件大小）、右侧语法高亮代码查看器、单文件下载、全部打包下载
-- **Tab 3 — 交流反馈**：评论输入 + 社区评价（星评、点赞、回复）
-
-### Prompt 模板 `/prompts`
-- 搜索、筛选、排序 Prompt 模板
-- 分类、难度、排序选项
-
-### Prompt 详情 `/prompts/[id]`
-- 在线版/本地版 Prompt
-- 变量填充表单
-- Before/After 对比
-- 使用说明
-
-### 其他页面
-- `/categories` — 分类浏览（Prompt）
-- `/categories/[slug]` — 分类详情
-- `/trending` — 排行榜
-- `/tags` — 标签云（支持搜索）
-- `/guide` — 新手指南 + Prompt 工程技巧
-- `/submit` — 提交 Prompt 模板
-- `/login` / `/register` — 认证（基于 localStorage）
+- **概览** — 今日调用数、成功率、花费、延迟、7 天趋势图
+- **API 密钥** — 创建/管理密钥，支持独立速率限制
+- **用量分析** — 详细调用历史，分页展示
+- **账单** — 余额展示和交易历史
+- **渠道管理** — 管理员可配置 AI 服务商渠道，支持智能路由
 
 ---
 
-## 功能清单
+## 渠道管理（管理员）
 
-### 核心功能
-- **Agent 技能市场** — 搜索、筛选、排序；三栏详情页（介绍、文件、反馈）；文件下载（单文件 + zip 打包）
-- **Prompt 模板** — 28 个模板，分类/难度/排序筛选；变量填充表单；一键复制
-- **快速创建** — 从 GitHub 仓库导入技能/模板，或上传本地文件
-- **技能对比** — `/skills/compare` 并排对比
+管理员可配置上游 AI 服务商渠道：
 
-### 用户系统
-- **认证** — 登录/注册，密码强度指示器，忘记密码，会话过期，回跳 URL
-- **个人中心** — 自定义头像上传裁剪，URL Tab 路由（`?tab=settings`），活动时间线，统计面板
-- **社交互动** — 点赞、收藏、关注作者、收藏集、公开用户主页（`/users/[username]`）
-- **评论系统** — Markdown 渲染、星级评分、回复/嵌套、编辑/删除、分页
-- **通知系统** — 铃铛图标带未读徽章、下拉框、类型筛选、按用户偏好设置
-
-### 体验与设计
-- **暗色/亮色主题** — 系统默认 + 手动切换，毛玻璃卡片，CSS 变量令牌
-- **国际化** — 100% 中英文，300+ 翻译键，分类名本地化，动态 `<html lang>`
-- **响应式** — 移动端优先，Sheet 抽屉导航，44px 触摸目标
-- **命令面板** — Ctrl+K 全局搜索，键盘导航
-- **统一搜索** — `/search` 跨市场搜索，自动补全、最近搜索、模糊匹配
-- **新手引导** — 首次访问 3 步引导流程
-- **加载与动画** — 骨架屏、页面渐入、交错入场动画
-
-### 技术层面
-- **SEO** — 页面级 metadata、OG 图片、canonical URL、sitemap、robots.txt、JSON-LD 结构化数据
-- **无障碍** — ARIA 角色/标签、键盘导航、focus-visible、动画减弱、跳转到主内容
-- **安全** — XSS 消毒、速率限制、密码哈希加盐、开放重定向防护、管理员双重验证
-- **性能** — 动态导入、过滤逻辑 memoize、Canvas 动画仅首页、跨标签页 localStorage 同步
+- **多服务商支持** — 添加 OpenAI、Anthropic、Google 等作为渠道
+- **加权路由** — 按权重分配流量，实现负载均衡
+- **自动故障切换** — 连续失败 3 次的渠道自动临时禁用
+- **模型映射** — 将请求的模型名映射到实际服务商模型名
+- **优先级系统** — 高优先级渠道优先使用
 
 ---
 
-## 数据结构
+## 环境变量
 
-### AgentSkill
-
-```typescript
-interface AgentSkill {
-  id: string;              // 唯一标识
-  name: string;            // 技能名称（如 "web-scraper"）
-  title: string;           // 显示标题
-  description: string;     // 一句话描述
-  avatar: string;          // 头像 emoji/图标
-  author: string;          // 作者名
-  developer: string;       // 开发者名
-  downloads: number;       // 下载量
-  stars: number;           // 星标数
-  lastUpdated: string;     // 最后更新日期
-  collection: string;      // 合集名
-  category: string;        // 分类名
-  installCommand: string;  // CLI 安装命令
-  readme: string;          // Markdown README
-  license: string;         // 许可证（MIT、Apache-2.0 等）
-  version: string;         // 版本号
-  files: Record<string, string>;  // 文件名 → 内容
-  demoInput: string;       // 演示输入
-  demoOutput: string;      // 演示输出
-  triggers: string[];      // 触发示例
-  tags: string[];          // 标签
-  featured: boolean;       // 精选标记
-  trending: boolean;       // 热门标记
-}
-```
-
-### Skill（Prompt 模板）
-
-```typescript
-interface Skill {
-  id: string;              // 唯一标识
-  title: string;           // 标题
-  subtitle: string;        // 一句话描述
-  category: string;        // 分类名称
-  difficulty: "beginner" | "intermediate" | "advanced";
-  rating: number;          // 评分 (0-5)
-  usageCount: number;      // 使用次数
-  promptOnline: string;    // 在线版 Prompt
-  promptLocal: string;     // 本地版 Prompt
-  // ... 更多字段见 src/lib/types.ts
-}
+```bash
+# 可选
+DATABASE_PATH=./data/oortapi.db    # SQLite 数据库路径
+JWT_SECRET=your-secret-key          # JWT 签名密钥（未设置则自动生成）
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 
 ---
 
 ## 部署
 
-### Vercel（推荐）
+### Vercel
+
+> 注意：SQLite 需要持久化文件系统。Vercel 环境建议使用 VPS 或 Docker 部署。
+
+### Docker
 
 ```bash
-# 安装 Vercel CLI
-npm i -g vercel
-
-# 部署
-vercel
+docker build -t oortapi .
+docker run -p 3000:3000 -v ./data:/app/data oortapi
 ```
 
-或直接将 GitHub 仓库连接到 [Vercel](https://vercel.com) 自动部署。
+### VPS
+
+```bash
+npm run build
+npm start
+```
+
+使用 PM2 进行生产环境管理：
+
+```bash
+pm2 start npm --name oortapi -- start
+```
+
+---
+
+## 资源中心
+
+原 AI Skills Hub 的功能保留在 `/resources/` 路径下：
+
+- Agent 技能市场
+- Prompt 模板
+- 分类、排行榜、标签云
+- 新手指南
 
 ---
 
@@ -280,68 +268,6 @@ vercel
 
 ## 免责声明
 
-**AI Skills Hub 是一个用于学习现代 Web 开发技术的学习型教育项目。本项目不是生产环境服务，不提供真实的商业功能，不应用于任何专业、商业或关键业务场景。**
+**OortAPI 是一个用于学习现代全栈 Web 开发技术的教育项目。本项目不是生产环境服务，不应用于任何商业或关键业务场景。**
 
-### 无担保声明
-
-本软件按"原样"提供，不附带任何形式的明示或暗示担保。详见 [Apache License 2.0](LICENSE) 完整条款（特别是第 7 条"免责声明"和第 8 条"责任限制"）。
-
-### 项目性质
-
-本项目是一个**前端学习项目**，旨在演示如何使用 Next.js、Tailwind CSS、shadcn/ui 等现代 Web 技术栈构建全栈应用。所有功能仅供演示目的。
-
-### 模拟数据声明
-
-**本项目中展示的所有数据均为虚构的自动生成数据。** 包括但不限于：
-
-- Prompt 模板、Agent 技能及其描述
-- 用户评价、推荐语、评论和评分
-- 下载量、星标数、使用统计
-- 作者名称、开发者名称和头像
-- 合集名称和分类描述
-- 演示输入/输出示例
-
-**以上数据不代表真实用户、真实产品、真实评价或真实业务指标。** 如与实际人物、产品或事件雷同，纯属巧合。
-
-### 第三方商标声明
-
-以下为各自公司的注册商标。本项目与其所有者之间不存在任何隶属、授权、赞助、背书或合作关系。提及这些名称仅用于识别和教育目的：
-
-- ChatGPT、OpenAI — OpenAI, Inc.
-- Claude、Anthropic — Anthropic, PBC
-- Grok、xAI — xAI Corp.
-- DeepSeek — DeepSeek
-- Qwen、阿里巴巴 — 阿里巴巴集团
-- Llama、Meta — Meta Platforms, Inc.
-- Vercel、Next.js — Vercel Inc.
-- GitHub、npm — GitHub, Inc.（Microsoft）
-
-模拟数据中使用的任何品牌名称、产品名称或公司名称（包括但不限于作者字段、合集名称、安装命令和演示输出）**均为虚构，不代表真实的背书或关联**。模拟安装命令（如 `npx skills add @...`）为非功能性命令，不应执行。
-
-### AI 输出免责
-
-- 本项目提供的 Prompt 模板和 Agent 技能**仅为学习参考**，不保证 AI 模型输出的准确性、安全性或适用性
-- AI 生成的内容可能包含错误、偏见或不当信息，使用者应自行判断和甄别
-- 使用任何 Prompt 模板或 Agent 技能所产生的后果，由使用者自行承担
-
-### 第三方服务
-
-本项目可能引用或涉及第三方 API 或服务。使用者应自行遵守相关服务的使用条款。本项目不为任何第三方服务的行为、可用性或准确性负责。
-
-### 无数据收集
-
-本项目不会在外部服务器上收集、传输或存储任何用户数据。所有用户交互（包括登录、收藏、点赞和邮件订阅）仅存储在浏览器的 `localStorage` 中，不会发送至任何服务器。
-
-### 责任限制
-
-在任何情况下，作者、贡献者或版权持有者均不对因使用本软件而产生的任何直接、间接、附带、特殊、惩罚性或后果性损害承担责任。
-
----
-
-> 如果本项目对你有帮助，欢迎 Star 支持。仅此而已，不构成任何明示或暗示的担保。
-
-### 致谢
-
-本项目由 **MiMo V2.5-pro** 模型通过 **Claude Code** 辅助生成。
-
-特别感谢 **Xiaomi MiMo Orbit-百万亿 Token 创作者激励计划** 对本项目的支持。MiMo 模型强大的推理能力与代码生成效率为本项目的快速构建提供了核心动力。期待未来能继续探索 AI 驱动的开发新范式。
+本软件按"原样"提供，不附带任何形式的担保。详见 [Apache License 2.0](LICENSE) 完整条款。

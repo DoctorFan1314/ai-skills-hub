@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Menu, X, Sun, Moon, Languages, ChevronDown, TrendingUp, Tags, BookOpen, LayoutGrid, User, Settings, Shield, LogOut } from "lucide-react";
+import { Search, Menu, X, Sun, Moon, Languages, ChevronDown, BookOpen, LayoutDashboard, Terminal, FolderOpen, User, Settings, Shield, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -12,51 +12,27 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
-
 import { NotificationBell } from "@/components/shared/notification-bell";
 
 export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { user, loaded, logout } = useAuth();
-  const { toast } = useToast();
+  const { toast: showToast } = useToast();
   const { resolvedTheme, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
 
   const navLinks = [
-    { href: "/", label: t.common.home },
-    { href: "/skills", label: t.common.skills, highlight: true },
-    { href: "/prompts", label: t.common.prompts },
+    { href: "/", label: lang === "zh" ? "首页" : "Home" },
+    { href: "/dashboard", label: lang === "zh" ? "控制台" : "Dashboard" },
+    { href: "/docs", label: lang === "zh" ? "文档" : "Docs" },
+    { href: "/resources/skills", label: lang === "zh" ? "资源中心" : "Resources" },
   ];
-
-  const moreLinks = [
-    { href: "/categories", label: t.common.categories, icon: LayoutGrid },
-    { href: "/trending", label: t.common.trending, icon: TrendingUp },
-    { href: "/tags", label: t.common.tags, icon: Tags },
-    { href: "/guide", label: t.common.guide, icon: BookOpen },
-  ];
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!moreOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [moreOpen]);
-
-  // Close dropdown on route change
-  useEffect(() => { setMoreOpen(false); setUserMenuOpen(false); }, [pathname]);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -69,6 +45,9 @@ export function Navbar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [userMenuOpen]);
+
+  // Close dropdown on route change
+  useEffect(() => { setUserMenuOpen(false); setSheetOpen(false); }, [pathname]);
 
   const handleUserMenuKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -90,15 +69,15 @@ export function Navbar() {
     const q = searchQuery.trim();
     if (q) {
       const encoded = encodeURIComponent(q);
-      router.push(`/search?q=${encoded}`);
+      router.push(`/resources/search?q=${encoded}`);
       setSearchOpen(false);
       setSearchQuery("");
     }
   }
 
-  function handleLogout() {
-    logout();
-    toast(t.common.logout);
+  async function handleLogout() {
+    await logout();
+    showToast(lang === "zh" ? "已退出登录" : "Logged out", "info");
     setSheetOpen(false);
   }
 
@@ -107,9 +86,9 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">
-            <span className="text-sm font-bold text-primary">AI</span>
+            <span className="text-sm font-bold text-primary">O</span>
           </div>
-          <span className="text-lg font-semibold text-foreground hidden sm:inline">AI Skills Hub</span>
+          <span className="text-lg font-semibold text-foreground hidden sm:inline">OortAPI</span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
@@ -117,68 +96,34 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              aria-current={pathname === link.href ? "page" : undefined}
-              className={`px-3 py-2 text-sm transition-colors rounded-md hover:bg-secondary ${link.highlight ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+              aria-current={pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href)) ? "page" : undefined}
+              className={`px-3 py-2 text-sm transition-colors rounded-md hover:bg-secondary ${
+                pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
+                  ? "text-foreground font-medium bg-secondary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {link.label}
             </Link>
           ))}
-          <div className="relative" ref={moreRef}>
-            <button
-              onClick={() => setMoreOpen(!moreOpen)}
-              className={`flex items-center gap-1 px-3 py-2 text-sm transition-colors rounded-md hover:bg-secondary ${moreOpen ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              aria-expanded={moreOpen}
-              aria-haspopup="menu"
-            >
-              {t.common.more}
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
-            </button>
-            {moreOpen && (
-              <div
-                role="menu"
-                className="absolute top-full left-0 mt-1 w-48 bg-card border border-border rounded-xl shadow-xl overflow-hidden animate-[fadeIn_0.1s_ease-out] z-50"
-                onKeyDown={(e) => {
-                  const items = Array.from(e.currentTarget.querySelectorAll('[role="menuitem"]')) as HTMLElement[];
-                  if (items.length === 0) return;
-                  const idx = items.indexOf(document.activeElement as HTMLElement);
-                  if (e.key === "ArrowDown") { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
-                  if (e.key === "ArrowUp") { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
-                  if (e.key === "Escape") { setMoreOpen(false); }
-                }}
-              >
-                {moreLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    role="menuitem"
-                    onClick={() => setMoreOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <link.icon className="h-4 w-4" />
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
         </nav>
 
         <div className="flex items-center gap-2">
           {searchOpen ? (
             <form role="search" onSubmit={handleSearch} className="flex items-center gap-1">
               <Input
-                placeholder={t.common.search}
+                placeholder={lang === "zh" ? "搜索..." : "Search..."}
                 className="h-8 w-40 md:w-56 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-sm"
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Button variant="ghost" size="icon-sm" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="text-muted-foreground hover:text-foreground" aria-label={t.common.closeSearch} aria-expanded={true}>
+              <Button variant="ghost" size="icon-sm" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="text-muted-foreground hover:text-foreground" aria-label="Close search">
                 <X className="h-4 w-4" />
               </Button>
             </form>
           ) : (
-            <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(true)} className="text-muted-foreground hover:text-foreground" aria-label={t.common.search} aria-expanded={false} id="search-trigger">
+            <Button variant="ghost" size="icon-sm" onClick={() => setSearchOpen(true)} className="text-muted-foreground hover:text-foreground" aria-label="Search">
               <Search className="h-4 w-4" />
               <span className="hidden lg:inline text-[10px] text-muted-foreground/60 ml-1">Ctrl+K</span>
             </Button>
@@ -189,7 +134,7 @@ export function Navbar() {
             size="icon-sm"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="text-muted-foreground hover:text-foreground"
-            aria-label={t.common.toggleTheme}
+            aria-label="Toggle theme"
           >
             <Sun className="h-4 w-4 hidden dark:block" />
             <Moon className="h-4 w-4 block dark:hidden" />
@@ -200,14 +145,12 @@ export function Navbar() {
             size="icon-sm"
             onClick={() => setLang(lang === "zh" ? "en" : "zh")}
             className="text-muted-foreground hover:text-foreground text-xs font-medium"
-            aria-label={t.common.switchLanguage}
+            aria-label="Switch language"
           >
             <Languages className="h-4 w-4" />
           </Button>
 
-          {user && (
-            <NotificationBell />
-          )}
+          {user && <NotificationBell />}
 
           <div className="hidden md:flex items-center gap-2">
             {!loaded ? null : user ? (
@@ -234,40 +177,27 @@ export function Navbar() {
                     className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-[fadeIn_0.1s_ease-out]"
                     onKeyDown={handleUserMenuKeyDown}
                   >
-                    {/* User info header */}
                     <div className="px-4 py-3 border-b border-border">
                       <p className="text-sm font-medium text-foreground truncate">{user.username}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
-                    {/* Menu items */}
                     <div className="py-1">
-                      <Link
-                        href="/profile"
-                        role="menuitem"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none"
-                      >
-                        <User className="h-4 w-4" />
-                        {t.common.profile}
+                      <Link href="/dashboard" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none">
+                        <LayoutDashboard className="h-4 w-4" />
+                        {lang === "zh" ? "控制台" : "Dashboard"}
                       </Link>
-                      <Link
-                        href="/profile?tab=settings"
-                        role="menuitem"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none"
-                      >
+                      <Link href="/profile" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none">
+                        <User className="h-4 w-4" />
+                        {lang === "zh" ? "个人中心" : "Profile"}
+                      </Link>
+                      <Link href="/dashboard/settings" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none">
                         <Settings className="h-4 w-4" />
-                        {t.profile.settings}
+                        {lang === "zh" ? "设置" : "Settings"}
                       </Link>
                       {user.role === "admin" && (
-                        <Link
-                          href="/admin"
-                          role="menuitem"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none"
-                        >
+                        <Link href="/admin" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none">
                           <Shield className="h-4 w-4" />
-                          {t.admin.title}
+                          {lang === "zh" ? "管理面板" : "Admin"}
                         </Link>
                       )}
                     </div>
@@ -278,7 +208,7 @@ export function Navbar() {
                         className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none"
                       >
                         <LogOut className="h-4 w-4" />
-                        {t.common.logout}
+                        {lang === "zh" ? "退出登录" : "Log Out"}
                       </button>
                     </div>
                   </div>
@@ -287,10 +217,10 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">{t.common.login}</Button>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">{lang === "zh" ? "登录" : "Log In"}</Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">{t.common.register}</Button>
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">{lang === "zh" ? "注册" : "Sign Up"}</Button>
                 </Link>
               </>
             )}
@@ -299,17 +229,16 @@ export function Navbar() {
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger
               render={
-                <Button variant="ghost" size="icon-sm" className="lg:hidden text-muted-foreground hover:text-foreground" aria-label={t.common.openNavigation}>
+                <Button variant="ghost" size="icon-sm" className="lg:hidden text-muted-foreground hover:text-foreground" aria-label="Open navigation">
                   <Menu className="h-5 w-5" />
                 </Button>
               }
             />
             <SheetContent side="right" className="bg-card border-border w-72">
-              <SheetTitle className="text-foreground sr-only">{t.common.navigationMenu}</SheetTitle>
-              {/* User info + notification bell */}
+              <SheetTitle className="text-foreground sr-only">{lang === "zh" ? "导航菜单" : "Navigation Menu"}</SheetTitle>
               {!loaded ? null : user ? (
                 <div className="mt-8 mb-4 px-4 flex items-center justify-between">
-                  <Link href="/profile" onClick={() => setSheetOpen(false)} className="flex items-center gap-3 min-w-0">
+                  <Link href="/dashboard" onClick={() => setSheetOpen(false)} className="flex items-center gap-3 min-w-0">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium overflow-hidden shrink-0">
                       {user.avatar ? (
                         <Image src={user.avatar} alt={user.username} width={40} height={40} className="h-10 w-10 rounded-full object-cover" unoptimized />
@@ -322,38 +251,13 @@ export function Navbar() {
                   <NotificationBell />
                 </div>
               ) : null}
-              <div className={`${user ? "" : "mt-8 "}mb-4 px-1`}>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={t.common.search}
-                    className="h-9 w-full pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const q = searchQuery.trim();
-                        if (q) {
-                          router.push(`/search?q=${encodeURIComponent(q)}`);
-                          setSearchQuery("");
-                          setSheetOpen(false);
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              <nav className="flex flex-col gap-1" aria-label={t.common.navigationMenu}>
+              <nav className="flex flex-col gap-1 mt-4" aria-label="Navigation menu">
                 {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href} onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary">
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="border-t border-border my-2" />
-                <p className="px-4 py-1 text-xs text-muted-foreground/60 uppercase tracking-wider">{t.common.more}</p>
-                {moreLinks.map((link) => (
-                  <Link key={link.href} href={link.href} onClick={() => setSheetOpen(false)} className="flex items-center gap-2.5 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary">
-                    <link.icon className="h-4 w-4" />
+                  <Link key={link.href} href={link.href} onClick={() => setSheetOpen(false)} className={`px-4 py-3 transition-colors rounded-md hover:bg-secondary ${
+                    pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
+                      ? "text-foreground font-medium bg-secondary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}>
                     {link.label}
                   </Link>
                 ))}
@@ -361,15 +265,20 @@ export function Navbar() {
                 {!loaded ? null : user ? (
                   <>
                     <Link href="/profile" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">
-                      {t.common.profile}
+                      {lang === "zh" ? "个人中心" : "Profile"}
                     </Link>
-                    <button onClick={handleLogout} className="px-4 py-3 text-left text-muted-foreground hover:text-foreground">{t.common.logout}</button>
+                    <Link href="/dashboard/settings" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">
+                      {lang === "zh" ? "设置" : "Settings"}
+                    </Link>
+                    <button onClick={handleLogout} className="px-4 py-3 text-left text-muted-foreground hover:text-foreground">
+                      {lang === "zh" ? "退出登录" : "Log Out"}
+                    </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/login" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">{t.common.login}</Link>
+                    <Link href="/login" onClick={() => setSheetOpen(false)} className="px-4 py-3 text-muted-foreground hover:text-foreground">{lang === "zh" ? "登录" : "Log In"}</Link>
                     <Link href="/register" onClick={() => setSheetOpen(false)} className="px-4 py-3">
-                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium">{t.common.register}</Button>
+                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium">{lang === "zh" ? "注册" : "Sign Up"}</Button>
                     </Link>
                   </>
                 )}

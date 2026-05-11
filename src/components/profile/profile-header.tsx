@@ -73,7 +73,7 @@ export function ProfileHeader() {
             {user.bio && <p className="text-sm text-muted-foreground mb-2">{user.bio}</p>}
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{user.email}</span>
-              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{t.profile.joinedAt} {new Date(user.joinDate).toLocaleDateString(locale)}</span>
+              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{t.profile.joinedAt} {new Date(user.created_at).toLocaleDateString(locale)}</span>
               <span className="flex items-center gap-1"><User className="h-3 w-3" />{user.role === "admin" ? t.profile.adminRole : t.profile.userRole}</span>
             </div>
           </div>

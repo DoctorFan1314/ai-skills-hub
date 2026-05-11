@@ -6,6 +6,59 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.0.0] — 2026-05-11
+
+### Strategic Transformation: AI API Relay Platform
+
+**OortAPI** (formerly AI Skills Hub) is now a full-stack AI API relay platform. The resource aggregation features (skills, prompts, categories) remain available under `/resources/`.
+
+#### Backend (New)
+- **SQLite Database** — `better-sqlite3` with 7 tables: users, api_keys, channels, model_rates, usage_logs, billing_records, system_settings
+- **JWT Authentication** — Server-side auth with httpOnly cookies, PBKDF2 password hashing (replacing localStorage-based auth)
+- **Unified API Gateway** — OpenAI-compatible endpoints at `/api/v1/`:
+  - `POST /api/v1/chat/completions` — Chat completions with streaming support
+  - `POST /api/v1/completions` — Text completions
+  - `POST /api/v1/images/generations` — Image generation
+  - `POST /api/v1/embeddings` — Text embeddings
+  - `GET /api/v1/models` — Available models with pricing
+  - `GET /api/v1/billing/balance` — Check account balance
+  - `GET /api/v1/billing/usage` — Usage history with pagination
+- **Smart Channel Routing** — Weighted random selection with automatic failover (3 consecutive failures → 5min cooldown)
+- **Per-Token Billing** — Model-specific rates, prepaid balance system, automatic deduction after each call
+- **Rate Limiting** — In-memory sliding window (default 60 req/min per API key)
+- **API Key Management** — `sk-oort-` prefixed keys with per-key rate limits and permissions
+
+#### Dashboard (New)
+- **Overview** (`/dashboard`) — Today's stats (calls, success rate, cost, latency), monthly summary, 7-day usage chart, top models
+- **API Keys** (`/dashboard/keys`) — Create, toggle, delete API keys with copy-to-clipboard
+- **Usage Analytics** (`/dashboard/usage`) — Detailed usage data with pagination
+- **Billing** (`/dashboard/billing`) — Balance display and billing history
+- **Channels** (`/dashboard/channels`) — Admin-only channel CRUD with connection testing
+- **Settings** (`/dashboard/settings`) — Profile editing and password change
+
+#### API Routes (16 endpoints)
+- Auth: `/api/auth/login`, `/api/auth/register`, `/api/auth/me`, `/api/auth/profile`, `/api/auth/reset-password`, `/api/auth/change-password`
+- Dashboard: `/api/dashboard/stats`, `/api/dashboard/keys` (CRUD), `/api/dashboard/channels` (CRUD)
+- API v1: `/api/v1/chat/completions`, `/api/v1/completions`, `/api/v1/images/generations`, `/api/v1/embeddings`, `/api/v1/models`, `/api/v1/billing/balance`, `/api/v1/billing/usage`
+
+#### Homepage Redesign
+- New hero section focused on API relay value proposition
+- Core feature cards (unified interface, smart routing, fine-grained billing, security)
+- AI provider logo wall (OpenAI, Anthropic, Google, Meta, DeepSeek, etc.)
+- Platform real-time stats
+- Resource hub entry point (secondary positioning)
+
+#### Infrastructure
+- **Project rename** — ai-skills-hub → OortAPI, version 3.0.0
+- **Database** — SQLite via better-sqlite3 with lazy singleton Proxy pattern
+- **Auth migration** — localStorage → JWT + httpOnly cookie
+- **Password hashing** — SHA-256 → PBKDF2
+- **Resource migration** — Existing pages moved to `/resources/` prefix
+- **i18n** — New `dashboard`, `apiDocs`, `resources` translation sections (~130 new keys)
+- **Dependencies** — Added better-sqlite3, nanoid, zod, recharts
+
+---
+
 ## [v2.8.1] — 2026-05-11
 
 ### Feature: Navbar Avatar Dropdown Menu

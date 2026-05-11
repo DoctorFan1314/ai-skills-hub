@@ -6,6 +6,59 @@
 
 ---
 
+## [v3.0.0] — 2026-05-11
+
+### 战略转型：AI API 中转站平台
+
+**OortAPI**（原 AI Skills Hub）现已升级为全栈 AI API 中转平台。资源聚合功能（技能、模板、分类）保留在 `/resources/` 路径下。
+
+#### 后端（全新）
+- **SQLite 数据库** — 使用 `better-sqlite3`，7 张表：users、api_keys、channels、model_rates、usage_logs、billing_records、system_settings
+- **JWT 认证** — 服务端认证 + httpOnly cookie，PBKDF2 密码哈希（替代 localStorage 认证）
+- **统一 API 网关** — OpenAI 兼容接口，路径 `/api/v1/`：
+  - `POST /api/v1/chat/completions` — 聊天补全，支持流式响应
+  - `POST /api/v1/completions` — 文本补全
+  - `POST /api/v1/images/generations` — 图像生成
+  - `POST /api/v1/embeddings` — 文本嵌入
+  - `GET /api/v1/models` — 可用模型及定价
+  - `GET /api/v1/billing/balance` — 查询余额
+  - `GET /api/v1/billing/usage` — 用量历史（分页）
+- **智能渠道路由** — 加权随机选择 + 自动故障切换（连续失败 3 次 → 5 分钟冷却）
+- **按量计费** — 按模型费率计费，预付费余额系统，每次调用后自动扣费
+- **速率限制** — 内存滑动窗口（默认 60 次/分钟/API Key）
+- **API Key 管理** — `sk-oort-` 前缀，支持独立速率限制和权限配置
+
+#### 控制台（全新）
+- **概览** (`/dashboard`) — 今日统计（调用数、成功率、花费、延迟）、月度汇总、7 天用量趋势图、热门模型
+- **API 密钥** (`/dashboard/keys`) — 创建、启用/禁用、删除 API Key，一键复制
+- **用量分析** (`/dashboard/usage`) — 详细用量数据，分页展示
+- **账单** (`/dashboard/billing`) — 余额展示和账单历史
+- **渠道管理** (`/dashboard/channels`) — 仅管理员可用，渠道增删改查 + 连接测试
+- **设置** (`/dashboard/settings`) — 个人资料编辑和密码修改
+
+#### API 路由（16 个端点）
+- 认证：`/api/auth/login`、`/api/auth/register`、`/api/auth/me`、`/api/auth/profile`、`/api/auth/reset-password`、`/api/auth/change-password`
+- 控制台：`/api/dashboard/stats`、`/api/dashboard/keys`（CRUD）、`/api/dashboard/channels`（CRUD）
+- API v1：`/api/v1/chat/completions`、`/api/v1/completions`、`/api/v1/images/generations`、`/api/v1/embeddings`、`/api/v1/models`、`/api/v1/billing/balance`、`/api/v1/billing/usage`
+
+#### 首页重构
+- 全新 Hero 区域，聚焦 API 中转站核心价值
+- 核心功能卡片（统一接口、智能路由、精细计费、安全管控）
+- AI 服务商 Logo 墙（OpenAI、Anthropic、Google、Meta、DeepSeek 等）
+- 平台实时数据展示
+- 资源中心入口（降为辅助定位）
+
+#### 基础设施
+- **项目改名** — ai-skills-hub → OortAPI，版本号 3.0.0
+- **数据库** — SQLite + better-sqlite3，延迟初始化 Proxy 模式
+- **认证迁移** — localStorage → JWT + httpOnly cookie
+- **密码哈希** — SHA-256 → PBKDF2
+- **资源迁移** — 现有页面移至 `/resources/` 前缀
+- **国际化** — 新增 `dashboard`、`apiDocs`、`resources` 翻译区块（约 130 个新键）
+- **依赖** — 新增 better-sqlite3、nanoid、zod、recharts
+
+---
+
 ## [v2.8.1] — 2026-05-11
 
 ### 功能：导航栏头像下拉菜单

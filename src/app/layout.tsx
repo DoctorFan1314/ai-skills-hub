@@ -39,25 +39,25 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
-    template: "%s | AI Skills Hub",
+    default: "OortAPI — Unified AI API Gateway",
+    template: "%s | OortAPI",
   },
-  description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install, works with ChatGPT, Claude, Grok, DeepSeek, Qwen, LM Studio, Ollama.",
+  description: "One API endpoint for all AI models. OpenAI-compatible format, smart routing, fine-grained billing. Connect OpenAI, Anthropic, Gemini, DeepSeek and 30+ providers.",
   icons: { icon: "/icon", apple: "/apple-icon" },
   openGraph: {
-    title: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
-    description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install.",
+    title: "OortAPI — Unified AI API Gateway",
+    description: "One API endpoint for all AI models. OpenAI-compatible format, smart routing, fine-grained billing.",
     url: siteUrl,
-    siteName: "AI Skills Hub",
+    siteName: "OortAPI",
     type: "website",
     locale: "en_US",
     alternateLocale: "zh_CN",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "AI Skills Hub" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "OortAPI" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Skills Hub — Agent Skills Marketplace + Prompt Templates",
-    description: "Discover executable Agent Skills and high-quality Prompt Templates. One-click install, works with ChatGPT, Claude, Grok, DeepSeek, Qwen.",
+    title: "OortAPI — Unified AI API Gateway",
+    description: "One API endpoint for all AI models. OpenAI-compatible format, smart routing, fine-grained billing.",
     images: ["/og.png"],
   },
   alternates: {
@@ -82,7 +82,7 @@ export default function RootLayout({
           id="theme-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ai-skills-hub-theme')||'dark';var d=t==='system'?matchMedia('(prefers-color-scheme:dark)').matches:t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('oortapi-theme')||'dark';var d=t==='system'?matchMedia('(prefers-color-scheme:dark)').matches:t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`,
           }}
         />
         <Script
