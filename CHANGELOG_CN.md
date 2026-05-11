@@ -6,6 +6,49 @@
 
 ---
 
+## [v3.1.0] — 2026-05-11
+
+### 管理员与计费增强
+
+#### 新功能
+- **用户管理** (`/dashboard/users`) — 管理员专属页面：列表、搜索、筛选用户；编辑角色（user/admin）；充值/扣费；启用/禁用用户；级联删除用户及关联数据
+- **兑换码系统** — 管理员批量生成兑换码（`RC-XXXXXXXX`），用户在账单页兑换即可即时到账。支持最大使用次数、过期时间、启用/禁用切换
+- **模型市场** (`/dashboard/models`) — 管理员定价管理，按模型设置输入/输出/缓存费率；从渠道一键同步模型
+- **API 文档** (`/docs`) — Swagger UI 交互式文档，包含完整 OpenAPI 3.0 规范（18+ 端点）
+
+#### 流式响应与 Token 追踪
+- **缓存 Token 追踪** — 用量日志和计费中分别追踪 `cached_tokens` 和 `cache_creation_input_tokens`（三级定价：普通输入、缓存命中 cache_rate、缓存写入 1.25x input_rate）
+- **流式 Token 计数** — 解析 SSE 分块，从上游 `stream_options.include_usage` 获取准确的输入/输出/缓存 Token 数
+- **用量页面缓存列** — 用量日志表格新增"缓存命中"和"缓存创建"列
+
+#### 渠道管理（Phase 1）
+- **内联编辑** — 编辑渠道名称、类型、API Key、base_url、权重、优先级、模型列表
+- **连接测试** — 对上游执行 `GET /v1/models` 测试，返回成功/失败 + 延迟
+- **模型映射** — 键值对 UI 配置请求模型名到上游模型名的映射
+- **同步模型** — 一键将渠道模型同步到 model_rates 表
+- **删除确认** — 删除前弹出确认对话框，防止误删
+- **限流状态** — 上游返回 429 时设为 `rate_limited` 而非 `offline`
+
+#### 安全
+- **JWT Secret 强制检查** — 生产环境使用默认密钥时直接抛出错误
+- **Anthropic 认证修复** — 使用正确的 `x-api-key` + `anthropic-version` 请求头；路由到 `/v1/messages` 端点
+- **移除不安全密码重置** — 删除 `/api/auth/reset-password`（无需认证即可重置任意用户密码）。用户必须登录后通过设置页修改密码
+- **移除旧版 Admin** — 删除 `/admin` 页面（基于 localStorage，来自 AI Skills Hub 时代）。所有管理功能已迁移至 `/dashboard` 并启用角色控制
+
+#### 数据库
+- **新表** `redeem_codes` — code、amount、enabled、max_uses、current_uses、created_by、expires_at
+- **新列** `users.enabled` — INTEGER DEFAULT 1（安全迁移）
+
+#### OpenAPI 规范
+- **新增端点**：`/api/dashboard/users`、`/api/dashboard/redeem`、`/api/v1/billing/redeem`、`/api/dashboard/models`
+- **更新 Schema**：UsageLog 包含 `tokens_in_cache` 和 `tokens_cache_creation`；Channel 包含 `rate_limited` 状态
+
+#### API 路由（22 个端点）
+- 新增：`GET/PATCH/DELETE /api/dashboard/users`、`GET/POST/PATCH/DELETE /api/dashboard/redeem`、`POST /api/v1/billing/redeem`、`GET/POST/PATCH/DELETE /api/dashboard/models`
+- 移除：`POST /api/auth/reset-password`
+
+---
+
 ## [v3.0.0] — 2026-05-11
 
 ### 战略转型：AI API 中转站平台

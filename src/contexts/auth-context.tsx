@@ -25,7 +25,6 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (data: Partial<Pick<User, "username" | "avatar" | "bio" | "preferences">>) => Promise<void>;
-  resetPassword: (email: string, newPassword: string) => Promise<boolean>;
   changePassword: (currentPw: string, newPw: string) => Promise<boolean>;
 }
 
@@ -132,23 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const resetPassword = useCallback(async (email: string, newPassword: string): Promise<boolean> => {
-    try {
-      const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, newPassword }),
-      });
-      return res.ok;
-    } catch {
-      return false;
-    }
-  }, []);
-
   const value = useMemo(
-    () => ({ user, loaded, login, register, logout, refreshUser, updateProfile, changePassword, resetPassword }),
-    [user, loaded, login, register, logout, refreshUser, updateProfile, changePassword, resetPassword],
+    () => ({ user, loaded, login, register, logout, refreshUser, updateProfile, changePassword }),
+    [user, loaded, login, register, logout, refreshUser, updateProfile, changePassword],
   );
 
   return (

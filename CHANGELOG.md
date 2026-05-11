@@ -6,6 +6,49 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.1.0] — 2026-05-11
+
+### Admin & Billing Enhancements
+
+#### New Features
+- **User Management** (`/dashboard/users`) — Admin-only page to list, search, filter users; edit roles (user/admin); credit/deduct balance; enable/disable users; delete users with cascade cleanup
+- **Redeem Code System** — Admin creates batch redeem codes (`RC-XXXXXXXX`), users redeem via billing page for instant balance credit. Supports max uses, expiration, enable/disable toggle
+- **Model Marketplace** (`/dashboard/models`) — Admin pricing management with per-model input/output/cache rates; sync models from channels
+- **API Documentation** (`/docs`) — Swagger UI with full OpenAPI 3.0 spec covering all 18+ endpoints
+
+#### Streaming & Token Tracking
+- **Cache Token Tracking** — Tracks `cached_tokens` and `cache_creation_input_tokens` separately in usage logs and billing (3-tier pricing: normal input, cache read at cache_rate, cache write at 1.25x input_rate)
+- **Streaming Token Counting** — Parses SSE chunks for accurate input/output/cache token counts from upstream `stream_options.include_usage`
+- **Usage Page Cache Columns** — New "Cache Hit" and "Cache Create" columns in usage logs table
+
+#### Channel Management (Phase 1)
+- **Inline Edit** — Edit channel name, type, API key, base_url, weight, priority, models
+- **Connection Test** — `GET /v1/models` test against upstream with latency measurement
+- **Model Mapping** — Key-value UI for mapping requested model names to upstream names
+- **Sync Models** — Copy channel models to model_rates table with one click
+- **Delete Confirmation** — Dialog before destructive delete
+- **Rate Limited Status** — Upstream 429 now sets `rate_limited` instead of `offline`
+
+#### Security
+- **JWT Secret Enforcement** — Production builds throw if JWT_SECRET is the default value
+- **Anthropic Auth Fix** — Correct `x-api-key` + `anthropic-version` headers; routes to `/v1/messages` endpoint
+- **Removed Insecure Reset Password** — Deleted `/api/auth/reset-password` (required no auth). Users must log in and use change-password
+- **Removed Legacy Admin** — Deleted `/admin` pages (localStorage-based, from AI Skills Hub era). All admin functionality now in `/dashboard` with role-based access
+
+#### Database
+- **New table** `redeem_codes` — code, amount, enabled, max_uses, current_uses, created_by, expires_at
+- **New column** `users.enabled` — INTEGER DEFAULT 1 (migration-safe)
+
+#### OpenAPI Spec
+- **New endpoints in spec**: `/api/dashboard/users`, `/api/dashboard/redeem`, `/api/v1/billing/redeem`, `/api/dashboard/models`
+- **Updated schemas**: UsageLog includes `tokens_in_cache` and `tokens_cache_creation`; Channel includes `rate_limited` status
+
+#### API Routes (22 endpoints total)
+- New: `GET/PATCH/DELETE /api/dashboard/users`, `GET/POST/PATCH/DELETE /api/dashboard/redeem`, `POST /api/v1/billing/redeem`, `GET/POST/PATCH/DELETE /api/dashboard/models`
+- Removed: `POST /api/auth/reset-password`
+
+---
+
 ## [v3.0.0] — 2026-05-11
 
 ### Strategic Transformation: AI API Relay Platform

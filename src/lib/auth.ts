@@ -1,9 +1,16 @@
 import { createHmac, randomBytes, pbkdf2Sync, timingSafeEqual } from 'crypto';
 import type { DBUser } from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'oortapi-default-secret-change-in-production';
+const DEFAULT_SECRET = 'oortapi-default-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
 const JWT_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
 const TOKEN_NAME = 'oortapi_token';
+
+function assertSecretValid() {
+  if (process.env.NODE_ENV === 'production' && JWT_SECRET === DEFAULT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET must be set in production. Define a strong JWT_SECRET environment variable.');
+  }
+}
 
 // --- JWT helpers ---
 
@@ -23,6 +30,7 @@ export interface JWTPayload {
 }
 
 export function signToken(payload: Omit<JWTPayload, 'exp'>): string {
+  assertSecretValid();
   const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const now = Math.floor(Date.now() / 1000);
   const body = base64url(JSON.stringify({ ...payload, exp: now + JWT_EXPIRY }));

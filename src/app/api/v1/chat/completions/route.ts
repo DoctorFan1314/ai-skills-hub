@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest } from '@/lib/api-gateway';
+import { deductBalance, calculateCost, logUsage } from '@/lib/billing-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,23 +42,104 @@ export async function POST(request: NextRequest) {
         startTime: number;
       };
 
-      // Create a TransformStream to forward the upstream response
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
+
+      let buffer = '';
+      let tokensIn = 0;
+      let tokensOut = 0;
+      let tokensInCache = 0;
+      let tokensCacheCreation = 0;
+      let completionText = '';
+      let logged = false;
 
       const transformStream = new TransformStream({
         async transform(chunk, controller) {
           const text = decoder.decode(chunk, { stream: true });
+          buffer += text;
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') continue;
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.usage) {
+                  tokensIn = parsed.usage.prompt_tokens || tokensIn;
+                  tokensOut = parsed.usage.completion_tokens || tokensOut;
+                  tokensInCache = parsed.usage.prompt_tokens_details?.cached_tokens || tokensInCache;
+                  tokensCacheCreation = parsed.usage.cache_creation_input_tokens || tokensCacheCreation;
+                }
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) completionText += delta;
+              } catch {
+                // Not valid JSON, skip
+              }
+            }
+          }
+
           controller.enqueue(encoder.encode(text));
         },
-        flush(controller) {
-          controller.terminate();
+        flush() {
+          if (tokensIn === 0) {
+            tokensIn = estimateTokens(JSON.stringify(body.messages));
+          }
+          if (tokensOut === 0 && completionText) {
+            tokensOut = estimateTokens(completionText);
+          }
+
+          const latencyMs = Date.now() - streamData.startTime;
+          const cost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+
+          if (cost > 0) {
+            deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
+          }
+
+          logUsage({
+            userId: streamData.userId,
+            apiKeyId: streamData.apiKeyId,
+            channelId: streamData.channelId,
+            model: streamData.model,
+            tokensIn,
+            tokensOut,
+            tokensInCache,
+            tokensCacheCreation,
+            cost,
+            latencyMs,
+            success: true,
+          });
+          logged = true;
         },
       });
 
       const upstreamBody = streamData.response.body;
       if (upstreamBody) {
-        upstreamBody.pipeTo(transformStream.writable).catch(() => {});
+        upstreamBody.pipeTo(transformStream.writable).catch(() => {
+          // If pipe fails, still log what we have
+          if (!logged) {
+            const latencyMs = Date.now() - streamData.startTime;
+            const tokensInEst = tokensIn || estimateTokens(JSON.stringify(body.messages));
+            const tokensOutEst = tokensOut || estimateTokens(completionText);
+            const cost = calculateCost(streamData.model, tokensInEst, tokensOutEst);
+            if (cost > 0) {
+              deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
+            }
+            logUsage({
+              userId: streamData.userId,
+              apiKeyId: streamData.apiKeyId,
+              channelId: streamData.channelId,
+              model: streamData.model,
+              tokensIn: tokensInEst,
+              tokensOut: tokensOutEst,
+              cost,
+              latencyMs,
+              success: true,
+            });
+          }
+        });
       }
 
       return new Response(transformStream.readable, {
@@ -87,4 +169,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function estimateTokens(text: string): number {
+  const chineseChars = (text.match(/[一-鿿]/g) || []).length;
+  const otherChars = text.length - chineseChars;
+  return Math.ceil(chineseChars / 2 + otherChars / 4);
 }

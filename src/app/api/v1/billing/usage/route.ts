@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { validateApiKey } from '@/lib/api-gateway';
+import { validateApiKey, validateUserFromCookie } from '@/lib/api-gateway';
 import type { DBUsageLog } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Support both API key auth and cookie auth (for dashboard)
     const authHeader = request.headers.get('authorization');
-    const auth = validateApiKey(authHeader);
+    let userId: number;
 
-    if (!auth.valid || !auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const auth = validateApiKey(authHeader);
+      if (!auth.valid || !auth.user) {
+        return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+      }
+      userId = auth.user.id;
+    } else {
+      const auth = validateUserFromCookie(request.headers.get('cookie'));
+      if (!auth.valid || !auth.user) {
+        return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+      }
+      userId = auth.user.id;
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -20,9 +31,9 @@ export async function GET(request: NextRequest) {
 
     const logs = db.prepare(
       'SELECT id, model, tokens_in, tokens_out, cost, latency_ms, success, cached, created_at FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    ).all(auth.user.id, limit, offset) as DBUsageLog[];
+    ).all(userId, limit, offset) as DBUsageLog[];
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM usage_logs WHERE user_id = ?').get(auth.user.id) as { count: number };
+    const total = db.prepare('SELECT COUNT(*) as count FROM usage_logs WHERE user_id = ?').get(userId) as { count: number };
 
     return NextResponse.json({
       object: 'list',

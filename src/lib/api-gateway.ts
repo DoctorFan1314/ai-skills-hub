@@ -104,12 +104,19 @@ export async function processGatewayRequest(
     const upstreamUrl = buildUpstreamUrl(channel.base_url || '', endpoint, channel.type);
     const upstreamBody = buildUpstreamRequest({ ...req, model: actualModel }, channel.type);
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (channel.type === 'anthropic') {
+      headers['x-api-key'] = channel.api_key_encrypted;
+      headers['anthropic-version'] = '2023-06-01';
+    } else {
+      headers['Authorization'] = `Bearer ${channel.api_key_encrypted}`;
+    }
+
     const upstreamRes = await fetch(upstreamUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${channel.api_key_encrypted}`,
-      },
+      headers,
       body: JSON.stringify(upstreamBody),
     });
 
@@ -158,10 +165,12 @@ export async function processGatewayRequest(
     const data = await upstreamRes.json();
     reportChannelSuccess(channel.id);
 
-    // Calculate tokens and cost
+    // Calculate tokens and cost (including cache tokens)
     const tokensIn = data.usage?.prompt_tokens || estimateTokens(JSON.stringify(req.messages || req.prompt || ''));
     const tokensOut = data.usage?.completion_tokens || estimateTokens(JSON.stringify(data.choices?.[0]?.message?.content || ''));
-    const cost = calculateCost(req.model, tokensIn, tokensOut);
+    const tokensInCache = data.usage?.prompt_tokens_details?.cached_tokens || 0;
+    const tokensCacheCreation = data.usage?.cache_creation_input_tokens || 0;
+    const cost = calculateCost(req.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
 
     // Deduct balance
     const deductResult = deductBalance(user.id, cost, `API call: ${req.model}`);
@@ -177,6 +186,8 @@ export async function processGatewayRequest(
       model: req.model,
       tokensIn,
       tokensOut,
+      tokensInCache,
+      tokensCacheCreation,
       cost,
       latencyMs,
       success: true,
@@ -207,15 +218,13 @@ export async function processGatewayRequest(
 // Build upstream URL based on provider type
 function buildUpstreamUrl(baseUrl: string, endpoint: string, providerType: string): string {
   const base = baseUrl.replace(/\/$/, '');
-  const paths: Record<string, string> = {
-    'openai': '/v1/',
-    'anthropic': '/v1/',
-    'deepseek': '/v1/',
-    'google': '/v1/',
-    'alibaba': '/v1/',
-  };
-  const prefix = paths[providerType] || '/v1/';
-  return `${base}${prefix}${endpoint}`;
+
+  // Anthropic uses /v1/messages instead of /v1/chat/completions
+  if (providerType === 'anthropic' && endpoint === 'chat/completions') {
+    return `${base}/v1/messages`;
+  }
+
+  return `${base}/v1/${endpoint}`;
 }
 
 // Build upstream request body based on provider type
@@ -232,7 +241,7 @@ function buildUpstreamRequest(req: GatewayRequest, providerType: string): unknow
   }
 
   // OpenAI-compatible (default for most providers)
-  return {
+  const body: Record<string, unknown> = {
     model: req.model,
     messages: req.messages,
     prompt: req.prompt,
@@ -244,6 +253,13 @@ function buildUpstreamRequest(req: GatewayRequest, providerType: string): unknow
     n: req.n,
     size: req.size,
   };
+
+  // Request usage data in streaming responses
+  if (req.stream) {
+    body.stream_options = { include_usage: true };
+  }
+
+  return body;
 }
 
 // Simple token estimation (4 chars ~= 1 token for English, 2 chars ~= 1 for Chinese)

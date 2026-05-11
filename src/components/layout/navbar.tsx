@@ -194,12 +194,10 @@ export function Navbar() {
                         <Settings className="h-4 w-4" />
                         {lang === "zh" ? "设置" : "Settings"}
                       </Link>
-                      {user.role === "admin" && (
-                        <Link href="/admin" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none">
+                      <Link href="/dashboard" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:bg-secondary focus:text-foreground focus-visible:outline-none">
                           <Shield className="h-4 w-4" />
-                          {lang === "zh" ? "管理面板" : "Admin"}
+                          {lang === "zh" ? "管理面板" : "Dashboard"}
                         </Link>
-                      )}
                     </div>
                     <div className="border-t border-border py-1">
                       <button

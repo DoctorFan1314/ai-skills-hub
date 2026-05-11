@@ -73,6 +73,8 @@ CREATE TABLE IF NOT EXISTS usage_logs (
   model TEXT NOT NULL,
   tokens_in INTEGER DEFAULT 0,
   tokens_out INTEGER DEFAULT 0,
+  tokens_in_cache INTEGER DEFAULT 0,
+  tokens_cache_creation INTEGER DEFAULT 0,
   cost REAL DEFAULT 0,
   latency_ms INTEGER,
   success INTEGER DEFAULT 1,
@@ -94,6 +96,20 @@ CREATE TABLE IF NOT EXISTS billing_records (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Redeem codes table
+CREATE TABLE IF NOT EXISTS redeem_codes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code TEXT UNIQUE NOT NULL,
+  amount REAL NOT NULL,
+  enabled INTEGER DEFAULT 1,
+  max_uses INTEGER DEFAULT 1,
+  current_uses INTEGER DEFAULT 0,
+  created_by INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME,
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
 -- System settings table
 CREATE TABLE IF NOT EXISTS system_settings (
   key TEXT PRIMARY KEY,
@@ -110,6 +126,7 @@ CREATE INDEX IF NOT EXISTS idx_usage_logs_model ON usage_logs(model);
 CREATE INDEX IF NOT EXISTS idx_billing_records_user ON billing_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_channels_type ON channels(type);
 CREATE INDEX IF NOT EXISTS idx_channels_enabled ON channels(enabled);
+CREATE INDEX IF NOT EXISTS idx_redeem_codes_code ON redeem_codes(code);
 
 -- Default system settings
 INSERT OR IGNORE INTO system_settings (key, value) VALUES

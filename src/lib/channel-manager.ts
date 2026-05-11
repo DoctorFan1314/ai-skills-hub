@@ -60,9 +60,11 @@ export function selectChannel(requestedModel: string): ChannelSelection | null {
 }
 
 export function reportChannelFailure(channelId: number, errorMessage: string) {
+  const isRateLimited = errorMessage.includes('429') || errorMessage.toLowerCase().includes('rate limit');
+  const status = isRateLimited ? 'rate_limited' : 'offline';
   db.prepare(
     'UPDATE channels SET fail_count = fail_count + 1, last_fail_at = CURRENT_TIMESTAMP, status = CASE WHEN fail_count + 1 >= ? THEN ? ELSE status END WHERE id = ?'
-  ).run(FAIL_THRESHOLD, 'offline', channelId);
+  ).run(FAIL_THRESHOLD, status, channelId);
 }
 
 export function reportChannelSuccess(channelId: number) {

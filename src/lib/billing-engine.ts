@@ -36,15 +36,35 @@ export function addBalance(userId: number, amount: number, type: 'recharge' | 'r
   return { success: true, newBalance };
 }
 
-export function calculateCost(model: string, tokensIn: number, tokensOut: number, cached: boolean = false): number {
+export function calculateCost(
+  model: string,
+  tokensIn: number,
+  tokensOut: number,
+  cached: boolean = false,
+  tokensInCache: number = 0,
+  tokensCacheCreation: number = 0,
+): number {
   const rate = db.prepare('SELECT input_rate, output_rate, cache_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { input_rate: number; output_rate: number; cache_rate: number } | undefined;
+
   if (!rate) {
     // Default rate if model not found
     return (tokensIn * 0.001 + tokensOut * 0.002) / 1000;
   }
-  const inputCost = cached ? tokensIn * rate.cache_rate / 1000 : tokensIn * rate.input_rate / 1000;
+
+  // Non-cached input tokens: charged at full input_rate
+  const nonCachedIn = tokensIn - tokensInCache - tokensCacheCreation;
+  const inputCost = Math.max(0, nonCachedIn) * rate.input_rate / 1000;
+
+  // Cache hit tokens: charged at cache_rate (typically 50% off for reads)
+  const cacheHitCost = tokensInCache * rate.cache_rate / 1000;
+
+  // Cache creation tokens: charged at 1.25x input_rate (Anthropic charges more for writes)
+  const cacheCreationCost = tokensCacheCreation * rate.input_rate * 1.25 / 1000;
+
+  // Output tokens: always at output_rate
   const outputCost = tokensOut * rate.output_rate / 1000;
-  return inputCost + outputCost;
+
+  return inputCost + cacheHitCost + cacheCreationCost + outputCost;
 }
 
 export function logUsage(data: {
@@ -54,6 +74,8 @@ export function logUsage(data: {
   model: string;
   tokensIn: number;
   tokensOut: number;
+  tokensInCache?: number;
+  tokensCacheCreation?: number;
   cost: number;
   latencyMs?: number;
   success: boolean;
@@ -61,10 +83,11 @@ export function logUsage(data: {
   cached?: boolean;
 }) {
   db.prepare(
-    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, cost, latency_ms, success, error_message, cached) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, latency_ms, success, error_message, cached) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     data.userId, data.apiKeyId ?? null, data.channelId ?? null, data.model,
-    data.tokensIn, data.tokensOut, data.cost, data.latencyMs ?? null,
+    data.tokensIn, data.tokensOut, data.tokensInCache ?? 0, data.tokensCacheCreation ?? 0,
+    data.cost, data.latencyMs ?? null,
     data.success ? 1 : 0, data.errorMessage ?? null, data.cached ? 1 : 0
   );
 }

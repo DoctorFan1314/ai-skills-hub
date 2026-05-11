@@ -32,7 +32,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { name, type, api_key_encrypted, base_url, weight, models, model_mapping, priority } = await request.json();
+    const body = await request.json();
+
+    // Handle test connection action
+    if (body.action === 'test') {
+      const { id } = body;
+      if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+
+      const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(id) as DBChannel | undefined;
+      if (!channel) return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+
+      const baseUrl = channel.base_url || 'https://api.openai.com';
+      const start = Date.now();
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(`${baseUrl.replace(/\/$/, '')}/v1/models`, {
+          headers: { 'Authorization': `Bearer ${channel.api_key_encrypted}` },
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        const latency_ms = Date.now() - start;
+        if (res.ok) {
+          return NextResponse.json({ success: true, latency_ms });
+        }
+        const text = await res.text().catch(() => '');
+        return NextResponse.json({ success: false, latency_ms, error: `HTTP ${res.status}: ${text.slice(0, 200)}` });
+      } catch (err: unknown) {
+        const latency_ms = Date.now() - start;
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        return NextResponse.json({ success: false, latency_ms, error: msg });
+      }
+    }
+
+    // Handle sync-models action: sync channel models to model_rates table
+    if (body.action === 'sync-models') {
+      const { id } = body;
+      if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+
+      const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(id) as DBChannel | undefined;
+      if (!channel) return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+
+      const models: string[] = JSON.parse(channel.models || '[]');
+      if (models.length === 0) {
+        return NextResponse.json({ error: 'Channel has no models configured. Please set models first.', synced: 0 }, { status: 400 });
+      }
+
+      const provider = channel.type;
+      let synced = 0;
+      const insertStmt = db.prepare(
+        'INSERT OR IGNORE INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate) VALUES (?, ?, ?, 0, 0, 0)'
+      );
+      for (const modelName of models) {
+        if (modelName === '*') continue;
+        const result = insertStmt.run(modelName, modelName, provider);
+        if (result.changes > 0) synced++;
+      }
+
+      return NextResponse.json({ success: true, synced, total: models.length });
+    }
+
+    const { name, type, api_key_encrypted, base_url, weight, models, model_mapping, priority } = body;
 
     if (!name || !type || !api_key_encrypted) {
       return NextResponse.json({ error: 'name, type, and api_key_encrypted are required' }, { status: 400 });

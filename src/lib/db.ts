@@ -22,6 +22,16 @@ function getDb(): Database.Database {
   const schema = readFileSync(join(process.cwd(), 'src', 'lib', 'schema.sql'), 'utf-8');
   _db.exec(schema);
 
+  // Migrations for existing databases (ALTER TABLE fails silently if column exists)
+  const migrations = [
+    'ALTER TABLE usage_logs ADD COLUMN tokens_in_cache INTEGER DEFAULT 0',
+    'ALTER TABLE usage_logs ADD COLUMN tokens_cache_creation INTEGER DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN enabled INTEGER DEFAULT 1',
+  ];
+  for (const sql of migrations) {
+    try { _db.exec(sql); } catch { /* column already exists */ }
+  }
+
   return _db;
 }
 
@@ -51,6 +61,7 @@ export interface DBUser {
   avatar: string | null;
   bio: string | null;
   preferences: string;
+  enabled: number;
   created_at: string;
   updated_at: string;
 }
@@ -106,6 +117,8 @@ export interface DBUsageLog {
   model: string;
   tokens_in: number;
   tokens_out: number;
+  tokens_in_cache: number;
+  tokens_cache_creation: number;
   cost: number;
   latency_ms: number | null;
   success: number;
@@ -122,4 +135,16 @@ export interface DBBillingRecord {
   description: string | null;
   balance_after: number | null;
   created_at: string;
+}
+
+export interface DBRedeemCode {
+  id: number;
+  code: string;
+  amount: number;
+  enabled: number;
+  max_uses: number;
+  current_uses: number;
+  created_by: number;
+  created_at: string;
+  expires_at: string | null;
 }

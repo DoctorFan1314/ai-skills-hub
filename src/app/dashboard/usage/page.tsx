@@ -10,6 +10,8 @@ interface UsageLog {
   model: string;
   tokens_in: number;
   tokens_out: number;
+  tokens_in_cache: number;
+  tokens_cache_creation: number;
   cost: number;
   latency_ms: number | null;
   success: number;
@@ -18,8 +20,8 @@ interface UsageLog {
 }
 
 const LABELS = {
-  zh: { title: "调用日志", model: "模型", tokens: "Token", cost: "费用", latency: "延迟", status: "状态", success: "成功", failed: "失败", noLogs: "暂无调用记录" },
-  en: { title: "Usage Logs", model: "Model", tokens: "Tokens", cost: "Cost", latency: "Latency", status: "Status", success: "Success", failed: "Failed", noLogs: "No usage logs yet" },
+  zh: { title: "调用日志", model: "模型", tokensIn: "输入 Tokens", tokensOut: "输出 Tokens", tokensInCache: "缓存命中", tokensCacheCreate: "缓存创建", tokens: "总 Tokens", cost: "费用", latency: "延迟", status: "状态", success: "成功", failed: "失败", noLogs: "暂无调用记录", time: "时间" },
+  en: { title: "Usage Logs", model: "Model", tokensIn: "Input Tokens", tokensOut: "Output Tokens", tokensInCache: "Cache Hit", tokensCacheCreate: "Cache Create", tokens: "Total Tokens", cost: "Cost", latency: "Latency", status: "Status", success: "Success", failed: "Failed", noLogs: "No usage logs yet", time: "Time" },
 };
 
 export default function UsagePage() {
@@ -55,18 +57,26 @@ export default function UsagePage() {
                 <thead>
                   <tr className="border-b border-border/50">
                     <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t.model}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensIn}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensOut}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensInCache}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensCacheCreate}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokens}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.cost}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.latency}</th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.status}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Time</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.time}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.map((log) => (
                     <tr key={log.id} className="border-b border-border/20 hover:bg-muted/30">
                       <td className="py-2 px-3 font-mono text-xs">{log.model}</td>
-                      <td className="py-2 px-3 text-right font-mono">{log.tokens_in + log.tokens_out}</td>
+                      <td className="py-2 px-3 text-right font-mono">{log.tokens_in.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-right font-mono">{log.tokens_out.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-right font-mono">{log.tokens_in_cache ? log.tokens_in_cache.toLocaleString() : "-"}</td>
+                      <td className="py-2 px-3 text-right font-mono">{log.tokens_cache_creation ? log.tokens_cache_creation.toLocaleString() : "-"}</td>
+                      <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out).toLocaleString()}</td>
                       <td className="py-2 px-3 text-right font-mono">${log.cost.toFixed(4)}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.latency_ms ? `${log.latency_ms}ms` : "-"}</td>
                       <td className="py-2 px-3 text-center">
