@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <AuthGuard>
       <CurrencyProvider>
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row gap-6">
             <DashboardSidebar />
             <div className="flex-1 min-w-0">

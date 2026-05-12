@@ -52,7 +52,7 @@ interface AnalyticsData {
 
 const LABELS = {
   zh: {
-    modelConsumption: "模型消耗 Tokens",
+    modelConsumption: "资源使用",
     callTrend: "调用趋势",
     callDistribution: "调用分布",
     byDay: "按天",
@@ -63,7 +63,7 @@ const LABELS = {
     yAxisUnit: "tokens",
   },
   en: {
-    modelConsumption: "Model Consumption Tokens",
+    modelConsumption: "Resource Usage",
     callTrend: "Call Trend",
     callDistribution: "Call Distribution",
     byDay: "Daily",
@@ -328,6 +328,47 @@ export function ModelAnalytics() {
           </div>
         </div>
       </div>
+
+      {/* Summary stats */}
+      {data?.total && (
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="glass-card">
+            <CardContent className="p-3 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-blue-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">{lang === "zh" ? "总调用" : "Total Calls"}</p>
+                <p className="text-lg font-bold font-mono">{data.total.calls.toLocaleString()}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="p-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">{lang === "zh" ? "总 Tokens" : "Total Tokens"}</p>
+                <p className="text-lg font-bold font-mono">
+                  {data.total.tokens >= 1_000_000
+                    ? `${(data.total.tokens / 1_000_000).toFixed(2)}M`
+                    : data.total.tokens >= 1_000
+                      ? `${(data.total.tokens / 1_000).toFixed(1)}K`
+                      : data.total.tokens.toLocaleString()}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="p-3 flex items-center gap-2">
+              <PieIcon className="h-4 w-4 text-red-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">{t.cost}</p>
+                <p className="text-lg font-bold font-mono">
+                  {currency === "CNY" ? `¥${(data.total.cost * exchangeRate).toFixed(2)}` : `$${data.total.cost.toFixed(4)}`}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Charts grid: bar + pie */}
       <div className="grid lg:grid-cols-3 gap-4">

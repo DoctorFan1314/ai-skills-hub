@@ -111,6 +111,28 @@ CREATE TABLE IF NOT EXISTS redeem_codes (
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
+-- Multiplier rules table (per-model multiplier)
+CREATE TABLE IF NOT EXISTS multiplier_rules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  model_name TEXT NOT NULL,
+  multiplier REAL NOT NULL DEFAULT 1.0,
+  enabled INTEGER DEFAULT 1,
+  description TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(model_name)
+);
+
+-- Time-based multiplier settings (global config)
+CREATE TABLE IF NOT EXISTS time_multiplier_settings (
+  id INTEGER PRIMARY KEY CHECK(id = 1),
+  day_start TEXT DEFAULT '08:00',
+  day_end TEXT DEFAULT '22:00',
+  day_rate REAL DEFAULT 1.0,
+  night_rate REAL DEFAULT 0.5,
+  timezone TEXT DEFAULT 'Asia/Shanghai',
+  enabled INTEGER DEFAULT 0
+);
+
 -- System settings table
 CREATE TABLE IF NOT EXISTS system_settings (
   key TEXT PRIMARY KEY,
@@ -124,10 +146,12 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_value ON api_keys(key_value);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_user ON usage_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_created ON usage_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_model ON usage_logs(model);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_channel ON usage_logs(channel_id);
 CREATE INDEX IF NOT EXISTS idx_billing_records_user ON billing_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_channels_type ON channels(type);
 CREATE INDEX IF NOT EXISTS idx_channels_enabled ON channels(enabled);
 CREATE INDEX IF NOT EXISTS idx_redeem_codes_code ON redeem_codes(code);
+CREATE INDEX IF NOT EXISTS idx_multiplier_rules_model ON multiplier_rules(model_name);
 
 -- Default system settings
 INSERT OR IGNORE INTO system_settings (key, value) VALUES

@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import ProfileClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Profile — AI Skills Hub",
-  description: "Manage your profile, favorites, likes, submissions and activity history",
+  title: "Profile — OortAPI",
+  description: "Manage your profile, view usage stats, and configure settings",
 };
 
 export default function ProfilePage() {

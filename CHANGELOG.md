@@ -8,12 +8,26 @@ All notable changes to this project will be documented in this file.
 
 ## [v3.3.0] — 2026-05-12
 
-### Analytics Charts, Navigation Restructure & Docs Rewrite
+### Analytics Charts, Tool Calling Fix, Profile Redesign & UX Improvements
 
 #### New Features
 - **Model Analytics with ECharts** — New model consumption analytics embedded in overview page: stacked bar chart (per-model **token usage** by day/hour), pie chart (call distribution), and trend line chart (call count). All charts share per-model color mapping
 - **Standalone Model Marketplace** — Models page moved from `/dashboard/models` to `/models` as a standalone page (no sidebar). Top navbar now shows: Home → Dashboard → Models → Docs → Resources
 - **Complete Docs Rewrite** — `/docs` page rewritten with clear sections: Quick Start (3-step with Base URL), AI App Integration (ChatBox, Cherry Studio, Open WebUI, etc.), SDK Integration, cURL Examples, Streaming, API Endpoints, Pricing, Error Codes
+- **Profile Page Redesign** — Rewrote profile page for OortAPI: overview tab (balance, total calls, total tokens, total cost stats + quick links to dashboard + recent usage table) and settings tab (profile editing, theme preference)
+- **Anthropic Messages API** — New `/api/v1/messages` endpoint supporting Anthropic native format with full tool_use/tool_result conversion between OpenAI and Anthropic formats
+- **Multiplier Rules** — New `/api/dashboard/multiplier` endpoint for per-model and time-based pricing multipliers
+
+#### Critical Bug Fixes
+- **Tool Calling Passthrough** — Fixed gateway not forwarding `tools`, `tool_choice`, `functions`, `function_call`, `response_format`, `stop`, `seed`, `presence_penalty`, `frequency_penalty` to upstream providers. Models were outputting raw `<tool_code>` text instead of proper tool calls
+- **Timestamp Timezone Fix** — SQLite stores UTC via `CURRENT_TIMESTAMP` but frontend displayed UTC time without conversion. All `new Date(timestamp)` calls now append `"Z"` suffix so JavaScript correctly interprets UTC and converts to user's local timezone
+- **Model Price Edit Bug** — Edit form in model marketplace displayed CNY values but labeled as USD, and saved CNY prices as USD. Fixed to correctly convert between currencies on display and save
+
+#### UI Improvements
+- **Dashboard Layout Widened** — Changed `max-w-7xl` to `max-w-[1600px]` across dashboard and models pages for better large-screen experience
+- **OortAPI Footer** — Replaced old "AI Skills Hub" footer with OortAPI-branded footer: Product, Features, Resources, Community sections with platform list (OpenAI, Anthropic, Google, DeepSeek, Qwen)
+- **Resource Hub Update** — Updated from 2 cards (Prompts + Skills) to 3 cards (Agent Skills + Prompt Templates + API Docs)
+- **Usage Page Currency** — Cost column and cost breakdown now follow currency setting (USD/CNY) instead of hardcoded `$`
 
 #### Analytics Controls
 - **Time Dimension Rework** — "By Day" mode: range buttons (7/14/30) control X-axis date range. "By Hour" mode: X-axis shows fixed 24h slots (00:00~23:00), range buttons hidden

@@ -36,6 +36,52 @@ export function addBalance(userId: number, amount: number, type: 'recharge' | 'r
   return { success: true, newBalance };
 }
 
+export function getEffectiveMultiplier(model: string): { multiplier: number; type: string; description: string } {
+  // 1. Check time-based multiplier
+  const timeSettings = db.prepare('SELECT * FROM time_multiplier_settings WHERE id = 1 AND enabled = 1').get() as {
+    day_start: string;
+    day_end: string;
+    day_rate: number;
+    night_rate: number;
+    timezone: string;
+  } | undefined;
+
+  if (timeSettings) {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: timeSettings.timezone,
+    });
+    const currentTime = formatter.format(now);
+    const isDay = currentTime >= timeSettings.day_start && currentTime <= timeSettings.day_end;
+
+    return {
+      multiplier: isDay ? timeSettings.day_rate : timeSettings.night_rate,
+      type: 'time',
+      description: isDay ? `Day rate (${timeSettings.day_start}-${timeSettings.day_end})` : `Night rate (${timeSettings.day_end}-${timeSettings.day_start})`
+    };
+  }
+
+  // 2. Check regular multiplier
+  const regular = db.prepare('SELECT multiplier, description FROM multiplier_rules WHERE model_name = ? AND enabled = 1').get(model) as {
+    multiplier: number;
+    description: string | null;
+  } | undefined;
+
+  if (regular) {
+    return {
+      multiplier: regular.multiplier,
+      type: 'regular',
+      description: regular.description || 'Model specific'
+    };
+  }
+
+  // 3. Default
+  return { multiplier: 1.0, type: 'default', description: 'Standard rate' };
+}
+
 export function calculateCost(
   model: string,
   tokensIn: number,
@@ -82,13 +128,14 @@ export function logUsage(data: {
   success: boolean;
   errorMessage?: string;
   cached?: boolean;
+  multiplier?: number;
 }) {
   db.prepare(
-    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, latency_ms, success, error_message, cached) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, latency_ms, success, error_message, cached, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     data.userId, data.apiKeyId ?? null, data.channelId ?? null, data.model,
     data.tokensIn, data.tokensOut, data.tokensInCache ?? 0, data.tokensCacheCreation ?? 0,
     data.cost, data.latencyMs ?? null,
-    data.success ? 1 : 0, data.errorMessage ?? null, data.cached ? 1 : 0
+    data.success ? 1 : 0, data.errorMessage ?? null, data.cached ? 1 : 0, data.multiplier ?? 1.0
   );
 }

@@ -234,7 +234,7 @@ export default function UsersPage() {
                           {u.enabled ? t.enabled : t.disabled}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-right text-xs text-muted-foreground">{new Date(u.created_at + "Z").toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1">
                           <button onClick={() => openEdit(u)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={t.edit}>

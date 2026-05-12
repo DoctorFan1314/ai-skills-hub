@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrency } from "@/contexts/currency-context";
 import { Pencil, Save, X, RefreshCw, Search, Cpu, Check, Zap } from "lucide-react";
 
 interface ChannelModel {
@@ -33,8 +34,6 @@ const PROVIDER_COLORS: Record<string, { bg: string; text: string; border: string
   meta:      { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/20" },
   unknown:   { bg: "bg-zinc-500/10",    text: "text-zinc-400",    border: "border-zinc-500/20" },
 };
-
-const EXCHANGE_RATE = 7.3;
 
 const LABELS = {
   zh: {
@@ -92,6 +91,7 @@ export default function ModelsPage() {
   const [models, setModels] = useState<ChannelModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState<Currency>("USD");
+  const [exchangeRate, setExchangeRate] = useState(7.3);
   const [editingModel, setEditingModel] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ input_rate: 0, output_rate: 0, cache_rate: 0, cache_creation_rate: 0, display_name: "" });
   const [search, setSearch] = useState("");
@@ -106,6 +106,17 @@ export default function ModelsPage() {
   };
 
   useEffect(() => { fetchModels(); }, []);
+
+  useEffect(() => {
+    fetch("/api/dashboard/settings", { credentials: "include" })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.settings?.exchange_rate) {
+          setExchangeRate(parseFloat(data.settings.exchange_rate) || 7.3);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const syncAllChannels = async () => {
     setSyncing(true);
@@ -165,7 +176,7 @@ export default function ModelsPage() {
 
   const fmtPrice = (rate: number) => {
     if (rate <= 0) return "-";
-    if (currency === "CNY") return `¥${(rate * EXCHANGE_RATE).toFixed(2)}`;
+    if (currency === "CNY") return `¥${(rate * exchangeRate).toFixed(2)}`;
     return `$${rate.toFixed(4)}`;
   };
 
@@ -175,7 +186,7 @@ export default function ModelsPage() {
     <div className="min-h-screen">
       {/* Hero header */}
       <div className="border-b border-border bg-gradient-to-b from-background to-muted/30">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
@@ -263,7 +274,7 @@ export default function ModelsPage() {
       </div>
 
       {/* Model Grid */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+      <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-6">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -320,8 +331,12 @@ export default function ModelsPage() {
                               <Input
                                 type="number"
                                 step="0.0001"
-                                value={editForm[key]}
-                                onChange={(e) => setEditForm((f) => ({ ...f, [key]: Number(e.target.value) }))}
+                                value={currency === "CNY" ? (editForm[key] * exchangeRate).toFixed(2) : editForm[key]}
+                                onChange={(e) => {
+                                  const raw = Number(e.target.value);
+                                  const usdValue = currency === "CNY" ? raw / exchangeRate : raw;
+                                  setEditForm((f) => ({ ...f, [key]: usdValue }));
+                                }}
                                 className="h-8 text-xs"
                               />
                             </div>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
-import { LayoutDashboard, Key, BarChart3, Wallet, Radio, Settings, Shield, Users, Gift } from "lucide-react";
+import { LayoutDashboard, Key, BarChart3, Wallet, Radio, Settings, Shield, Users, Gift, Percent } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "overview" as const },
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/usage", icon: BarChart3, labelKey: "usage" as const },
   { href: "/dashboard/billing", icon: Wallet, labelKey: "billing" as const },
   { href: "/dashboard/channels", icon: Radio, labelKey: "channels" as const, adminOnly: true },
+  { href: "/dashboard/multiplier", icon: Percent, labelKey: "multiplier" as const, adminOnly: true },
   { href: "/dashboard/users", icon: Users, labelKey: "users" as const, adminOnly: true },
   { href: "/dashboard/redeem", icon: Gift, labelKey: "redeem" as const, adminOnly: true },
   { href: "/dashboard/settings", icon: Settings, labelKey: "settings" as const },
@@ -21,9 +22,10 @@ const NAV_ITEMS = [
 const LABELS: Record<string, { zh: string; en: string }> = {
   overview: { zh: "概览", en: "Overview" },
   apiKeys: { zh: "API Keys", en: "API Keys" },
-  usage: { zh: "用量分析", en: "Usage" },
+  usage: { zh: "调用日志", en: "Call Logs" },
   billing: { zh: "账单中心", en: "Billing" },
   channels: { zh: "渠道管理", en: "Channels" },
+  multiplier: { zh: "倍率管理", en: "Multipliers" },
   users: { zh: "用户管理", en: "Users" },
   redeem: { zh: "兑换码", en: "Redeem Codes" },
   settings: { zh: "设置", en: "Settings" },

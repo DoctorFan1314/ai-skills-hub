@@ -1,33 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { NewsletterForm } from "@/components/shared/newsletter-form";
 import { useI18n } from "@/contexts/i18n-context";
 
-interface FooterLink {
-  label: string;
-  href: string;
-  disabled?: boolean;
-}
-
 export function Footer() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const footerSections = [
-    { id: "skills", title: t.common.skills, links: [
-      { label: t.common.skills, href: "/skills" },
-      { label: t.common.prompts, href: "/prompts" },
+    { id: "product", title: lang === "zh" ? "产品" : "Product", links: [
+      { label: lang === "zh" ? "模型市场" : "Models", href: "/models", disabled: false },
+      { label: lang === "zh" ? "API 文档" : "API Docs", href: "/docs", disabled: false },
+      { label: lang === "zh" ? "控制台" : "Dashboard", href: "/dashboard", disabled: false },
+      { label: lang === "zh" ? "定价" : "Pricing", href: "/models", disabled: false },
     ]},
-    { id: "browse", title: t.footer.browse, links: [
-      { label: t.common.categories, href: "/categories" },
-      { label: t.common.trending, href: "/trending" },
-      { label: t.common.tags, href: "/tags" },
+    { id: "features", title: lang === "zh" ? "功能" : "Features", links: [
+      { label: lang === "zh" ? "统一接口" : "Unified API", href: "/docs", disabled: false },
+      { label: lang === "zh" ? "智能路由" : "Smart Routing", href: "/docs", disabled: false },
+      { label: lang === "zh" ? "用量计费" : "Usage & Billing", href: "/dashboard/usage", disabled: false },
+      { label: lang === "zh" ? "多格式兼容" : "Multi-Protocol", href: "/docs", disabled: false },
     ]},
     { id: "resources", title: t.footer.resources, links: [
-      { label: t.common.guide, href: "/guide" },
-      { label: t.common.submit, href: "/submit" },
-      { label: t.footer.changelog, href: "#" },
-      { label: t.footer.api, href: "#", disabled: true },
+      { label: lang === "zh" ? "Agent 技能" : "Agent Skills", href: "/skills", disabled: false },
+      { label: lang === "zh" ? "Prompt 模板" : "Prompt Templates", href: "/prompts", disabled: false },
+      { label: lang === "zh" ? "分类浏览" : "Categories", href: "/categories", disabled: false },
+      { label: lang === "zh" ? "新手指南" : "Guide", href: "/guide", disabled: false },
     ]},
     { id: "community", title: t.footer.community, links: [
       { label: t.footer.github, href: "#", disabled: true },
@@ -43,17 +39,13 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">
-                <span className="text-sm font-bold text-primary">AI</span>
+                <span className="text-sm font-bold text-primary">O</span>
               </div>
-              <span className="text-lg font-semibold text-foreground">AI Skills Hub</span>
+              <span className="text-lg font-semibold text-foreground">OortAPI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
               {t.footer.description}
             </p>
-            <div>
-              <h3 className="text-sm font-medium text-foreground mb-3">{t.footer.newsletter}</h3>
-              <NewsletterForm />
-            </div>
           </div>
           {footerSections.map((section) => (
             <nav key={section.id} aria-label={section.title}>
@@ -63,8 +55,6 @@ export function Footer() {
                   <li key={link.label}>
                     {link.disabled ? (
                       <span className="text-sm text-muted-foreground/50 cursor-not-allowed" aria-disabled="true">{link.label} <span className="text-[10px]">({t.footer.comingSoon || "Coming soon"})</span></span>
-                    ) : link.href === "#" ? (
-                      <span className="text-sm text-muted-foreground cursor-default">{link.label} <span className="text-[10px] text-muted-foreground/50">({t.footer.comingSoon || "Coming soon"})</span></span>
                     ) : (
                       <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                         {link.label}
@@ -80,9 +70,9 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">{t.footer.copyright}</p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span>{t.footer.platforms}:</span>
-            <span>ChatGPT</span><span>·</span>
-            <span>Claude</span><span>·</span>
-            <span>Grok</span><span>·</span>
+            <span>OpenAI</span><span>·</span>
+            <span>Anthropic</span><span>·</span>
+            <span>Google</span><span>·</span>
             <span>DeepSeek</span><span>·</span>
             <span>Qwen</span>
           </div>

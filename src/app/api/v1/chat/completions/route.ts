@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest } from '@/lib/api-gateway';
-import { deductBalance, calculateCost, logUsage } from '@/lib/billing-engine';
+import { deductBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
         }
 
         const latencyMs = Date.now() - streamData.startTime;
-        const cost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+        const { multiplier } = getEffectiveMultiplier(streamData.model);
+        const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+        const cost = baseCost * multiplier;
 
         if (cost > 0) {
           deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest) {
           cost,
           latencyMs,
           success: true,
+          multiplier,
         });
       }
 
@@ -105,9 +108,10 @@ export async function POST(request: NextRequest) {
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.usage) {
-                  tokensIn = parsed.usage.prompt_tokens || tokensIn;
-                  tokensOut = parsed.usage.completion_tokens || tokensOut;
-                  tokensInCache = parsed.usage.prompt_tokens_details?.cached_tokens || tokensInCache;
+                  tokensIn = parsed.usage.prompt_tokens || parsed.usage.input_tokens || tokensIn;
+                  tokensOut = parsed.usage.completion_tokens || parsed.usage.output_tokens || tokensOut;
+                  // OpenAI: prompt_tokens_details.cached_tokens; Anthropic: cache_read_input_tokens
+                  tokensInCache = parsed.usage.prompt_tokens_details?.cached_tokens || parsed.usage.cache_read_input_tokens || tokensInCache;
                   tokensCacheCreation = parsed.usage.cache_creation_input_tokens || tokensCacheCreation;
                 }
                 const delta = parsed.choices?.[0]?.delta?.content;

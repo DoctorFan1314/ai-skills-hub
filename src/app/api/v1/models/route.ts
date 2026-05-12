@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       return {
         id: modelName,
         object: 'model',
-        created: rate ? Math.floor(new Date(rate.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000),
+        created: rate ? Math.floor(new Date(rate.created_at + "Z").getTime() / 1000) : Math.floor(Date.now() / 1000),
         owned_by: rate?.provider || 'unknown',
         display_name: rate?.display_name || modelName,
         pricing: rate ? {

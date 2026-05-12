@@ -2,14 +2,31 @@ import db from './db';
 import type { DBApiKey, DBUser } from './db';
 import { verifyToken, getTokenFromCookie, decrypt } from './auth';
 import { checkRateLimit, type RateLimitResult } from './rate-limiter';
-import { deductBalance, calculateCost, logUsage } from './billing-engine';
+import { deductBalance, calculateCost, logUsage, getEffectiveMultiplier } from './billing-engine';
 import { selectChannel, reportChannelFailure, reportChannelSuccess } from './channel-manager';
 
 export interface GatewayRequest {
   model: string;
-  messages?: Array<{ role: string; content: string }>;
+  messages?: Array<{ role: string; content: string | Array<{ type: string; text?: string }> }>;
   prompt?: string;
   input?: string | string[];
+  stream?: boolean;
+  temperature?: number;
+  top_p?: number;
+  max_tokens?: number;
+  n?: number;
+  size?: string;
+  // Tool / function calling
+  tools?: Array<{ type: string; function: { name: string; description?: string; parameters?: unknown } }>;
+  tool_choice?: string | { type: string; function?: { name: string } };
+  functions?: Array<{ name: string; description?: string; parameters?: unknown }>;
+  function_call?: string | { name: string };
+  // Other common OpenAI-compatible params
+  response_format?: { type: string };
+  stop?: string | string[];
+  seed?: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
   [key: string]: unknown;
 }
 
@@ -167,11 +184,14 @@ export async function processGatewayRequest(
     reportChannelSuccess(channel.id);
 
     // Calculate tokens and cost (including cache tokens)
-    const tokensIn = data.usage?.prompt_tokens || estimateTokens(JSON.stringify(req.messages || req.prompt || ''));
-    const tokensOut = data.usage?.completion_tokens || estimateTokens(JSON.stringify(data.choices?.[0]?.message?.content || ''));
-    const tokensInCache = data.usage?.prompt_tokens_details?.cached_tokens || 0;
+    const tokensIn = data.usage?.prompt_tokens || data.usage?.input_tokens || estimateTokens(JSON.stringify(req.messages || req.prompt || ''));
+    const tokensOut = data.usage?.completion_tokens || data.usage?.output_tokens || estimateTokens(JSON.stringify(data.choices?.[0]?.message?.content || ''));
+    // OpenAI: prompt_tokens_details.cached_tokens; Anthropic: usage.cache_read_input_tokens
+    const tokensInCache = data.usage?.prompt_tokens_details?.cached_tokens || data.usage?.cache_read_input_tokens || 0;
     const tokensCacheCreation = data.usage?.cache_creation_input_tokens || 0;
-    const cost = calculateCost(req.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+    const { multiplier } = getEffectiveMultiplier(req.model);
+    const baseCost = calculateCost(req.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+    const cost = baseCost * multiplier;
 
     // Deduct balance
     const deductResult = deductBalance(user.id, cost, `API call: ${req.model}`);
@@ -192,6 +212,7 @@ export async function processGatewayRequest(
       cost,
       latencyMs,
       success: true,
+      multiplier,
     });
 
     return { success: true, data };
@@ -231,6 +252,7 @@ function buildUpstreamUrl(baseUrl: string, endpoint: string, providerType: strin
 // Build upstream request body based on provider type
 function buildUpstreamRequest(req: GatewayRequest, providerType: string): unknown {
   if (providerType === 'anthropic') {
+    // Anthropic format: only supported fields
     return {
       model: req.model,
       messages: req.messages,
@@ -238,24 +260,16 @@ function buildUpstreamRequest(req: GatewayRequest, providerType: string): unknow
       stream: req.stream || false,
       temperature: req.temperature,
       top_p: req.top_p,
+      tools: req.tools,
+      tool_choice: req.tool_choice,
+      stop_sequences: req.stop,
     };
   }
 
-  // OpenAI-compatible (default for most providers)
-  const body: Record<string, unknown> = {
-    model: req.model,
-    messages: req.messages,
-    prompt: req.prompt,
-    input: req.input,
-    stream: req.stream || false,
-    temperature: req.temperature,
-    top_p: req.top_p,
-    max_tokens: req.max_tokens,
-    n: req.n,
-    size: req.size,
-  };
+  // OpenAI-compatible (default): pass through ALL client params
+  const body: Record<string, unknown> = { ...req };
 
-  // Request usage data in streaming responses
+  // Ensure stream_options is set for streaming usage data
   if (req.stream) {
     body.stream_options = { include_usage: true };
   }

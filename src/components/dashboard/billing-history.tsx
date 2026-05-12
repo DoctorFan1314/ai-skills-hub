@@ -57,7 +57,7 @@ export function BillingHistory({ lang = "zh" }: { lang?: "zh" | "en" }) {
                   <Icon className={`h-4 w-4 ${config.color} shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm">{r.description || config[lang]}</div>
-                    <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(r.created_at + "Z").toLocaleString()}</div>
                   </div>
                   <div className="text-right">
                     <div className={`font-mono text-sm ${r.amount > 0 ? "text-green-500" : "text-red-500"}`}>

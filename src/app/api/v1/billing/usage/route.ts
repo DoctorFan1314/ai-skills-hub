@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateApiKey, validateUserFromCookie } from '@/lib/api-gateway';
-import type { DBUsageLog } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +29,15 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const logs = db.prepare(
-      'SELECT id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, latency_ms, success, cached, created_at FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    ).all(userId, limit, offset) as DBUsageLog[];
+      `SELECT u.id, u.model, u.tokens_in, u.tokens_out, u.tokens_in_cache, u.tokens_cache_creation,
+              u.cost, u.latency_ms, u.success, u.cached, u.created_at, u.channel_id, u.multiplier,
+              c.name as channel_name,
+              m.input_rate, m.output_rate, m.cache_rate, m.cache_creation_rate
+       FROM usage_logs u
+       LEFT JOIN channels c ON u.channel_id = c.id
+       LEFT JOIN model_rates m ON u.model = m.model_name
+       WHERE u.user_id = ? ORDER BY u.created_at DESC LIMIT ? OFFSET ?`
+    ).all(userId, limit, offset);
 
     const total = db.prepare('SELECT COUNT(*) as count FROM usage_logs WHERE user_id = ?').get(userId) as { count: number };
 

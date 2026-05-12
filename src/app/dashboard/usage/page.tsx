@@ -2,9 +2,9 @@
 
 import { useI18n } from "@/contexts/i18n-context";
 import { useCurrency } from "@/contexts/currency-context";
-import { UsageChart } from "@/components/dashboard/usage-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { Activity, Coins, DollarSign } from "lucide-react";
 
 interface UsageLog {
   id: number;
@@ -18,31 +18,262 @@ interface UsageLog {
   success: number;
   cached: number;
   created_at: string;
+  multiplier: number | null;
+  channel_name: string | null;
+  input_rate: number | null;
+  output_rate: number | null;
+  cache_rate: number | null;
+  cache_creation_rate: number | null;
+}
+
+interface UsageSummary {
+  total_calls: number;
+  total_tokens: number;
+  total_cost: number;
 }
 
 const LABELS = {
-  zh: { title: "调用日志", model: "模型", tokensIn: "输入 Tokens", tokensOut: "输出 Tokens", tokensInCache: "缓存命中", tokensCacheCreate: "缓存创建", tokens: "总 Tokens", cost: "费用", latency: "延迟", status: "状态", success: "成功", failed: "失败", noLogs: "暂无调用记录", time: "时间" },
-  en: { title: "Usage Logs", model: "Model", tokensIn: "Input Tokens", tokensOut: "Output Tokens", tokensInCache: "Cache Hit", tokensCacheCreate: "Cache Create", tokens: "Total Tokens", cost: "Cost", latency: "Latency", status: "Status", success: "Success", failed: "Failed", noLogs: "No usage logs yet", time: "Time" },
+  zh: {
+    title: "调用日志",
+    model: "模型",
+    channel: "渠道",
+    tokensIn: "输入 Tokens",
+    tokensOut: "输出 Tokens",
+    tokensInCache: "缓存命中",
+    tokensCacheCreate: "缓存创建",
+    tokens: "总 Tokens",
+    cost: "费用",
+    latency: "延迟",
+    status: "状态",
+    success: "成功",
+    failed: "失败",
+    multiplier: "倍率",
+    details: "详情",
+    noLogs: "暂无调用记录",
+    time: "时间",
+    totalCalls: "总调用次数",
+    totalTokens: "总 Tokens",
+    totalCost: "总花费",
+    inputCost: "输入费用",
+    outputCost: "输出费用",
+    cacheReadCost: "缓存读取费用",
+    cacheWriteCost: "缓存创建费用",
+    costBreakdown: "费用明细",
+    noChannel: "无渠道",
+    formula: "计算公式",
+    nonCachedTokens: "非缓存输入",
+    total: "合计",
+    noRateData: "未找到模型费率，使用默认费率",
+  },
+  en: {
+    title: "Call Logs",
+    model: "Model",
+    channel: "Channel",
+    tokensIn: "Input Tokens",
+    tokensOut: "Output Tokens",
+    tokensInCache: "Cache Hit",
+    tokensCacheCreate: "Cache Create",
+    tokens: "Total Tokens",
+    cost: "Cost",
+    latency: "Latency",
+    status: "Status",
+    success: "Success",
+    failed: "Failed",
+    multiplier: "Multiplier",
+    details: "Details",
+    noLogs: "No usage logs yet",
+    time: "Time",
+    totalCalls: "Total Calls",
+    totalTokens: "Total Tokens",
+    totalCost: "Total Cost",
+    inputCost: "Input Cost",
+    outputCost: "Output Cost",
+    cacheReadCost: "Cache Read Cost",
+    cacheWriteCost: "Cache Write Cost",
+    costBreakdown: "Cost Breakdown",
+    noChannel: "No channel",
+    formula: "Formula",
+    nonCachedTokens: "Non-cached Input",
+    total: "Total",
+    noRateData: "Model rate not found, using default rate",
+  },
 };
+
+function formatRate(rate: number | null | undefined): string {
+  if (rate == null || rate === 0) return "-";
+  return `$${rate.toFixed(4)}/1K`;
+}
 
 export default function UsagePage() {
   const { lang } = useI18n();
-  const { formatPrice } = useCurrency();
+  const { currency, exchangeRate, formatPrice, symbol } = useCurrency();
   const [logs, setLogs] = useState<UsageLog[]>([]);
+  const [summary, setSummary] = useState<UsageSummary>({ total_calls: 0, total_tokens: 0, total_cost: 0 });
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const t = LABELS[lang];
 
   useEffect(() => {
-    fetch("/api/v1/billing/usage?limit=20", { credentials: "include" })
+    fetch("/api/v1/billing/usage?limit=50", { credentials: "include" })
       .then(res => res.json())
-      .then(d => { setLogs(d.data || []); setLoading(false); })
+      .then(d => {
+        const logsData = d.data || [];
+        setLogs(logsData);
+        const totalCalls = logsData.length;
+        const totalTokens = logsData.reduce((s: number, l: UsageLog) => s + l.tokens_in + l.tokens_out + l.tokens_in_cache + l.tokens_cache_creation, 0);
+        const totalCost = logsData.reduce((s: number, l: UsageLog) => s + l.cost, 0);
+        setSummary({ total_calls: totalCalls, total_tokens: totalTokens, total_cost: totalCost });
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
+  const formatTokens = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return n.toLocaleString();
+  };
+
+  // Format cost in the current currency (small amounts use USD precision then convert)
+  const formatCostDisplay = (usd: number) => {
+    if (currency === "CNY") {
+      return `¥${(usd * exchangeRate).toFixed(4)}`;
+    }
+    return `$${usd.toFixed(6)}`;
+  };
+
+  // Render detailed cost breakdown for a log entry
+  const renderBreakdown = (log: UsageLog) => {
+    const inputRate = log.input_rate ?? 0.001;
+    const outputRate = log.output_rate ?? 0.002;
+    const cacheRate = log.cache_rate ?? 0;
+    const cacheCreationRate = log.cache_creation_rate && log.cache_creation_rate > 0
+      ? log.cache_creation_rate
+      : inputRate * 1.25;
+    const mult = log.multiplier ?? 1.0;
+
+    // Non-cached input = total input - cache_hit - cache_creation
+    const nonCachedIn = Math.max(0, log.tokens_in - log.tokens_in_cache - log.tokens_cache_creation);
+
+    const inputCost = nonCachedIn * inputRate / 1000;
+    const cacheHitCost = log.tokens_in_cache * cacheRate / 1000;
+    const cacheCreationCost = log.tokens_cache_creation * cacheCreationRate / 1000;
+    const outputCost = log.tokens_out * outputRate / 1000;
+    const baseCost = inputCost + cacheHitCost + cacheCreationCost + outputCost;
+    const finalCost = baseCost * mult;
+
+    const rateSource = log.input_rate != null ? "" : ` (${t.noRateData})`;
+
+    return (
+      <div className="text-xs space-y-3 font-mono">
+        <p className="font-semibold text-sm">{t.costBreakdown}</p>
+
+        {/* Rate info */}
+        <div className="text-muted-foreground space-y-0.5">
+          <p>{lang === "zh" ? "模型费率" : "Model Rates"}{rateSource}:</p>
+          <p className="pl-3">input = {formatRate(inputRate)}, output = {formatRate(outputRate)}</p>
+          <p className="pl-3">cache_read = {formatRate(cacheRate)}, cache_create = {formatRate(cacheCreationRate)}</p>
+        </div>
+
+        {/* Calculation lines */}
+        <div className="space-y-1">
+          {nonCachedIn > 0 && (
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">
+                {t.inputCost}: {nonCachedIn.toLocaleString()} × {inputRate.toFixed(4)} / 1000
+              </span>
+              <span>= {formatCostDisplay(inputCost)}</span>
+            </div>
+          )}
+          {log.tokens_in_cache > 0 && (
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">
+                {t.cacheReadCost}: {log.tokens_in_cache.toLocaleString()} × {cacheRate.toFixed(4)} / 1000
+              </span>
+              <span>= {formatCostDisplay(cacheHitCost)}</span>
+            </div>
+          )}
+          {log.tokens_cache_creation > 0 && (
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">
+                {t.cacheWriteCost}: {log.tokens_cache_creation.toLocaleString()} × {cacheCreationRate.toFixed(4)} / 1000
+              </span>
+              <span>= {formatCostDisplay(cacheCreationCost)}</span>
+            </div>
+          )}
+          {log.tokens_out > 0 && (
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">
+                {t.outputCost}: {log.tokens_out.toLocaleString()} × {outputRate.toFixed(4)} / 1000
+              </span>
+              <span>= {formatCostDisplay(outputCost)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Subtotal and multiplier */}
+        <div className="border-t border-border/30 pt-1 space-y-1">
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">{lang === "zh" ? "小计 (base cost)" : "Subtotal (base cost)"}</span>
+            <span>= {formatCostDisplay(baseCost)}</span>
+          </div>
+          {mult !== 1.0 && (
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">
+                × {lang === "zh" ? "倍率" : "Multiplier"}: {mult.toFixed(2)}x
+              </span>
+              <span></span>
+            </div>
+          )}
+          <div className="flex justify-between gap-4 font-semibold text-sm">
+            <span>{t.total}</span>
+            <span>= {formatCostDisplay(finalCost)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{lang === "zh" ? "用量分析" : "Usage Analytics"}</h1>
-      <UsageChart lang={lang} />
+      <h1 className="text-2xl font-bold">{t.title}</h1>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="glass-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-md bg-blue-500/10">
+              <Activity className="h-4 w-4 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{t.totalCalls}</p>
+              <p className="text-xl font-bold font-mono">{summary.total_calls.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="glass-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-md bg-green-500/10">
+              <Coins className="h-4 w-4 text-green-500" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{t.totalTokens}</p>
+              <p className="text-xl font-bold font-mono">{formatTokens(summary.total_tokens)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="glass-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-md bg-red-500/10">
+              <DollarSign className="h-4 w-4 text-red-500" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{t.totalCost}</p>
+              <p className="text-xl font-bold font-mono">{formatPrice(summary.total_cost)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="glass-card">
         <CardHeader>
@@ -58,13 +289,16 @@ export default function UsagePage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
+                    <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t.channel}</th>
                     <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t.model}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensIn}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensOut}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensInCache}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensCacheCreate}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokens}</th>
+                    <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.multiplier}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.cost}</th>
+                    <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.details}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.latency}</th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.status}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.time}</th>
@@ -72,22 +306,45 @@ export default function UsagePage() {
                 </thead>
                 <tbody>
                   {logs.map((log) => (
-                    <tr key={log.id} className="border-b border-border/20 hover:bg-muted/30">
+                    <Fragment key={log.id}>
+                    <tr className="border-b border-border/20 hover:bg-muted/30">
+                      <td className="py-2 px-3 text-xs text-muted-foreground">{log.channel_name || t.noChannel}</td>
                       <td className="py-2 px-3 font-mono text-xs">{log.model}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_in.toLocaleString()}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_out.toLocaleString()}</td>
-                      <td className="py-2 px-3 text-right font-mono">{log.tokens_in_cache ? log.tokens_in_cache.toLocaleString() : "-"}</td>
-                      <td className="py-2 px-3 text-right font-mono">{log.tokens_cache_creation ? log.tokens_cache_creation.toLocaleString() : "-"}</td>
-                      <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out).toLocaleString()}</td>
-                      <td className="py-2 px-3 text-right font-mono">{formatPrice(log.cost)}</td>
+                      <td className="py-2 px-3 text-right font-mono">{log.tokens_in_cache > 0 ? log.tokens_in_cache.toLocaleString() : "0"}</td>
+                      <td className="py-2 px-3 text-right font-mono">{log.tokens_cache_creation > 0 ? log.tokens_cache_creation.toLocaleString() : "0"}</td>
+                      <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out + log.tokens_in_cache + log.tokens_cache_creation).toLocaleString()}</td>
+                      <td className="py-2 px-3 text-center">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-mono">
+                          {(log.multiplier ?? 1.0).toFixed(2)}x
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-right font-mono">{formatCostDisplay(log.cost)}</td>
+                      <td className="py-2 px-3 text-center">
+                        <button
+                          onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {t.details}
+                        </button>
+                      </td>
                       <td className="py-2 px-3 text-right font-mono">{log.latency_ms ? `${log.latency_ms}ms` : "-"}</td>
                       <td className="py-2 px-3 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${log.success ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
                           {log.success ? t.success : t.failed}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-right text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</td>
+                      <td className="py-2 px-3 text-right text-xs text-muted-foreground">{new Date(log.created_at + "Z").toLocaleString()}</td>
                     </tr>
+                    {expandedId === log.id && (
+                      <tr className="border-b border-border/20 bg-muted/20">
+                        <td colSpan={13} className="px-6 py-4">
+                          {renderBreakdown(log)}
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
