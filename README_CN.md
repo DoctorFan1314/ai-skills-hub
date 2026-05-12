@@ -131,7 +131,7 @@ curl https://your-domain.com/api/v1/billing/balance \
 | 认证 | JWT + httpOnly cookie |
 | 样式 | Tailwind CSS v4 |
 | 组件库 | shadcn/ui (Base UI) |
-| 图表 | Recharts |
+| 图表 | Recharts + ECharts (echarts-for-react) |
 | 密码哈希 | PBKDF2 |
 | 部署 | Vercel / Docker / VPS |
 
@@ -153,15 +153,18 @@ oortapi/
 │   │   │   │   └── billing/            # 余额与用量
 │   │   │   ├── auth/                   # 登录、注册、个人信息
 │   │   │   └── dashboard/              # 统计、密钥、渠道、用户、兑换码、模型、设置 CRUD
+│   │   ├── models/                     # 模型市场（独立页面）
+│   │   │   └── page.tsx               # 卡片网格，搜索、供应商筛选、货币切换、四价展示
 │   │   ├── dashboard/                  # 用户控制台页面
-│   │   │   ├── page.tsx                # 概览（统计+图表）
+│   │   │   ├── page.tsx                # 概览（统计 + ECharts 模型分析）
 │   │   │   ├── keys/page.tsx           # API 密钥管理
 │   │   │   ├── usage/page.tsx          # 用量分析
 │   │   │   ├── billing/page.tsx        # 账单与余额
-│   │   │   ├── models/page.tsx         # 模型市场 — 卡片网格 + 货币切换
-│   │   │   ├── users/page.tsx          # 用户管理（管理员）+ 密码重置
 │   │   │   ├── channels/page.tsx       # 渠道管理（管理员）
+│   │   │   ├── users/page.tsx          # 用户管理（管理员）+ 密码重置
+│   │   │   ├── redeem/page.tsx         # 兑换码管理（管理员）
 │   │   │   └── settings/page.tsx       # 账户设置
+│   │   ├── docs/                       # API 文档（Swagger UI）
 │   │   ├── resources/                  # 技能、模板、分类
 │   │   ├── login/page.tsx
 │   │   ├── register/page.tsx
@@ -194,8 +197,8 @@ oortapi/
 
 注册后用户可访问完整控制台：
 
-- **概览** — 今日调用数、成功率、花费、延迟、7 天趋势图
-- **模型市场** — 卡片网格布局，支持搜索、供应商筛选、USD/CNY 货币切换、四价展示（输入/补全/缓存读/缓存写）
+- **概览** — 今日调用数、成功率、花费、延迟、ECharts 模型消耗分析（堆叠柱状图、饼状图、趋势折线图）
+- **模型市场** — 独立页面 `/models`，卡片网格布局，支持搜索、供应商筛选、USD/CNY 货币切换、四价展示（输入/补全/缓存读/缓存写）
 - **API 密钥** — 创建/管理密钥，支持独立速率限制
 - **用量分析** — 详细调用历史，含 Token 分拆（输入、输出、缓存命中、缓存创建），货币感知费用展示
 - **账单** — 余额展示（USD/CNY）、交易历史、兑换码充值

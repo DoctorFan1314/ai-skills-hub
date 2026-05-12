@@ -53,8 +53,41 @@ export async function POST(request: NextRequest) {
       let completionText = '';
       let logged = false;
 
+      function doLogUsage() {
+        if (logged) return;
+        logged = true;
+
+        if (tokensIn === 0) {
+          tokensIn = estimateTokens(JSON.stringify(body.messages));
+        }
+        if (tokensOut === 0 && completionText) {
+          tokensOut = estimateTokens(completionText);
+        }
+
+        const latencyMs = Date.now() - streamData.startTime;
+        const cost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+
+        if (cost > 0) {
+          deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
+        }
+
+        logUsage({
+          userId: streamData.userId,
+          apiKeyId: streamData.apiKeyId,
+          channelId: streamData.channelId,
+          model: streamData.model,
+          tokensIn,
+          tokensOut,
+          tokensInCache,
+          tokensCacheCreation,
+          cost,
+          latencyMs,
+          success: true,
+        });
+      }
+
       const transformStream = new TransformStream({
-        async transform(chunk, controller) {
+        transform(chunk, controller) {
           const text = decoder.decode(chunk, { stream: true });
           buffer += text;
 
@@ -64,7 +97,11 @@ export async function POST(request: NextRequest) {
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6).trim();
-              if (data === '[DONE]') continue;
+              // Forward [DONE] as-is — clients need it to know the stream ended
+              if (data === '[DONE]') {
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                continue;
+              }
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.usage) {
@@ -84,34 +121,7 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode(text));
         },
         flush() {
-          if (tokensIn === 0) {
-            tokensIn = estimateTokens(JSON.stringify(body.messages));
-          }
-          if (tokensOut === 0 && completionText) {
-            tokensOut = estimateTokens(completionText);
-          }
-
-          const latencyMs = Date.now() - streamData.startTime;
-          const cost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
-
-          if (cost > 0) {
-            deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
-          }
-
-          logUsage({
-            userId: streamData.userId,
-            apiKeyId: streamData.apiKeyId,
-            channelId: streamData.channelId,
-            model: streamData.model,
-            tokensIn,
-            tokensOut,
-            tokensInCache,
-            tokensCacheCreation,
-            cost,
-            latencyMs,
-            success: true,
-          });
-          logged = true;
+          doLogUsage();
         },
       });
 
@@ -119,26 +129,7 @@ export async function POST(request: NextRequest) {
       if (upstreamBody) {
         upstreamBody.pipeTo(transformStream.writable).catch(() => {
           // If pipe fails, still log what we have
-          if (!logged) {
-            const latencyMs = Date.now() - streamData.startTime;
-            const tokensInEst = tokensIn || estimateTokens(JSON.stringify(body.messages));
-            const tokensOutEst = tokensOut || estimateTokens(completionText);
-            const cost = calculateCost(streamData.model, tokensInEst, tokensOutEst);
-            if (cost > 0) {
-              deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
-            }
-            logUsage({
-              userId: streamData.userId,
-              apiKeyId: streamData.apiKeyId,
-              channelId: streamData.channelId,
-              model: streamData.model,
-              tokensIn: tokensInEst,
-              tokensOut: tokensOutEst,
-              cost,
-              latencyMs,
-              success: true,
-            });
-          }
+          doLogUsage();
         });
       }
 
@@ -147,6 +138,7 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
         },
       });
     }

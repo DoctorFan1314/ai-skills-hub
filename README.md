@@ -131,7 +131,7 @@ curl https://your-domain.com/api/v1/billing/balance \
 | Auth | JWT + httpOnly cookies |
 | Styling | Tailwind CSS v4 |
 | UI Library | shadcn/ui (Base UI) |
-| Charts | Recharts |
+| Charts | Recharts + ECharts (echarts-for-react) |
 | Password Hashing | PBKDF2 |
 | Deployment | Vercel / Docker / VPS |
 
@@ -154,13 +154,14 @@ oortapi/
 │   │   │   ├── auth/                   # Login, register, profile
 │   │   │   ├── dashboard/              # Stats, keys, channels, users, redeem, models, settings CRUD
 │   │   │   └── docs/                   # OpenAPI spec endpoint
+│   │   ├── models/                     # Model marketplace (standalone page)
+│   │   │   └── page.tsx               # Card grid with search, provider filter, currency toggle, 4-price display
 │   │   ├── dashboard/                  # User dashboard pages
-│   │   │   ├── page.tsx                # Overview (stats + charts)
+│   │   │   ├── page.tsx                # Overview (stats + ECharts model analytics)
 │   │   │   ├── keys/page.tsx           # API key management
 │   │   │   ├── usage/page.tsx          # Usage analytics (with cache columns)
 │   │   │   ├── billing/page.tsx        # Billing, balance & redeem codes
 │   │   │   ├── channels/page.tsx       # Channel management (admin)
-│   │   │   ├── models/page.tsx         # Model marketplace — card grid with currency toggle
 │   │   │   ├── users/page.tsx          # User management (admin) + password reset
 │   │   │   ├── redeem/page.tsx         # Redeem code management (admin)
 │   │   │   └── settings/page.tsx       # Account settings
@@ -197,8 +198,8 @@ oortapi/
 
 After registering, users get access to a full dashboard:
 
-- **Overview** — Today's calls, success rate, cost, latency, 7-day chart
-- **Models** — Card grid marketplace with search, provider filter, USD/CNY currency toggle, 4-price display (input/output/cache read/cache write)
+- **Overview** — Today's calls, success rate, cost, latency, model consumption charts (ECharts: stacked bar, pie, trend line)
+- **Models** — Standalone page at `/models` with card grid, search, provider filter, USD/CNY toggle, 4-price display
 - **API Keys** — Create/manage keys with per-key rate limits
 - **Usage** — Detailed call history with token breakdown (input, output, cache hit, cache create), currency-aware cost display
 - **Billing** — Balance display (USD/CNY), transaction history, redeem codes

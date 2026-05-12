@@ -18,11 +18,7 @@ function getDb(): Database.Database {
   _db.pragma('journal_mode = WAL');
   _db.pragma('foreign_keys = ON');
 
-  // Initialize schema
-  const schema = readFileSync(join(process.cwd(), 'src', 'lib', 'schema.sql'), 'utf-8');
-  _db.exec(schema);
-
-  // Migrations for existing databases (ALTER TABLE fails silently if column exists)
+  // Run migrations FIRST so existing databases have new columns before schema INSERTs
   const migrations = [
     'ALTER TABLE usage_logs ADD COLUMN tokens_in_cache INTEGER DEFAULT 0',
     'ALTER TABLE usage_logs ADD COLUMN tokens_cache_creation INTEGER DEFAULT 0',
@@ -32,6 +28,10 @@ function getDb(): Database.Database {
   for (const sql of migrations) {
     try { _db.exec(sql); } catch { /* column already exists */ }
   }
+
+  // Initialize schema (CREATE TABLE IF NOT EXISTS + INSERTs now work with all columns)
+  const schema = readFileSync(join(process.cwd(), 'src', 'lib', 'schema.sql'), 'utf-8');
+  _db.exec(schema);
 
   return _db;
 }

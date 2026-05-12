@@ -30,6 +30,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: lang === "zh" ? "首页" : "Home" },
     { href: "/dashboard", label: lang === "zh" ? "控制台" : "Dashboard" },
+    { href: "/models", label: lang === "zh" ? "模型市场" : "Models" },
     { href: "/docs", label: lang === "zh" ? "文档" : "Docs" },
     { href: "/resources/skills", label: lang === "zh" ? "资源中心" : "Resources" },
   ];

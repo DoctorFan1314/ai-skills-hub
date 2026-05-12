@@ -2,14 +2,13 @@
 
 import { useI18n } from "@/contexts/i18n-context";
 import { StatsCards } from "@/components/dashboard/stats-cards";
-import { UsageChart } from "@/components/dashboard/usage-chart";
+import { ModelAnalytics } from "@/components/dashboard/model-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
 import { Code } from "lucide-react";
 
 const LABELS = {
-  zh: { title: "快速开始", description: "使用以下代码开始调用 OortAPI", example: "示例代码" },
-  en: { title: "Quick Start", description: "Use the following code to start calling OortAPI", example: "Example Code" },
+  zh: { title: "快速开始", description: "使用以下代码开始调用 OortAPI" },
+  en: { title: "Quick Start", description: "Use the following code to start calling OortAPI" },
 };
 
 export default function DashboardPage() {
@@ -23,7 +22,7 @@ export default function DashboardPage() {
       </h1>
 
       <StatsCards lang={lang} />
-      <UsageChart lang={lang} />
+      <ModelAnalytics />
 
       <Card className="glass-card">
         <CardHeader>

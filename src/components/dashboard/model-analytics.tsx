@@ -1,0 +1,370 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/contexts/i18n-context";
+import { useCurrency } from "@/contexts/currency-context";
+import { BarChart3, TrendingUp, PieChart as PieIcon } from "lucide-react";
+
+const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
+
+interface ModelByDay {
+  date: string;
+  model: string;
+  calls: number;
+  cost: number;
+  tokens: number;
+}
+
+interface ModelByHour {
+  hour: string;
+  model: string;
+  calls: number;
+  cost: number;
+  tokens: number;
+}
+
+interface ModelDistribution {
+  model: string;
+  calls: number;
+  cost: number;
+  tokens: number;
+}
+
+interface DailyTrend {
+  date: string;
+  calls: number;
+  cost: number;
+  tokens: number;
+  avg_latency: number | null;
+}
+
+interface AnalyticsData {
+  model_by_day: ModelByDay[];
+  model_by_hour: ModelByHour[];
+  model_distribution: ModelDistribution[];
+  daily_trend: DailyTrend[];
+  rpm: number;
+  tpm: number;
+  total: { calls: number; cost: number; tokens: number };
+}
+
+const LABELS = {
+  zh: {
+    modelConsumption: "模型消耗",
+    callTrend: "调用趋势",
+    callDistribution: "调用分布",
+    byDay: "按天",
+    byHour: "按小时",
+    calls: "调用次数",
+    cost: "花费",
+    noData: "暂无数据",
+    yAxisUnit: "次",
+  },
+  en: {
+    modelConsumption: "Model Consumption",
+    callTrend: "Call Trend",
+    callDistribution: "Call Distribution",
+    byDay: "Daily",
+    byHour: "Hourly",
+    calls: "Calls",
+    cost: "Cost",
+    noData: "No data yet",
+    yAxisUnit: "",
+  },
+};
+
+const MODEL_COLORS = [
+  "#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#f97316", "#14b8a6", "#a855f7",
+  "#e11d48", "#0ea5e9", "#84cc16", "#eab308", "#6366f1",
+];
+
+/** Generate last N date strings (YYYY-MM-DD) ending with today */
+function generateDateSlots(days: number): string[] {
+  const slots: string[] = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    slots.push(d.toISOString().slice(0, 10));
+  }
+  return slots;
+}
+
+/** Generate 24 hour slots (HH:00) */
+function generateHourSlots(): string[] {
+  return Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0") + ":00");
+}
+
+export function ModelAnalytics() {
+  const { lang } = useI18n();
+  const { currency, exchangeRate } = useCurrency();
+  const t = LABELS[lang];
+
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [range, setRange] = useState<7 | 14 | 30>(7);
+  const [timeMode, setTimeMode] = useState<"day" | "hour">("day");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const groupBy = timeMode === "hour" ? "hour" : "day";
+    const r = timeMode === "hour" ? "7d" : `${range}d`;
+    fetch(`/api/dashboard/analytics?range=${r}&group_by=${groupBy}`, { credentials: "include" })
+      .then(res => res.json())
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [range, timeMode]);
+
+  // Unique model list
+  const models = useMemo(() => {
+    if (!data) return [];
+    const set = new Set<string>();
+    data.model_by_day.forEach(d => set.add(d.model));
+    data.model_by_hour.forEach(d => set.add(d.model));
+    data.model_distribution.forEach(d => set.add(d.model));
+    return Array.from(set);
+  }, [data]);
+
+  // Stable color map per model
+  const colorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    models.forEach((m, i) => { map[m] = MODEL_COLORS[i % MODEL_COLORS.length]; });
+    return map;
+  }, [models]);
+
+  // Build complete slots (always show full range, fill 0 for missing data)
+  const timeSource = useMemo(() => {
+    if (timeMode === "hour") {
+      // Fixed 24-hour slots
+      const slots = generateHourSlots();
+      const source = data?.model_by_hour || [];
+      const byModel: Record<string, Record<string, number>> = {};
+      source.forEach(d => {
+        if (!byModel[d.model]) byModel[d.model] = {};
+        byModel[d.model][d.hour] = d.calls;
+      });
+      return { slots, byModel };
+    }
+    // Day mode: generate full date range
+    const slots = generateDateSlots(range);
+    const source = data?.model_by_day || [];
+    const byModel: Record<string, Record<string, number>> = {};
+    source.forEach(d => {
+      if (!byModel[d.model]) byModel[d.model] = {};
+      byModel[d.model][d.date] = d.calls;
+    });
+    return { slots, byModel };
+  }, [data, timeMode, range]);
+
+  // Format x-axis labels
+  const xLabels = useMemo(() => {
+    if (timeMode === "hour") {
+      return timeSource.slots.map(s => s.slice(0, 5)); // "00"
+    }
+    return timeSource.slots.map(s => s.slice(5)); // "01-15"
+  }, [timeSource.slots, timeMode]);
+
+  // ======== Stacked Bar Chart ========
+  const stackedBarOption = useMemo(() => {
+    const { slots, byModel } = timeSource;
+    const series = models.map(model => ({
+      name: model,
+      type: "bar" as const,
+      stack: "total",
+      emphasis: { focus: "series" as const },
+      itemStyle: { color: colorMap[model] },
+      data: slots.map(slot => byModel[model]?.[slot] || 0),
+    }));
+    return {
+      tooltip: { trigger: "axis" as const, axisPointer: { type: "shadow" as const } },
+      legend: { type: "scroll" as const, bottom: 0, textStyle: { fontSize: 11 } },
+      grid: { left: 60, right: 20, top: 20, bottom: 60 },
+      xAxis: { type: "category" as const, data: xLabels, axisLabel: { fontSize: 11 } },
+      yAxis: {
+        type: "value" as const,
+        name: t.yAxisUnit || undefined,
+        nameTextStyle: { fontSize: 11, color: "hsl(var(--muted-foreground))" },
+        axisLabel: { fontSize: 11 },
+      },
+      series,
+    };
+  }, [timeSource, models, colorMap, xLabels, t.yAxisUnit]);
+
+  // ======== Trend Line Chart (per-model, same colors as bar) ========
+  const trendOption = useMemo(() => {
+    const { slots, byModel } = timeSource;
+    const series = models.map(model => ({
+      name: model,
+      type: "line" as const,
+      smooth: true,
+      showSymbol: false,
+      itemStyle: { color: colorMap[model] },
+      areaStyle: { color: colorMap[model] + "18" },
+      data: slots.map(slot => byModel[model]?.[slot] || 0),
+    }));
+    return {
+      tooltip: { trigger: "axis" as const },
+      legend: { type: "scroll" as const, bottom: 0, textStyle: { fontSize: 11 } },
+      grid: { left: 60, right: 20, top: 20, bottom: 60 },
+      xAxis: { type: "category" as const, data: xLabels, axisLabel: { fontSize: 11 } },
+      yAxis: {
+        type: "value" as const,
+        name: t.yAxisUnit || undefined,
+        nameTextStyle: { fontSize: 11, color: "hsl(var(--muted-foreground))" },
+        axisLabel: { fontSize: 11 },
+      },
+      series,
+    };
+  }, [timeSource, models, colorMap, xLabels, t.yAxisUnit]);
+
+  // ======== Pie Chart (with bottom legend, no overlap) ========
+  const pieOption = useMemo(() => {
+    if (!data?.model_distribution?.length) return {};
+    return {
+      tooltip: {
+        trigger: "item" as const,
+        formatter: (p: { name: string; value: number; percent: number }) =>
+          `${p.name}: ${p.value} (${p.percent}%)`,
+      },
+      legend: {
+        orient: "horizontal" as const,
+        bottom: 0,
+        left: "center",
+        type: "scroll" as const,
+        textStyle: { fontSize: 11 },
+        itemWidth: 10,
+        itemHeight: 10,
+        itemGap: 12,
+        pageTextStyle: { fontSize: 11 },
+      },
+      series: [{
+        type: "pie",
+        radius: ["35%", "65%"],
+        center: ["50%", "42%"],
+        avoidLabelOverlap: true,
+        itemStyle: { borderRadius: 6, borderColor: "hsl(var(--card))", borderWidth: 2 },
+        label: {
+          show: true,
+          formatter: "{b}\n{d}%",
+          fontSize: 10,
+          lineHeight: 14,
+        },
+        labelLine: {
+          show: true,
+          length: 12,
+          length2: 8,
+          smooth: true,
+        },
+        emphasis: {
+          label: { show: true, fontSize: 13, fontWeight: "bold" },
+        },
+        data: data.model_distribution.map(d => ({
+          name: d.model,
+          value: d.calls,
+          itemStyle: { color: colorMap[d.model] },
+        })),
+      }],
+    };
+  }, [data, colorMap]);
+
+  if (loading && !data) {
+    return (
+      <div className="grid md:grid-cols-2 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="glass-card animate-pulse">
+            <CardContent className="p-6"><div className="h-64 bg-muted rounded" /></CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="text-lg font-semibold">{t.modelConsumption}</h2>
+        <div className="flex gap-2">
+          {/* Range selector — only visible in day mode */}
+          {timeMode === "day" && (
+            <div className="flex bg-muted rounded-lg p-0.5">
+              {([7, 14, 30] as const).map(r => (
+                <button key={r} onClick={() => setRange(r)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    range === r
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Granularity selector */}
+          <div className="flex bg-muted rounded-lg p-0.5">
+            <button onClick={() => setTimeMode("day")}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                timeMode === "day"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
+              {t.byDay}
+            </button>
+            <button onClick={() => setTimeMode("hour")}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                timeMode === "hour"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
+              {t.byHour}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts grid: bar + pie */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <Card className="glass-card lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />{t.modelConsumption}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ReactECharts option={stackedBarOption} style={{ height: 360 }} opts={{ renderer: "canvas" }} notMerge />
+          </CardContent>
+        </Card>
+        <Card className="glass-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <PieIcon className="h-4 w-4" />{t.callDistribution}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data?.model_distribution?.length ? (
+              <ReactECharts option={pieOption} style={{ height: 360 }} opts={{ renderer: "canvas" }} notMerge />
+            ) : (
+              <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">{t.noData}</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Trend line chart — same time filter, per-model colors */}
+      <Card className="glass-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />{t.callTrend}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReactECharts option={trendOption} style={{ height: 300 }} opts={{ renderer: "canvas" }} notMerge />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -31,7 +31,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const toast = useCallback(
     (message: string, type: Toast["type"] = "info", duration?: number) => {
-      const id = crypto.randomUUID();
+      const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
       const now = Date.now();
       const autoDismiss = duration ?? (type === "error" ? 5000 : 3000);
 

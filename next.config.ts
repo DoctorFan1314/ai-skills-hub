@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["echarts", "zrender"],
   allowedDevOrigins: [
     "192.168.31.125",
     "192.168.*",
