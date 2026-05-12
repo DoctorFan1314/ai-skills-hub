@@ -27,6 +27,7 @@ function getDb(): Database.Database {
     'ALTER TABLE usage_logs ADD COLUMN tokens_in_cache INTEGER DEFAULT 0',
     'ALTER TABLE usage_logs ADD COLUMN tokens_cache_creation INTEGER DEFAULT 0',
     'ALTER TABLE users ADD COLUMN enabled INTEGER DEFAULT 1',
+    'ALTER TABLE model_rates ADD COLUMN cache_creation_rate REAL DEFAULT 0',
   ];
   for (const sql of migrations) {
     try { _db.exec(sql); } catch { /* column already exists */ }
@@ -105,6 +106,7 @@ export interface DBModelRate {
   input_rate: number;
   output_rate: number;
   cache_rate: number;
+  cache_creation_rate: number;
   enabled: number;
   created_at: string;
 }

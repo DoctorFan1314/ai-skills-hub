@@ -9,9 +9,9 @@ import { LayoutDashboard, Key, BarChart3, Wallet, Radio, Settings, Shield, Shopp
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "overview" as const },
+  { href: "/dashboard/models", icon: ShoppingBag, labelKey: "models" as const },
   { href: "/dashboard/keys", icon: Key, labelKey: "apiKeys" as const },
   { href: "/dashboard/usage", icon: BarChart3, labelKey: "usage" as const },
-  { href: "/dashboard/models", icon: ShoppingBag, labelKey: "models" as const },
   { href: "/dashboard/billing", icon: Wallet, labelKey: "billing" as const },
   { href: "/dashboard/channels", icon: Radio, labelKey: "channels" as const, adminOnly: true },
   { href: "/dashboard/users", icon: Users, labelKey: "users" as const, adminOnly: true },

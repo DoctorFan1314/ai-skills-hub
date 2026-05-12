@@ -6,6 +6,41 @@
 
 ---
 
+## [v3.2.0] — 2026-05-12
+
+### UI 重新设计、安全加固与计费增强
+
+#### 新功能
+- **Recharts 用量图表** — 用真实交互式图表替换纯 CSS 条形图（柱状图显示调用次数 + 折线图显示花费趋势）
+- **缓存创建定价** — model_rates 表新增 `cache_creation_rate`，支持缓存写入操作的独立定价（之前硬编码为 1.25x input_rate）。模型 API 完整 CRUD 支持
+- **货币切换 (USD/CNY)** — 用户可在模型市场、用量、账单页面切换美元 ($) 和人民币 (¥)。汇率由管理员通过系统设置配置（默认 7.3）。用户偏好存入 localStorage
+- **系统设置 API** — 新增 `GET/PATCH /api/dashboard/settings` 端点，管理员管理全局设置（currency、exchange_rate 等）
+- **管理员重置密码** — 管理员可在用户管理页面为任意用户重置密码，生成安全的 12 位随机密码，仅显示一次，支持一键复制
+- **渠道 API Key 加密** — 所有渠道 API Key 使用 AES-256-GCM 加密存储。旧版明文 Key 透明解密，向后兼容。控制台显示掩码 Key（前 10 位 + "..."）
+
+#### 模型市场重新设计
+- **卡片网格布局** — 用响应式卡片网格（1-3 列）替换表格列表，支持供应商筛选按钮和搜索
+- **四价展示** — 每张模型卡片显示：输入、补全、缓存读取、缓存创建价格
+- **货币切换** — 直接在模型市场页面切换 USD/CNY
+- **侧边栏重排** — 模型市场移至第 2 位（概览 → 模型市场 → API Keys → 用量 → ...）
+
+#### 渠道健康监控
+- **健康 API** — `GET /api/dashboard/channels?action=health` 返回各渠道 24 小时统计：成功率、平均延迟、调用次数
+- **内联健康指标** — 渠道卡片显示 24h 成功率（颜色编码：绿色 ≥95%、黄色 ≥80%、红色 <80%）、平均延迟和调用次数
+
+#### Bug 修复
+- **用量日志缓存列** — 修复 `/api/v1/billing/usage` SELECT 缺少 `tokens_in_cache` 和 `tokens_cache_creation`，导致控制台表格显示 "-"
+
+#### 数据库
+- **新列** `model_rates.cache_creation_rate` — REAL DEFAULT 0（安全迁移）
+- **新设置** `system_settings`：`currency`（默认 USD）、`exchange_rate`（默认 7.3）
+
+#### 安全
+- **AES-256-GCM 加密** — 渠道 API Key 使用 `ENCRYPTION_KEY` 环境变量派生密钥加密。旧版明文 Key 优雅回退
+- **API Key 显示掩码** — GET /api/dashboard/channels 返回掩码 Key（前 10 位）而非完整加密值
+
+---
+
 ## [v3.1.0] — 2026-05-11
 
 ### 管理员与计费增强

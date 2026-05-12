@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback } from "react";
-import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet } from "lucide-react";
+import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound } from "lucide-react";
 
 interface UserItem {
   id: number;
@@ -30,6 +30,8 @@ const LABELS = {
     deleteConfirm: "确定要删除用户 {email} 吗？此操作不可撤销，将删除该用户的所有数据（API Keys、用量记录、账单记录）。",
     noUsers: "暂无用户", selfDisable: "不能禁用自己", selfDemote: "不能降级自己", selfDelete: "不能删除自己",
     balanceTopup: "用户充值", balanceDeduct: "用户扣费",
+    resetPassword: "重置密码", resetPasswordConfirm: "确认重置密码",
+    resetPasswordSuccess: "密码重置成功，请将新密码告知用户：", copyPassword: "复制密码", copied: "已复制",
   },
   en: {
     title: "User Management", search: "Search email or username", all: "All", admin: "Admin", user: "User",
@@ -40,6 +42,8 @@ const LABELS = {
     deleteConfirm: "Are you sure you want to delete {email}? This cannot be undone and will delete all their data (API Keys, usage logs, billing records).",
     noUsers: "No users found", selfDisable: "Cannot disable yourself", selfDemote: "Cannot demote yourself", selfDelete: "Cannot delete yourself",
     balanceTopup: "Top Up Balance", balanceDeduct: "Deduct Balance",
+    resetPassword: "Reset Password", resetPasswordConfirm: "Confirm Password Reset",
+    resetPasswordSuccess: "Password reset successfully. Please share this new password with the user:", copyPassword: "Copy", copied: "Copied",
   },
 };
 
@@ -65,6 +69,11 @@ export default function UsersPage() {
   // Delete dialog
   const [deleteUser, setDeleteUser] = useState<UserItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Reset password result
+  const [resetResult, setResetResult] = useState<{ email: string; password: string } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -122,6 +131,31 @@ export default function UsersPage() {
     setDeleteLoading(false);
     setDeleteUser(null);
     fetchUsers();
+  }
+
+  async function handleResetPassword() {
+    if (!editUser) return;
+    setResetLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: editUser.id, resetPassword: true }),
+      });
+      const data = await res.json();
+      if (data.newPassword) {
+        setResetResult({ email: editUser.email, password: data.newPassword });
+      }
+    } catch { /* ignore */ }
+    setResetLoading(false);
+  }
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   }
 
   const roleFilters = [
@@ -252,9 +286,15 @@ export default function UsersPage() {
               <label className="text-sm text-foreground mb-1.5 block">{t.balanceDeduct}</label>
               <Input type="number" min="0" step="0.01" placeholder="0.00" value={editDeduct} onChange={(e) => setEditDeduct(e.target.value)} className="bg-secondary border-border" />
             </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setEditUser(null)}>{t.cancel}</Button>
-              <Button onClick={handleSave} disabled={editSaving}>{editSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : t.save}</Button>
+            <div className="flex gap-2 justify-between">
+              <Button variant="outline" size="sm" onClick={handleResetPassword} disabled={resetLoading} className="text-orange-500 border-orange-500/30 hover:bg-orange-500/10">
+                {resetLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <KeyRound className="h-4 w-4 mr-1" />}
+                {t.resetPassword}
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEditUser(null)}>{t.cancel}</Button>
+                <Button onClick={handleSave} disabled={editSaving}>{editSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : t.save}</Button>
+              </div>
             </div>
           </div>
         </DialogContent>
@@ -272,6 +312,32 @@ export default function UsersPage() {
             <Button onClick={handleDelete} disabled={deleteLoading} className="bg-red-600 text-white hover:bg-red-700">
               {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.confirm}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Result Dialog */}
+      <Dialog open={!!resetResult} onOpenChange={(open) => { if (!open) { setResetResult(null); setCopied(false); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-green-500" />
+              {t.resetPasswordConfirm}
+            </DialogTitle>
+            <DialogDescription>{resetResult?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">{t.resetPasswordSuccess}</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 p-3 bg-muted rounded-lg text-sm font-mono break-all select-all">{resetResult?.password}</code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => resetResult && copyToClipboard(resetResult.password)}
+              >
+                {copied ? t.copied : t.copyPassword}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const logs = db.prepare(
-      'SELECT id, model, tokens_in, tokens_out, cost, latency_ms, success, cached, created_at FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+      'SELECT id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, latency_ms, success, cached, created_at FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
     ).all(userId, limit, offset) as DBUsageLog[];
 
     const total = db.prepare('SELECT COUNT(*) as count FROM usage_logs WHERE user_id = ?').get(userId) as { count: number };

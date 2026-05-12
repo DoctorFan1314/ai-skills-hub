@@ -1,5 +1,4 @@
-import { createHmac, randomBytes, pbkdf2Sync, timingSafeEqual } from 'crypto';
-import type { DBUser } from './db';
+import { createHmac, randomBytes, pbkdf2Sync, timingSafeEqual, createCipheriv, createDecipheriv } from 'crypto';
 
 const DEFAULT_SECRET = 'oortapi-default-secret-change-in-production';
 const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
@@ -99,4 +98,44 @@ export function clearTokenCookie(): string {
 export function generateApiKey(): string {
   const random = randomBytes(32).toString('hex');
   return `sk-oort-${random}`;
+}
+
+// --- AES-256-GCM Encryption for channel API keys ---
+
+const ENCRYPTION_KEY_RAW = process.env.ENCRYPTION_KEY || 'oortapi-default-encryption-key-32b!';
+
+function getEncryptionKey(): Buffer {
+  // Derive a 32-byte key from whatever is provided
+  return pbkdf2Sync(ENCRYPTION_KEY_RAW, 'oortapi-salt', 10000, 32, 'sha256');
+}
+
+export function encrypt(plaintext: string): string {
+  const key = getEncryptionKey();
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  // Format: iv:authTag:ciphertext (all base64)
+  return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted.toString('base64')}`;
+}
+
+export function decrypt(ciphertext: string): string {
+  // Support legacy plaintext keys (no colons = not encrypted)
+  if (!ciphertext.includes(':')) return ciphertext;
+
+  const parts = ciphertext.split(':');
+  if (parts.length !== 3) return ciphertext; // Not our format, return as-is
+
+  try {
+    const key = getEncryptionKey();
+    const iv = Buffer.from(parts[0], 'base64');
+    const authTag = Buffer.from(parts[1], 'base64');
+    const encrypted = Buffer.from(parts[2], 'base64');
+    const decipher = createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
+    return decipher.update(encrypted) + decipher.final('utf8');
+  } catch {
+    // If decryption fails, assume it's a legacy plaintext key
+    return ciphertext;
+  }
 }

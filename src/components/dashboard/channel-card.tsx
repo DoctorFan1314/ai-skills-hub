@@ -95,6 +95,9 @@ const LABELS = {
     syncSuccess: "同步成功",
     syncNoModels: "渠道未配置模型，请先编辑添加模型",
     channelModels: "渠道模型",
+    successRate: "成功率",
+    avgLatency: "平均延迟",
+    calls24h: "24h调用",
   },
   en: {
     title: "Channel Management",
@@ -136,6 +139,9 @@ const LABELS = {
     syncSuccess: "Synced successfully",
     syncNoModels: "Channel has no models configured. Please edit and add models first.",
     channelModels: "Channel models",
+    successRate: "Success",
+    avgLatency: "Avg Latency",
+    calls24h: "24h Calls",
   },
 };
 
@@ -358,6 +364,11 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
     synced?: number;
     error?: string;
   } | null>(null);
+  const [healthData, setHealthData] = useState<Record<number, {
+    total_calls_24h: number;
+    success_rate_24h: number | null;
+    avg_latency_24h: number | null;
+  }>>({});
   const t = LABELS[lang];
 
   const fetchChannels = () => {
@@ -372,7 +383,21 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
 
   useEffect(() => {
     fetchChannels();
+    fetchHealth();
   }, []);
+
+  const fetchHealth = () => {
+    fetch("/api/dashboard/channels?action=health", { credentials: "include" })
+      .then((res) => res.json())
+      .then((d) => {
+        const map: Record<number, typeof healthData[number]> = {};
+        for (const h of d.health || []) {
+          map[h.channel_id] = h;
+        }
+        setHealthData(map);
+      })
+      .catch(() => {});
+  };
 
   const createChannel = async () => {
     await fetch("/api/dashboard/channels", {
@@ -620,6 +645,17 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                         <div className="text-xs text-muted-foreground">
                           {ch.base_url || "default"} · {t.weight}: {ch.weight} ·{" "}
                           {t.priority}: {ch.priority} · {t.fails}: {ch.fail_count}
+                          {healthData[ch.id] && (
+                            <>
+                              {" · "}{t.calls24h}: {healthData[ch.id].total_calls_24h}
+                              {healthData[ch.id].success_rate_24h !== null && (
+                                <>{" · "}{t.successRate}: <span className={healthData[ch.id].success_rate_24h! >= 95 ? "text-green-500" : healthData[ch.id].success_rate_24h! >= 80 ? "text-yellow-500" : "text-red-500"}>{healthData[ch.id].success_rate_24h!.toFixed(1)}%</span></>
+                              )}
+                              {healthData[ch.id].avg_latency_24h !== null && (
+                                <>{" · "}{t.avgLatency}: {healthData[ch.id].avg_latency_24h}ms</>
+                              )}
+                            </>
+                          )}
                         </div>
                         {testResult?.id === ch.id && (
                           <div

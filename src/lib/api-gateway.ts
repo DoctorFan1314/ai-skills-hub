@@ -1,6 +1,6 @@
 import db from './db';
 import type { DBApiKey, DBUser } from './db';
-import { verifyToken, getTokenFromCookie } from './auth';
+import { verifyToken, getTokenFromCookie, decrypt } from './auth';
 import { checkRateLimit, type RateLimitResult } from './rate-limiter';
 import { deductBalance, calculateCost, logUsage } from './billing-engine';
 import { selectChannel, reportChannelFailure, reportChannelSuccess } from './channel-manager';
@@ -107,11 +107,12 @@ export async function processGatewayRequest(
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
+    const decryptedKey = decrypt(channel.api_key_encrypted);
     if (channel.type === 'anthropic') {
-      headers['x-api-key'] = channel.api_key_encrypted;
+      headers['x-api-key'] = decryptedKey;
       headers['anthropic-version'] = '2023-06-01';
     } else {
-      headers['Authorization'] = `Bearer ${channel.api_key_encrypted}`;
+      headers['Authorization'] = `Bearer ${decryptedKey}`;
     }
 
     const upstreamRes = await fetch(upstreamUrl, {

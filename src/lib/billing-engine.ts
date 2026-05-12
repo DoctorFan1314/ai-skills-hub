@@ -44,7 +44,7 @@ export function calculateCost(
   tokensInCache: number = 0,
   tokensCacheCreation: number = 0,
 ): number {
-  const rate = db.prepare('SELECT input_rate, output_rate, cache_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { input_rate: number; output_rate: number; cache_rate: number } | undefined;
+  const rate = db.prepare('SELECT input_rate, output_rate, cache_rate, cache_creation_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { input_rate: number; output_rate: number; cache_rate: number; cache_creation_rate: number } | undefined;
 
   if (!rate) {
     // Default rate if model not found
@@ -55,11 +55,12 @@ export function calculateCost(
   const nonCachedIn = tokensIn - tokensInCache - tokensCacheCreation;
   const inputCost = Math.max(0, nonCachedIn) * rate.input_rate / 1000;
 
-  // Cache hit tokens: charged at cache_rate (typically 50% off for reads)
+  // Cache hit tokens: charged at cache_rate
   const cacheHitCost = tokensInCache * rate.cache_rate / 1000;
 
-  // Cache creation tokens: charged at 1.25x input_rate (Anthropic charges more for writes)
-  const cacheCreationCost = tokensCacheCreation * rate.input_rate * 1.25 / 1000;
+  // Cache creation tokens: use cache_creation_rate if set, else fallback to 1.25x input_rate
+  const cacheCreateRate = rate.cache_creation_rate > 0 ? rate.cache_creation_rate : rate.input_rate * 1.25;
+  const cacheCreationCost = tokensCacheCreation * cacheCreateRate / 1000;
 
   // Output tokens: always at output_rate
   const outputCost = tokensOut * rate.output_rate / 1000;

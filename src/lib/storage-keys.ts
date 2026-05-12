@@ -32,4 +32,6 @@ export const STORAGE_KEYS = {
   lastPasswordReset: "oortapi-last-pw-reset",
   // Notification preferences (user-scoped)
   notificationPrefs: (email: string) => `oortapi-notification-prefs-${email || "anonymous"}`,
+  // Currency preference
+  currency: "oortapi-currency",
 } as const;

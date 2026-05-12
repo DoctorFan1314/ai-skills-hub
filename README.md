@@ -152,7 +152,7 @@ oortapi/
 │   │   │   │   ├── models/             # Model listing
 │   │   │   │   └── billing/            # Balance, usage & redeem
 │   │   │   ├── auth/                   # Login, register, profile
-│   │   │   ├── dashboard/              # Stats, keys, channels, users, redeem, models CRUD
+│   │   │   ├── dashboard/              # Stats, keys, channels, users, redeem, models, settings CRUD
 │   │   │   └── docs/                   # OpenAPI spec endpoint
 │   │   ├── dashboard/                  # User dashboard pages
 │   │   │   ├── page.tsx                # Overview (stats + charts)
@@ -160,8 +160,8 @@ oortapi/
 │   │   │   ├── usage/page.tsx          # Usage analytics (with cache columns)
 │   │   │   ├── billing/page.tsx        # Billing, balance & redeem codes
 │   │   │   ├── channels/page.tsx       # Channel management (admin)
-│   │   │   ├── models/page.tsx         # Model marketplace & pricing (admin)
-│   │   │   ├── users/page.tsx          # User management (admin)
+│   │   │   ├── models/page.tsx         # Model marketplace — card grid with currency toggle
+│   │   │   ├── users/page.tsx          # User management (admin) + password reset
 │   │   │   ├── redeem/page.tsx         # Redeem code management (admin)
 │   │   │   └── settings/page.tsx       # Account settings
 │   │   ├── docs/                       # API documentation (Swagger UI)
@@ -172,7 +172,7 @@ oortapi/
 │   ├── lib/
 │   │   ├── db.ts                       # SQLite connection (lazy singleton)
 │   │   ├── schema.sql                  # Database schema (8 tables)
-│   │   ├── auth.ts                     # JWT + password hashing
+│   │   ├── auth.ts                     # JWT + password hashing + AES-256-GCM encryption
 │   │   ├── api-gateway.ts              # Unified gateway logic
 │   │   ├── channel-manager.ts          # Smart channel routing
 │   │   ├── billing-engine.ts           # Per-token billing (3-tier cache pricing)
@@ -184,6 +184,7 @@ oortapi/
 │   │   └── ...
 │   └── contexts/
 │       ├── auth-context.tsx            # JWT-based auth
+│       ├── currency-context.tsx        # USD/CNY currency switching
 │       └── ...
 ├── data/                               # SQLite database (gitignored)
 ├── package.json
@@ -197,12 +198,12 @@ oortapi/
 After registering, users get access to a full dashboard:
 
 - **Overview** — Today's calls, success rate, cost, latency, 7-day chart
+- **Models** — Card grid marketplace with search, provider filter, USD/CNY currency toggle, 4-price display (input/output/cache read/cache write)
 - **API Keys** — Create/manage keys with per-key rate limits
-- **Usage** — Detailed call history with token breakdown (input, output, cache hit, cache create)
-- **Billing** — Balance display, transaction history, redeem codes
-- **Channels** — Admin: configure AI provider channels with smart routing, connection testing, model sync
-- **Models** — Admin: model marketplace with per-model pricing (input/output/cache rates)
-- **Users** — Admin: user management with role control, balance adjustment, enable/disable
+- **Usage** — Detailed call history with token breakdown (input, output, cache hit, cache create), currency-aware cost display
+- **Billing** — Balance display (USD/CNY), transaction history, redeem codes
+- **Channels** — Admin: configure AI provider channels with smart routing, connection testing, model sync, health monitoring (24h success rate, latency, call count)
+- **Users** — Admin: user management with role control, balance adjustment, enable/disable, password reset
 - **Redeem Codes** — Admin: batch generate codes for balance top-ups
 
 ---
@@ -219,15 +220,18 @@ Admins can configure upstream AI provider channels:
 - **Connection testing** — Verify upstream connectivity with latency measurement
 - **Model sync** — Copy channel models to the model marketplace with one click
 - **Rate limit detection** — Upstream 429 responses are detected and marked as `rate_limited`
+- **Health monitoring** — 24h success rate, average latency, and call count per channel
+- **Encrypted API keys** — AES-256-GCM encryption at rest for all channel API keys
 
 ---
 
 ## Billing & Redeem Codes
 
-- **Per-token billing** — Model-specific rates with cache-aware pricing (input, cache read, cache write, output)
-- **Cache token tracking** — Separate tracking for cache hit and cache creation tokens
+- **Per-token billing** — Model-specific rates with 3-tier cache-aware pricing (input, cache read, cache write, output)
+- **Cache token tracking** — Separate tracking for cache hit and cache creation tokens with configurable rates
+- **Currency support** — USD/CNY switching with admin-configurable exchange rate
 - **Redeem codes** — Admins generate batch codes, users redeem for instant balance credit
-- **Usage analytics** — Full breakdown with cache columns in the dashboard
+- **Usage analytics** — Full breakdown with cache columns and currency-aware cost display
 
 ---
 
@@ -237,6 +241,7 @@ Admins can configure upstream AI provider channels:
 # Optional
 DATABASE_PATH=./data/oortapi.db    # SQLite database path
 JWT_SECRET=your-secret-key          # JWT signing secret (auto-generated if not set)
+ENCRYPTION_KEY=your-encryption-key  # AES-256 key for channel API key encryption
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 

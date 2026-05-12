@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
+import { encrypt, decrypt } from '@/lib/auth';
 import type { DBChannel } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +18,48 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
+    const action = request.nextUrl.searchParams.get('action');
+
+    if (action === 'health') {
+      // Return health stats per channel from usage_logs (last 24h)
+      const stats = db.prepare(`
+        SELECT
+          channel_id,
+          COUNT(*) as total_calls,
+          SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as success_calls,
+          AVG(CASE WHEN success = 1 THEN latency_ms ELSE NULL END) as avg_latency
+        FROM usage_logs
+        WHERE channel_id IS NOT NULL AND created_at >= datetime('now', '-1 day')
+        GROUP BY channel_id
+      `).all() as { channel_id: number; total_calls: number; success_calls: number; avg_latency: number | null }[];
+
+      const channels = db.prepare('SELECT id, name, status, fail_count, last_fail_at FROM channels').all() as Pick<DBChannel, 'id' | 'name' | 'status' | 'fail_count' | 'last_fail_at'>[];
+
+      const healthMap = new Map(stats.map(s => [s.channel_id, s]));
+      const health = channels.map(ch => {
+        const s = healthMap.get(ch.id);
+        return {
+          channel_id: ch.id,
+          name: ch.name,
+          status: ch.status,
+          fail_count: ch.fail_count,
+          last_fail_at: ch.last_fail_at,
+          total_calls_24h: s?.total_calls ?? 0,
+          success_rate_24h: s ? (s.success_calls / s.total_calls * 100) : null,
+          avg_latency_24h: s?.avg_latency ? Math.round(s.avg_latency) : null,
+        };
+      });
+
+      return NextResponse.json({ health });
+    }
+
     const channels = db.prepare('SELECT * FROM channels ORDER BY priority DESC, created_at DESC').all();
-    return NextResponse.json({ channels });
+    // Return masked API keys for security
+    const masked = (channels as DBChannel[]).map(ch => ({
+      ...ch,
+      api_key_encrypted: ch.api_key_encrypted ? decrypt(ch.api_key_encrypted).slice(0, 10) + '...' : '',
+    }));
+    return NextResponse.json({ channels: masked });
   } catch (error) {
     console.error('Channels list error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -48,7 +89,7 @@ export async function POST(request: NextRequest) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
         const res = await fetch(`${baseUrl.replace(/\/$/, '')}/v1/models`, {
-          headers: { 'Authorization': `Bearer ${channel.api_key_encrypted}` },
+          headers: { 'Authorization': `Bearer ${decrypt(channel.api_key_encrypted)}` },
           signal: controller.signal,
         });
         clearTimeout(timeout);
@@ -100,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     const result = db.prepare(
       'INSERT INTO channels (name, type, api_key_encrypted, base_url, weight, models, model_mapping, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, type, api_key_encrypted, base_url || null, weight || 1.0, JSON.stringify(models || []), JSON.stringify(model_mapping || {}), priority || 0);
+    ).run(name, type, encrypt(api_key_encrypted), base_url || null, weight || 1.0, JSON.stringify(models || []), JSON.stringify(model_mapping || {}), priority || 0);
 
     const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(result.lastInsertRowid);
     return NextResponse.json({ channel });
@@ -124,7 +165,7 @@ export async function PATCH(request: NextRequest) {
     const values: unknown[] = [];
     if (name !== undefined) { updates.push('name = ?'); values.push(name); }
     if (type !== undefined) { updates.push('type = ?'); values.push(type); }
-    if (api_key_encrypted !== undefined) { updates.push('api_key_encrypted = ?'); values.push(api_key_encrypted); }
+    if (api_key_encrypted !== undefined) { updates.push('api_key_encrypted = ?'); values.push(encrypt(api_key_encrypted)); }
     if (base_url !== undefined) { updates.push('base_url = ?'); values.push(base_url); }
     if (weight !== undefined) { updates.push('weight = ?'); values.push(weight); }
     if (enabled !== undefined) { updates.push('enabled = ?'); values.push(enabled ? 1 : 0); }

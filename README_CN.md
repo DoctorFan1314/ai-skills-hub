@@ -152,12 +152,14 @@ oortapi/
 │   │   │   │   ├── models/             # 模型列表
 │   │   │   │   └── billing/            # 余额与用量
 │   │   │   ├── auth/                   # 登录、注册、个人信息
-│   │   │   └── dashboard/              # 统计、密钥、渠道 CRUD
+│   │   │   └── dashboard/              # 统计、密钥、渠道、用户、兑换码、模型、设置 CRUD
 │   │   ├── dashboard/                  # 用户控制台页面
 │   │   │   ├── page.tsx                # 概览（统计+图表）
 │   │   │   ├── keys/page.tsx           # API 密钥管理
 │   │   │   ├── usage/page.tsx          # 用量分析
 │   │   │   ├── billing/page.tsx        # 账单与余额
+│   │   │   ├── models/page.tsx         # 模型市场 — 卡片网格 + 货币切换
+│   │   │   ├── users/page.tsx          # 用户管理（管理员）+ 密码重置
 │   │   │   ├── channels/page.tsx       # 渠道管理（管理员）
 │   │   │   └── settings/page.tsx       # 账户设置
 │   │   ├── resources/                  # 技能、模板、分类
@@ -167,17 +169,19 @@ oortapi/
 │   ├── lib/
 │   │   ├── db.ts                       # SQLite 连接（延迟初始化）
 │   │   ├── schema.sql                  # 数据库 Schema
-│   │   ├── auth.ts                     # JWT + 密码哈希
+│   │   ├── auth.ts                     # JWT + 密码哈希 + AES-256-GCM 加密
 │   │   ├── api-gateway.ts              # 统一网关逻辑
 │   │   ├── channel-manager.ts          # 智能渠道路由
-│   │   ├── billing-engine.ts           # 按量计费引擎
-│   │   └── rate-limiter.ts             # 速率限制
+│   │   ├── billing-engine.ts           # 按量计费引擎（三级缓存定价）
+│   │   ├── rate-limiter.ts             # 速率限制
+│   │   └── openapi-spec.ts             # OpenAPI 3.0 规范
 │   ├── components/
 │   │   ├── dashboard/                  # 控制台 UI 组件
 │   │   ├── home/                       # 首页组件
 │   │   └── ...
 │   └── contexts/
 │       ├── auth-context.tsx            # 基于 JWT 的认证
+│       ├── currency-context.tsx        # USD/CNY 货币切换
 │       └── ...
 ├── data/                               # SQLite 数据库（已 gitignore）
 ├── package.json
@@ -191,12 +195,12 @@ oortapi/
 注册后用户可访问完整控制台：
 
 - **概览** — 今日调用数、成功率、花费、延迟、7 天趋势图
+- **模型市场** — 卡片网格布局，支持搜索、供应商筛选、USD/CNY 货币切换、四价展示（输入/补全/缓存读/缓存写）
 - **API 密钥** — 创建/管理密钥，支持独立速率限制
-- **用量分析** — 详细调用历史，含 Token 分拆（输入、输出、缓存命中、缓存创建）
-- **账单** — 余额展示、交易历史、兑换码充值
-- **渠道管理** — 管理员配置 AI 服务商渠道，支持智能路由、连接测试、模型同步
-- **模型市场** — 管理员定价管理，按模型设置输入/输出/缓存费率
-- **用户管理** — 管理员管理用户，角色控制、余额调整、启用/禁用
+- **用量分析** — 详细调用历史，含 Token 分拆（输入、输出、缓存命中、缓存创建），货币感知费用展示
+- **账单** — 余额展示（USD/CNY）、交易历史、兑换码充值
+- **渠道管理** — 管理员配置 AI 服务商渠道，支持智能路由、连接测试、模型同步、健康监控（24h 成功率、延迟、调用次数）
+- **用户管理** — 管理员管理用户，角色控制、余额调整、启用/禁用、密码重置
 - **兑换码** — 管理员批量生成兑换码，用户即时兑换充值
 
 ---
@@ -213,15 +217,18 @@ oortapi/
 - **连接测试** — 验证上游连通性并测量延迟
 - **模型同步** — 一键将渠道模型同步到模型市场
 - **限流检测** — 上游 429 响应自动标记为 `rate_limited`
+- **健康监控** — 24 小时成功率、平均延迟、调用次数
+- **API Key 加密** — 所有渠道 API Key 使用 AES-256-GCM 加密存储
 
 ---
 
 ## 计费与兑换码
 
-- **按量计费** — 按模型费率计费，缓存感知定价（输入、缓存读、缓存写、输出）
-- **缓存 Token 追踪** — 分别追踪缓存命中和缓存创建 Token
+- **按量计费** — 按模型费率计费，三级缓存感知定价（输入、缓存读、缓存写、输出）
+- **缓存 Token 追踪** — 分别追踪缓存命中和缓存创建 Token，支持独立费率配置
+- **货币支持** — USD/CNY 切换，管理员可配置汇率
 - **兑换码** — 管理员批量生成兑换码，用户即时兑换到账
-- **用量分析** — 控制台展示完整 Token 分拆（含缓存列）
+- **用量分析** — 控制台展示完整 Token 分拆（含缓存列），货币感知费用展示
 
 ---
 
@@ -231,6 +238,7 @@ oortapi/
 # 可选
 DATABASE_PATH=./data/oortapi.db    # SQLite 数据库路径
 JWT_SECRET=your-secret-key          # JWT 签名密钥（未设置则自动生成）
+ENCRYPTION_KEY=your-encryption-key  # AES-256 渠道 API Key 加密密钥
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 

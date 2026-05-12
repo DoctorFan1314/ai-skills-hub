@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS model_rates (
   input_rate REAL NOT NULL DEFAULT 0,
   output_rate REAL NOT NULL DEFAULT 0,
   cache_rate REAL DEFAULT 0,
+  cache_creation_rate REAL DEFAULT 0,
   enabled INTEGER DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -134,19 +135,21 @@ INSERT OR IGNORE INTO system_settings (key, value) VALUES
   ('registration_enabled', 'true'),
   ('default_rate_limit', '60'),
   ('default_balance', '10.0'),
-  ('maintenance_mode', 'false');
+  ('maintenance_mode', 'false'),
+  ('currency', 'USD'),
+  ('exchange_rate', '7.3');
 
 -- Default model rates (popular models)
-INSERT OR IGNORE INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate) VALUES
-  ('gpt-4o', 'GPT-4o', 'openai', 0.0025, 0.01, 0.00125),
-  ('gpt-4o-mini', 'GPT-4o Mini', 'openai', 0.00015, 0.0006, 0.000075),
-  ('gpt-4-turbo', 'GPT-4 Turbo', 'openai', 0.01, 0.03, 0.005),
-  ('gpt-3.5-turbo', 'GPT-3.5 Turbo', 'openai', 0.0005, 0.0015, 0.00025),
-  ('claude-3-5-sonnet-20241022', 'Claude 3.5 Sonnet', 'anthropic', 0.003, 0.015, 0.0015),
-  ('claude-3-5-haiku-20241022', 'Claude 3.5 Haiku', 'anthropic', 0.001, 0.005, 0.0005),
-  ('claude-3-opus-20240229', 'Claude 3 Opus', 'anthropic', 0.015, 0.075, 0.0075),
-  ('deepseek-chat', 'DeepSeek Chat', 'deepseek', 0.00014, 0.00028, 0.00007),
-  ('deepseek-reasoner', 'DeepSeek Reasoner', 'deepseek', 0.00055, 0.00219, 0.000275),
-  ('gemini-2.0-flash', 'Gemini 2.0 Flash', 'google', 0.0001, 0.0004, 0.00005),
-  ('gemini-1.5-pro', 'Gemini 1.5 Pro', 'google', 0.00125, 0.005, 0.000625),
-  ('qwen-max', 'Qwen Max', 'alibaba', 0.0016, 0.0064, 0.0008);
+INSERT OR IGNORE INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate, cache_creation_rate) VALUES
+  ('gpt-4o', 'GPT-4o', 'openai', 0.0025, 0.01, 0.00125, 0.003125),
+  ('gpt-4o-mini', 'GPT-4o Mini', 'openai', 0.00015, 0.0006, 0.000075, 0.0001875),
+  ('gpt-4-turbo', 'GPT-4 Turbo', 'openai', 0.01, 0.03, 0.005, 0.0125),
+  ('gpt-3.5-turbo', 'GPT-3.5 Turbo', 'openai', 0.0005, 0.0015, 0.00025, 0.000625),
+  ('claude-3-5-sonnet-20241022', 'Claude 3.5 Sonnet', 'anthropic', 0.003, 0.015, 0.0015, 0.00375),
+  ('claude-3-5-haiku-20241022', 'Claude 3.5 Haiku', 'anthropic', 0.001, 0.005, 0.0005, 0.00125),
+  ('claude-3-opus-20240229', 'Claude 3 Opus', 'anthropic', 0.015, 0.075, 0.0075, 0.01875),
+  ('deepseek-chat', 'DeepSeek Chat', 'deepseek', 0.00014, 0.00028, 0.00007, 0.000175),
+  ('deepseek-reasoner', 'DeepSeek Reasoner', 'deepseek', 0.00055, 0.00219, 0.000275, 0.0006875),
+  ('gemini-2.0-flash', 'Gemini 2.0 Flash', 'google', 0.0001, 0.0004, 0.00005, 0.000125),
+  ('gemini-1.5-pro', 'Gemini 1.5 Pro', 'google', 0.00125, 0.005, 0.000625, 0.0015625),
+  ('qwen-max', 'Qwen Max', 'alibaba', 0.0016, 0.0064, 0.0008, 0.002);

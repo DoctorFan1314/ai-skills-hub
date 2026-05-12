@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/contexts/i18n-context";
+import { useCurrency } from "@/contexts/currency-context";
 import { BillingHistory } from "@/components/dashboard/billing-history";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const LABELS = {
 
 export default function BillingPage() {
   const { lang } = useI18n();
+  const { currency, setCurrency, symbol, exchangeRate } = useCurrency();
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const t = LABELS[lang];
@@ -61,7 +63,7 @@ export default function BillingPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-muted-foreground mb-1">{t.balance}</div>
-              <div className="text-4xl font-bold font-mono">${(user?.balance || 0).toFixed(2)}</div>
+              <div className="text-4xl font-bold font-mono">{currency === "CNY" ? `¥${((user?.balance || 0) * exchangeRate).toFixed(2)}` : `$${(user?.balance || 0).toFixed(2)}`}</div>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="gap-2" onClick={() => setRedeemOpen(true)}>

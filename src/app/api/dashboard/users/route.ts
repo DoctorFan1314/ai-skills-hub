@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
 import { addBalance, deductBalance } from '@/lib/billing-engine';
+import { generateSalt, hashPassword } from '@/lib/auth';
 import type { DBUser } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -52,7 +53,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, role, enabled, addBalance: addAmt, deductBalance: deductAmt } = body;
+    const { id, role, enabled, addBalance: addAmt, deductBalance: deductAmt, resetPassword } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'User id is required' }, { status: 400 });
@@ -99,8 +100,20 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // Reset password
+    let newPassword: string | undefined;
+    if (resetPassword === true) {
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+      const bytes = new Uint8Array(12);
+      crypto.getRandomValues(bytes);
+      newPassword = Array.from(bytes, b => chars[b % chars.length]).join('');
+      const salt = generateSalt();
+      const passwordHash = hashPassword(newPassword, salt);
+      db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(passwordHash, salt, id);
+    }
+
     const updated = db.prepare('SELECT id, email, username, balance, role, enabled, avatar, created_at, updated_at FROM users WHERE id = ?').get(id);
-    return NextResponse.json({ user: updated });
+    return NextResponse.json({ user: updated, newPassword });
   } catch (error) {
     console.error('User update error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

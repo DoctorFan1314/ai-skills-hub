@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         input_rate: number;
         output_rate: number;
         cache_rate: number;
+        cache_creation_rate: number;
         rate_id: number | null;
         display_name: string | null;
       }>();
@@ -40,8 +41,8 @@ export async function GET(request: NextRequest) {
           if (!modelMap.has(modelName)) {
             // Check if there's pricing info
             const rate = db.prepare(
-              'SELECT id, display_name, input_rate, output_rate, cache_rate, enabled FROM model_rates WHERE model_name = ?'
-            ).get(modelName) as Pick<DBModelRate, 'id' | 'display_name' | 'input_rate' | 'output_rate' | 'cache_rate' | 'enabled'> | undefined;
+              'SELECT id, display_name, input_rate, output_rate, cache_rate, cache_creation_rate, enabled FROM model_rates WHERE model_name = ?'
+            ).get(modelName) as Pick<DBModelRate, 'id' | 'display_name' | 'input_rate' | 'output_rate' | 'cache_rate' | 'cache_creation_rate' | 'enabled'> | undefined;
 
             modelMap.set(modelName, {
               model_name: modelName,
@@ -52,6 +53,7 @@ export async function GET(request: NextRequest) {
               input_rate: rate?.input_rate ?? 0,
               output_rate: rate?.output_rate ?? 0,
               cache_rate: rate?.cache_rate ?? 0,
+              cache_creation_rate: rate?.cache_creation_rate ?? 0,
               rate_id: rate?.id ?? null,
               display_name: rate?.display_name ?? null,
             });
@@ -93,13 +95,13 @@ export async function PATCH(request: NextRequest) {
       } else {
         // Create new rate entry
         const result = db.prepare(
-          'INSERT INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(body.model_name, body.display_name || body.model_name, body.provider || 'unknown', body.input_rate || 0, body.output_rate || 0, body.cache_rate || 0);
+          'INSERT INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate, cache_creation_rate) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).run(body.model_name, body.display_name || body.model_name, body.provider || 'unknown', body.input_rate || 0, body.output_rate || 0, body.cache_rate || 0, body.cache_creation_rate || 0);
         body.id = result.lastInsertRowid;
       }
     }
 
-    const { id, display_name, input_rate, output_rate, cache_rate, enabled } = body;
+    const { id, display_name, input_rate, output_rate, cache_rate, cache_creation_rate, enabled } = body;
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
     const updates: string[] = [];
@@ -108,6 +110,7 @@ export async function PATCH(request: NextRequest) {
     if (input_rate !== undefined) { updates.push('input_rate = ?'); values.push(input_rate); }
     if (output_rate !== undefined) { updates.push('output_rate = ?'); values.push(output_rate); }
     if (cache_rate !== undefined) { updates.push('cache_rate = ?'); values.push(cache_rate); }
+    if (cache_creation_rate !== undefined) { updates.push('cache_creation_rate = ?'); values.push(cache_creation_rate); }
     if (enabled !== undefined) { updates.push('enabled = ?'); values.push(enabled ? 1 : 0); }
 
     if (updates.length > 0) {
@@ -130,7 +133,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { model_name, display_name, provider, input_rate, output_rate, cache_rate } = await request.json();
+    const { model_name, display_name, provider, input_rate, output_rate, cache_rate, cache_creation_rate } = await request.json();
     if (!model_name) return NextResponse.json({ error: 'model_name is required' }, { status: 400 });
 
     const existing = db.prepare('SELECT id FROM model_rates WHERE model_name = ?').get(model_name);
@@ -139,8 +142,8 @@ export async function POST(request: NextRequest) {
     }
 
     const result = db.prepare(
-      'INSERT INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(model_name, display_name || model_name, provider || 'unknown', input_rate || 0, output_rate || 0, cache_rate || 0);
+      'INSERT INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate, cache_creation_rate) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(model_name, display_name || model_name, provider || 'unknown', input_rate || 0, output_rate || 0, cache_rate || 0, cache_creation_rate || 0);
 
     const model = db.prepare('SELECT * FROM model_rates WHERE id = ?').get(result.lastInsertRowid);
     return NextResponse.json({ model });

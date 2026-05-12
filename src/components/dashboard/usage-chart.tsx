@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 interface DailyData {
   date: string;
@@ -11,8 +12,8 @@ interface DailyData {
 }
 
 const LABELS = {
-  zh: { title: "近 7 天用量", calls: "调用次数", cost: "花费 ($)" },
-  en: { title: "Last 7 Days Usage", calls: "Calls", cost: "Cost ($)" },
+  zh: { title: "近 7 天用量", calls: "调用次数", cost: "花费 ($)", tokens: "Token 用量", noData: "暂无数据" },
+  en: { title: "Last 7 Days Usage", calls: "Calls", cost: "Cost ($)", tokens: "Tokens", noData: "No data yet" },
 };
 
 export function UsageChart({ lang = "zh" }: { lang?: "zh" | "en" }) {
@@ -26,51 +27,73 @@ export function UsageChart({ lang = "zh" }: { lang?: "zh" | "en" }) {
       .catch(() => {});
   }, []);
 
-  const maxCalls = Math.max(...data.map(d => d.calls), 1);
-  const maxCost = Math.max(...data.map(d => d.cost), 0.001);
+  if (data.length === 0) {
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-lg">{t.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">{t.noData}</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = data.map(d => ({
+    ...d,
+    label: d.date.slice(5),
+  }));
 
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="text-lg">{t.title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {data.length === 0 ? (
-          <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-            {lang === "zh" ? "暂无数据" : "No data yet"}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Bar chart for calls */}
-            <div>
-              <div className="text-xs text-muted-foreground mb-2">{t.calls}</div>
-              <div className="flex items-end gap-2 h-32">
-                {data.map((d) => (
-                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="text-xs font-mono text-muted-foreground">{d.calls}</div>
-                    <div
-                      className="w-full bg-primary/20 rounded-t-sm transition-all"
-                      style={{ height: `${(d.calls / maxCalls) * 100}%`, minHeight: d.calls > 0 ? 4 : 0 }}
-                    />
-                    <div className="text-[10px] text-muted-foreground">{d.date.slice(5)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Cost line */}
-            <div>
-              <div className="text-xs text-muted-foreground mb-2">{t.cost}</div>
-              <div className="flex items-center gap-2">
-                {data.map((d) => (
-                  <div key={d.date} className="flex-1 text-center">
-                    <div className="text-xs font-mono">${d.cost.toFixed(4)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="grid md:grid-cols-2 gap-4">
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-lg">{t.calls}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+              />
+              <Bar dataKey="calls" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-lg">{t.cost}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                formatter={(value) => [`$${Number(value).toFixed(4)}`, t.cost]}
+              />
+              <Line type="monotone" dataKey="cost" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

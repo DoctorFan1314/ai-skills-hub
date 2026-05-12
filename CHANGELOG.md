@@ -6,6 +6,41 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.2.0] — 2026-05-12
+
+### UI Redesign, Security & Billing Enhancements
+
+#### New Features
+- **Recharts Usage Charts** — Replaced CSS bar charts with real interactive charts (BarChart for calls + LineChart for cost trend) using Recharts
+- **Cache Creation Pricing** — Added `cache_creation_rate` to model_rates table, enabling separate pricing for cache write operations (previously hardcoded at 1.25x input_rate). Full CRUD support in models API
+- **Currency Switching (USD/CNY)** — Users can toggle between USD ($) and CNY (¥) on models, usage, and billing pages. Exchange rate is admin-configurable via system settings (default 7.3). Preference saved in localStorage
+- **System Settings API** — New `GET/PATCH /api/dashboard/settings` endpoint for admin to manage site-wide settings (currency, exchange_rate, etc.)
+- **Admin Password Reset** — Admins can reset any user's password from the user management page. Generates a secure 12-character random password shown once with copy-to-clipboard
+- **Channel API Key Encryption** — All channel API keys are now encrypted at rest using AES-256-GCM. Legacy plaintext keys are transparently decrypted for backward compatibility. Dashboard shows masked keys (first 10 chars + "...")
+
+#### Model Marketplace Redesign
+- **Card Grid Layout** — Replaced table list with responsive card grid (1-3 columns) with provider filter buttons and search
+- **4-Price Display** — Each model card shows: Input, Output, Cache Read, Cache Write prices
+- **Currency Toggle** — Switch between USD/CNY directly on the marketplace page
+- **Sidebar Reorder** — Models moved to position 2 (Overview → Models → API Keys → Usage → ...)
+
+#### Channel Health Monitoring
+- **Health API** — `GET /api/dashboard/channels?action=health` returns per-channel 24h stats: success rate, average latency, call count
+- **Inline Health Metrics** — Channel cards now display 24h success rate (color-coded: green ≥95%, yellow ≥80%, red <80%), average latency, and call count
+
+#### Bug Fixes
+- **Usage Log Cache Columns** — Fixed `/api/v1/billing/usage` SELECT missing `tokens_in_cache` and `tokens_cache_creation`, causing "-" in the dashboard table
+
+#### Database
+- **New column** `model_rates.cache_creation_rate` — REAL DEFAULT 0 (migration-safe)
+- **New settings** in `system_settings`: `currency` (default USD), `exchange_rate` (default 7.3)
+
+#### Security
+- **AES-256-GCM Encryption** — Channel API keys encrypted with derived key from `ENCRYPTION_KEY` env variable. Graceful fallback for legacy plaintext keys
+- **Masked API Key Display** — GET /api/dashboard/channels returns masked keys (first 10 chars) instead of full encrypted values
+
+---
+
 ## [v3.1.0] — 2026-05-11
 
 ### Admin & Billing Enhancements

@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/contexts/i18n-context";
+import { useCurrency } from "@/contexts/currency-context";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ const LABELS = {
 
 export default function UsagePage() {
   const { lang } = useI18n();
+  const { formatPrice } = useCurrency();
   const [logs, setLogs] = useState<UsageLog[]>([]);
   const [loading, setLoading] = useState(true);
   const t = LABELS[lang];
@@ -77,7 +79,7 @@ export default function UsagePage() {
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_in_cache ? log.tokens_in_cache.toLocaleString() : "-"}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_cache_creation ? log.tokens_cache_creation.toLocaleString() : "-"}</td>
                       <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out).toLocaleString()}</td>
-                      <td className="py-2 px-3 text-right font-mono">${log.cost.toFixed(4)}</td>
+                      <td className="py-2 px-3 text-right font-mono">{formatPrice(log.cost)}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.latency_ms ? `${log.latency_ms}ms` : "-"}</td>
                       <td className="py-2 px-3 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${log.success ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
