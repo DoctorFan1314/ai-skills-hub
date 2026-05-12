@@ -52,7 +52,7 @@ interface AnalyticsData {
 
 const LABELS = {
   zh: {
-    modelConsumption: "模型消耗",
+    modelConsumption: "模型消耗 Tokens",
     callTrend: "调用趋势",
     callDistribution: "调用分布",
     byDay: "按天",
@@ -60,10 +60,10 @@ const LABELS = {
     calls: "调用次数",
     cost: "花费",
     noData: "暂无数据",
-    yAxisUnit: "次",
+    yAxisUnit: "tokens",
   },
   en: {
-    modelConsumption: "Model Consumption",
+    modelConsumption: "Model Consumption Tokens",
     callTrend: "Call Trend",
     callDistribution: "Call Distribution",
     byDay: "Daily",
@@ -71,7 +71,7 @@ const LABELS = {
     calls: "Calls",
     cost: "Cost",
     noData: "No data yet",
-    yAxisUnit: "",
+    yAxisUnit: "tokens",
   },
 };
 
@@ -137,27 +137,32 @@ export function ModelAnalytics() {
   }, [models]);
 
   // Build complete slots (always show full range, fill 0 for missing data)
+  // Returns both tokens (for bar chart) and calls (for trend line)
   const timeSource = useMemo(() => {
     if (timeMode === "hour") {
-      // Fixed 24-hour slots
       const slots = generateHourSlots();
       const source = data?.model_by_hour || [];
-      const byModel: Record<string, Record<string, number>> = {};
+      const byModelTokens: Record<string, Record<string, number>> = {};
+      const byModelCalls: Record<string, Record<string, number>> = {};
       source.forEach(d => {
-        if (!byModel[d.model]) byModel[d.model] = {};
-        byModel[d.model][d.hour] = d.calls;
+        if (!byModelTokens[d.model]) byModelTokens[d.model] = {};
+        if (!byModelCalls[d.model]) byModelCalls[d.model] = {};
+        byModelTokens[d.model][d.hour] = d.tokens;
+        byModelCalls[d.model][d.hour] = d.calls;
       });
-      return { slots, byModel };
+      return { slots, byModelTokens, byModelCalls };
     }
-    // Day mode: generate full date range
     const slots = generateDateSlots(range);
     const source = data?.model_by_day || [];
-    const byModel: Record<string, Record<string, number>> = {};
+    const byModelTokens: Record<string, Record<string, number>> = {};
+    const byModelCalls: Record<string, Record<string, number>> = {};
     source.forEach(d => {
-      if (!byModel[d.model]) byModel[d.model] = {};
-      byModel[d.model][d.date] = d.calls;
+      if (!byModelTokens[d.model]) byModelTokens[d.model] = {};
+      if (!byModelCalls[d.model]) byModelCalls[d.model] = {};
+      byModelTokens[d.model][d.date] = d.tokens;
+      byModelCalls[d.model][d.date] = d.calls;
     });
-    return { slots, byModel };
+    return { slots, byModelTokens, byModelCalls };
   }, [data, timeMode, range]);
 
   // Format x-axis labels
@@ -168,21 +173,21 @@ export function ModelAnalytics() {
     return timeSource.slots.map(s => s.slice(5)); // "01-15"
   }, [timeSource.slots, timeMode]);
 
-  // ======== Stacked Bar Chart ========
+  // ======== Stacked Bar Chart (Tokens) ========
   const stackedBarOption = useMemo(() => {
-    const { slots, byModel } = timeSource;
+    const { slots, byModelTokens } = timeSource;
     const series = models.map(model => ({
       name: model,
       type: "bar" as const,
       stack: "total",
       emphasis: { focus: "series" as const },
       itemStyle: { color: colorMap[model] },
-      data: slots.map(slot => byModel[model]?.[slot] || 0),
+      data: slots.map(slot => byModelTokens[model]?.[slot] || 0),
     }));
     return {
       tooltip: { trigger: "axis" as const, axisPointer: { type: "shadow" as const } },
       legend: { type: "scroll" as const, bottom: 0, textStyle: { fontSize: 11 } },
-      grid: { left: 60, right: 20, top: 20, bottom: 60 },
+      grid: { left: 70, right: 20, top: 20, bottom: 60 },
       xAxis: { type: "category" as const, data: xLabels, axisLabel: { fontSize: 11 } },
       yAxis: {
         type: "value" as const,
@@ -194,9 +199,9 @@ export function ModelAnalytics() {
     };
   }, [timeSource, models, colorMap, xLabels, t.yAxisUnit]);
 
-  // ======== Trend Line Chart (per-model, same colors as bar) ========
+  // ======== Trend Line Chart (Calls, per-model, same colors as bar) ========
   const trendOption = useMemo(() => {
-    const { slots, byModel } = timeSource;
+    const { slots, byModelCalls } = timeSource;
     const series = models.map(model => ({
       name: model,
       type: "line" as const,
@@ -204,7 +209,7 @@ export function ModelAnalytics() {
       showSymbol: false,
       itemStyle: { color: colorMap[model] },
       areaStyle: { color: colorMap[model] + "18" },
-      data: slots.map(slot => byModel[model]?.[slot] || 0),
+      data: slots.map(slot => byModelCalls[model]?.[slot] || 0),
     }));
     return {
       tooltip: { trigger: "axis" as const },
@@ -213,15 +218,13 @@ export function ModelAnalytics() {
       xAxis: { type: "category" as const, data: xLabels, axisLabel: { fontSize: 11 } },
       yAxis: {
         type: "value" as const,
-        name: t.yAxisUnit || undefined,
+        name: lang === "zh" ? "次" : "",
         nameTextStyle: { fontSize: 11, color: "hsl(var(--muted-foreground))" },
         axisLabel: { fontSize: 11 },
       },
       series,
     };
-  }, [timeSource, models, colorMap, xLabels, t.yAxisUnit]);
-
-  // ======== Pie Chart (with bottom legend, no overlap) ========
+  }, [timeSource, models, colorMap, xLabels, lang]);
   const pieOption = useMemo(() => {
     if (!data?.model_distribution?.length) return {};
     return {

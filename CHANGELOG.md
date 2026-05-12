@@ -11,15 +11,15 @@ All notable changes to this project will be documented in this file.
 ### Analytics Charts, Navigation Restructure & Docs Rewrite
 
 #### New Features
-- **Model Analytics with ECharts** — New model consumption analytics embedded in overview page: stacked bar chart (per-model calls by day/hour), pie chart (call distribution), and trend line chart. All charts share per-model color mapping
+- **Model Analytics with ECharts** — New model consumption analytics embedded in overview page: stacked bar chart (per-model **token usage** by day/hour), pie chart (call distribution), and trend line chart (call count). All charts share per-model color mapping
 - **Standalone Model Marketplace** — Models page moved from `/dashboard/models` to `/models` as a standalone page (no sidebar). Top navbar now shows: Home → Dashboard → Models → Docs → Resources
-- **Complete Docs Rewrite** — `/docs` page rewritten with clear sections: Quick Start (3-step), Authentication, SDK Integration, API Endpoints, Streaming, Pricing, Error Codes. Code blocks with copy-ready examples
+- **Complete Docs Rewrite** — `/docs` page rewritten with clear sections: Quick Start (3-step with Base URL), AI App Integration (ChatBox, Cherry Studio, Open WebUI, etc.), SDK Integration, cURL Examples, Streaming, API Endpoints, Pricing, Error Codes
 
 #### Analytics Controls
 - **Time Dimension Rework** — "By Day" mode: range buttons (7/14/30) control X-axis date range. "By Hour" mode: X-axis shows fixed 24h slots (00:00~23:00), range buttons hidden
 - **Complete X-axis** — All date/hour slots always shown even when no data exists for that period, ensuring the selected range is always visually represented
 - **Button Highlight Fix** — Selected range and granularity buttons now use `bg-primary text-primary-foreground` for clear active state
-- **Y-axis Unit Label** — Stacked bar chart Y-axis shows unit label ("次" in Chinese)
+- **Y-axis Unit Label** — Stacked bar chart Y-axis shows "tokens" unit, trend chart shows "calls" unit (previously both showed the same metric)
 - **Pie Chart Fix** — Legend moved to horizontal bottom with leader lines, eliminating label overlap
 
 #### Navigation Restructure
@@ -31,7 +31,7 @@ All notable changes to this project will be documented in this file.
 - **crypto.randomUUID** — Replaced with `Math.random()` + `Date.now()` for non-secure contexts (HTTP LAN access)
 
 #### Documentation
-- **Docs Page** — Complete rewrite with structured sections, code blocks, SDK integration table, error codes reference
+- **Docs Page** — Structured sections: Quick Start (Base URL + 3-step), AI App Integration (ChatBox, Cherry Studio, Open WebUI, NextChat, LobeChat), SDK, cURL, Streaming, Endpoints, Pricing, Errors
 - **README / README_CN** — Updated project structure (models at `/models`), updated dashboard descriptions
 - **CHANGELOG / CHANGELOG_CN** — Added v3.3.0 entry
 

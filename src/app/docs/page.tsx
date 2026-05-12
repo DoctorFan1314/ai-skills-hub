@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Code, Zap, Shield, BookOpen, Terminal, CreditCard, Cpu, ArrowRight, Copy } from "lucide-react";
+import { Code, Zap, Shield, BookOpen, Terminal, CreditCard, Cpu, ArrowRight, Globe, Key, AppWindow } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "文档 — OortAPI",
@@ -26,7 +26,7 @@ function CodeBlock({ code, lang = "bash" }: { code: string; lang?: string }) {
   return (
     <div className="relative group">
       <pre className="bg-zinc-950 rounded-lg p-4 overflow-x-auto text-sm leading-relaxed border border-zinc-800">
-        <code className="text-zinc-300 font-mono">{code}</code>
+        <code className="text-zinc-300 font-mono whitespace-pre">{code}</code>
       </pre>
     </div>
   );
@@ -53,7 +53,7 @@ export default function DocsPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
             >
               <Code className="h-4 w-4" />
-              在线调试
+              API 在线调试
             </Link>
             <Link
               href="/models"
@@ -68,19 +68,22 @@ export default function DocsPage() {
 
       <div className="max-w-5xl mx-auto px-4 lg:px-8 py-12 space-y-16">
 
-        {/* ===== Quick Start ===== */}
+        {/* ===== Step 1: Get API Key ===== */}
         <section id="quickstart">
           <h2 className="text-2xl font-bold mb-2">快速开始</h2>
-          <p className="text-muted-foreground mb-6">3 步接入 OortAPI，耗时不超过 2 分钟。</p>
+          <p className="text-muted-foreground mb-8">3 步接入 OortAPI，2 分钟内完成。</p>
 
-          <div className="space-y-8">
+          <div className="space-y-10">
             {/* Step 1 */}
             <div className="flex gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">1</div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold mb-2">获取 API Key</h3>
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                  <Key className="h-4 w-4 text-primary" />
+                  获取 API Key
+                </h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  注册账户后，进入 <Link href="/dashboard/keys" className="text-primary hover:underline">控制台 → API Keys</Link>，点击创建。你的 Key 以 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">sk-oort-</code> 开头。
+                  注册并登录后，进入 <Link href="/dashboard/keys" className="text-primary hover:underline font-medium">控制台 → API Keys</Link>，点击创建。你的 Key 以 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">sk-oort-</code> 开头。
                 </p>
               </div>
             </div>
@@ -89,15 +92,28 @@ export default function DocsPage() {
             <div className="flex gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">2</div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold mb-2">发送请求</h3>
-                <p className="text-sm text-muted-foreground mb-3">将 OpenAI 的 base URL 替换为你的 OortAPI 地址即可：</p>
-                <CodeBlock code={`curl https://your-domain.com/api/v1/chat/completions \\
-  -H "Authorization: Bearer sk-oort-YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'`} />
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" />
+                  配置 Base URL
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  在你的 AI 客户端中，将 API 地址设置为以下 Base URL（请将 <code className="text-xs bg-muted px-1 rounded font-mono">your-domain.com</code> 替换为你的实际域名）：
+                </p>
+
+                <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                  <div className="rounded-lg border border-border/50 p-4">
+                    <div className="text-xs font-medium text-emerald-400 mb-2">OpenAI 兼容协议</div>
+                    <code className="text-sm font-mono text-foreground break-all">https://your-domain.com/api/v1</code>
+                  </div>
+                  <div className="rounded-lg border border-border/50 p-4">
+                    <div className="text-xs font-medium text-amber-400 mb-2">Anthropic 兼容协议</div>
+                    <code className="text-sm font-mono text-foreground break-all">https://your-domain.com/api</code>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-xs text-muted-foreground">
+                  <strong className="text-foreground">提示：</strong>大多数 AI 客户端（ChatBox、Cherry Studio 等）使用 OpenAI 兼容协议。Anthropic 协议仅在直接调用 Claude 原生接口时使用。
+                </div>
               </div>
             </div>
 
@@ -105,13 +121,74 @@ export default function DocsPage() {
             <div className="flex gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">3</div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold mb-2">使用 SDK（推荐）</h3>
-                <p className="text-sm text-muted-foreground mb-3">直接使用 OpenAI 官方 SDK，只需修改 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">base_url</code>：</p>
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                  <AppWindow className="h-4 w-4 text-primary" />
+                  开始使用
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  选择你熟悉的 AI 应用或开发方式，填入 API Key 和 Base URL 即可。
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs font-medium text-muted-foreground mb-2">Python</div>
-                    <CodeBlock lang="python" code={`from openai import OpenAI
+        {/* ===== AI Application Integration ===== */}
+        <section id="apps">
+          <h2 className="text-2xl font-bold mb-2">在 AI 应用中使用</h2>
+          <p className="text-muted-foreground mb-6">以下客户端均已支持 OpenAI 兼容接口，填入 Base URL 和 API Key 即可使用。</p>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                name: "ChatBox",
+                desc: "跨平台 AI 桌面客户端，支持 iOS/Android/Mac/Windows/Web",
+                config: "设置 → 模型提供方 → OpenAI API\nAPI 域名: 你的 Base URL\nAPI Key: 你的 Key",
+              },
+              {
+                name: "Cherry Studio",
+                desc: "功能丰富的 AI 桌面客户端，支持多模型切换",
+                config: "设置 → 模型服务商 → 添加\nAPI 地址: 你的 Base URL\nAPI Key: 你的 Key",
+              },
+              {
+                name: "Open WebUI",
+                desc: "自托管 Web 界面，兼容 OpenAI API",
+                config: "Settings → Connections\nOpenAI API: 你的 Base URL\nAPI Key: 你的 Key",
+              },
+              {
+                name: "NextChat (ChatGPT Next Web)",
+                desc: "流行的 Web AI 聊天界面",
+                config: "设置 → OpenAI API 代理地址\n填入: 你的 Base URL\nAPI Key: 你的 Key",
+              },
+              {
+                name: "LobeChat",
+                desc: "现代化的 AI 聊天框架",
+                config: "设置 → 语言模型 → OpenAI\nAPI 代理地址: 你的 Base URL\nAPI Key: 你的 Key",
+              },
+              {
+                name: "更多客户端",
+                desc: "任何支持 OpenAI API 的应用均可接入",
+                config: "API 地址填入 Base URL\nAPI Key 填入你的 Key",
+              },
+            ].map((app) => (
+              <div key={app.name} className="rounded-xl border border-border/50 p-5 hover:border-foreground/20 transition-colors">
+                <h3 className="font-semibold text-sm mb-1">{app.name}</h3>
+                <p className="text-xs text-muted-foreground mb-3">{app.desc}</p>
+                <pre className="text-[11px] text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed">{app.config}</pre>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== SDK Integration ===== */}
+        <section id="sdk">
+          <h2 className="text-2xl font-bold mb-2">SDK 集成</h2>
+          <p className="text-muted-foreground mb-6">直接使用 OpenAI 官方 SDK，只需修改 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">base_url</code>。</p>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">Python</div>
+              <CodeBlock lang="python" code={`from openai import OpenAI
 
 client = OpenAI(
     api_key="sk-oort-YOUR_API_KEY",
@@ -123,10 +200,10 @@ response = client.chat.completions.create(
     messages=[{"role": "user", "content": "Hello!"}]
 )
 print(response.choices[0].message.content)`} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-muted-foreground mb-2">Node.js</div>
-                    <CodeBlock lang="javascript" code={`import OpenAI from "openai";
+            </div>
+            <div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">Node.js</div>
+              <CodeBlock lang="javascript" code={`import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: "sk-oort-YOUR_API_KEY",
@@ -138,66 +215,87 @@ const response = await client.chat.completions.create({
   messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(response.choices[0].message.content)`} />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-        </section>
-
-        {/* ===== Authentication ===== */}
-        <section id="auth">
-          <h2 className="text-2xl font-bold mb-2">认证方式</h2>
-          <p className="text-muted-foreground mb-6">OortAPI 使用两种认证方式，分别用于不同场景。</p>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-border/50 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">API Key 认证</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">用于所有 AI 模型接口（<code className="text-xs bg-muted px-1 rounded">/api/v1/*</code>）。</p>
-              <CodeBlock code={`Authorization: Bearer sk-oort-YOUR_API_KEY`} />
-            </div>
-            <div className="rounded-xl border border-border/50 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="h-4 w-4 text-amber-400" />
-                <h3 className="font-semibold text-sm">Cookie 认证</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">用于控制台管理接口（<code className="text-xs bg-muted px-1 rounded">/api/dashboard/*</code>）。登录后自动设置。</p>
-              <CodeBlock code={`# 浏览器自动携带 cookie，无需手动设置`} />
-            </div>
-          </div>
-        </section>
-
-        {/* ===== SDK Integration ===== */}
-        <section id="sdk">
-          <h2 className="text-2xl font-bold mb-2">SDK 集成</h2>
-          <p className="text-muted-foreground mb-6">OortAPI 完全兼容 OpenAI API 格式，支持所有 OpenAI SDK 和兼容客户端。</p>
 
           <div className="rounded-xl border border-border/50 divide-y divide-border/30">
             {[
-              { name: "OpenAI Python SDK", pkg: "pip install openai", change: 'base_url="https://your-domain.com/api/v1"' },
-              { name: "OpenAI Node.js SDK", pkg: "npm install openai", change: 'baseURL: "https://your-domain.com/api/v1"' },
-              { name: "ChatBox / Open WebUI", pkg: "桌面客户端或 Web UI", change: 'API Base URL → 你的域名/api/v1' },
-              { name: "LangChain", pkg: "pip install langchain-openai", change: 'openai_api_base="https://your-domain.com/api/v1"' },
-              { name: "Vercel AI SDK", pkg: "npm install ai", change: 'baseURL: "https://your-domain.com/api/v1"' },
+              { name: "LangChain", change: 'openai_api_base="https://your-domain.com/api/v1"' },
+              { name: "Vercel AI SDK", change: 'baseURL: "https://your-domain.com/api/v1"' },
+              { name: "LlamaIndex", change: 'api_base="https://your-domain.com/api/v1"' },
             ].map((sdk) => (
-              <div key={sdk.name} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-5 py-3.5">
-                <div className="font-medium text-sm w-48 shrink-0">{sdk.name}</div>
-                <code className="text-xs text-muted-foreground font-mono flex-1">{sdk.change}</code>
+              <div key={sdk.name} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-5 py-3">
+                <div className="font-medium text-sm w-40 shrink-0">{sdk.name}</div>
+                <code className="text-xs text-muted-foreground font-mono">{sdk.change}</code>
               </div>
             ))}
           </div>
         </section>
 
+        {/* ===== cURL Examples ===== */}
+        <section id="curl">
+          <h2 className="text-2xl font-bold mb-2">cURL 示例</h2>
+          <p className="text-muted-foreground mb-6">直接使用 curl 调用 API：</p>
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">聊天补全</h3>
+              <CodeBlock code={`curl https://your-domain.com/api/v1/chat/completions \\
+  -H "Authorization: Bearer sk-oort-YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'`} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium mb-2">流式响应</h3>
+              <CodeBlock code={`curl https://your-domain.com/api/v1/chat/completions \\
+  -H "Authorization: Bearer sk-oort-YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": true
+  }'
+
+# 响应格式：
+# data: {"id":"...","choices":[{"delta":{"content":"Hello"}}]}
+# data: {"id":"...","choices":[{"delta":{"content":"!"}}]}
+# data: [DONE]`} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium mb-2">查询余额与模型</h3>
+              <CodeBlock code={`# 查询余额
+curl https://your-domain.com/api/v1/billing/balance \\
+  -H "Authorization: Bearer sk-oort-YOUR_API_KEY"
+
+# 获取模型列表
+curl https://your-domain.com/api/v1/models \\
+  -H "Authorization: Bearer sk-oort-YOUR_API_KEY"`} />
+            </div>
+          </div>
+        </section>
+
+        {/* ===== Streaming ===== */}
+        <section id="streaming">
+          <h2 className="text-2xl font-bold mb-2">流式响应</h2>
+          <p className="text-muted-foreground mb-6">OortAPI 完全支持 SSE 流式响应，客户端会收到标准的 OpenAI 格式流。</p>
+
+          <div className="p-4 rounded-lg bg-muted/30 border border-border/50 text-sm space-y-2">
+            <p>• 流式响应使用标准 <code className="text-xs bg-muted px-1 rounded font-mono">text/event-stream</code> 格式</p>
+            <p>• 每个 chunk 以 <code className="text-xs bg-muted px-1 rounded font-mono">data: </code> 前缀，流结束以 <code className="text-xs bg-muted px-1 rounded font-mono">data: [DONE]</code> 标记</p>
+            <p>• usage 统计通过 <code className="text-xs bg-muted px-1 rounded font-mono">stream_options.include_usage</code> 自动注入，客户端无需额外配置</p>
+            <p>• 所有主流 SDK 和客户端均已支持此格式</p>
+          </div>
+        </section>
+
         {/* ===== API Endpoints ===== */}
         <section id="endpoints">
-          <h2 className="text-2xl font-bold mb-2">API 端点</h2>
+          <h2 className="text-2xl font-bold mb-2">API 端点一览</h2>
           <p className="text-muted-foreground mb-6">所有 AI 接口均以 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">/api/v1</code> 为前缀，完全兼容 OpenAI 格式。</p>
 
           <div className="space-y-6">
-            {/* AI Endpoints */}
             <div className="rounded-xl border border-border/50 overflow-hidden">
               <div className="px-5 py-3.5 bg-muted/30 border-b border-border/50 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
@@ -220,7 +318,6 @@ console.log(response.choices[0].message.content)`} />
               </div>
             </div>
 
-            {/* Billing */}
             <div className="rounded-xl border border-border/50 overflow-hidden">
               <div className="px-5 py-3.5 bg-muted/30 border-b border-border/50 flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-primary" />
@@ -241,7 +338,6 @@ console.log(response.choices[0].message.content)`} />
               </div>
             </div>
 
-            {/* Auth */}
             <div className="rounded-xl border border-border/50 overflow-hidden">
               <div className="px-5 py-3.5 bg-muted/30 border-b border-border/50 flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
@@ -263,31 +359,6 @@ console.log(response.choices[0].message.content)`} />
                 ))}
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ===== Streaming ===== */}
-        <section id="streaming">
-          <h2 className="text-2xl font-bold mb-2">流式响应</h2>
-          <p className="text-muted-foreground mb-6">OortAPI 完全支持 SSE 流式响应，客户端会收到标准的 OpenAI 格式流。</p>
-
-          <CodeBlock code={`curl https://your-domain.com/api/v1/chat/completions \\
-  -H "Authorization: Bearer sk-oort-YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello!"}],
-    "stream": true
-  }'
-
-# 响应格式：
-# data: {"id":"...","choices":[{"delta":{"content":"Hello"}}]}
-# data: {"id":"...","choices":[{"delta":{"content":"!"}}]}
-# data: [DONE]`} />
-
-          <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border/50 text-sm">
-            <p className="font-medium mb-1">注意</p>
-            <p className="text-muted-foreground">流式响应中的 usage 统计通过 <code className="text-xs bg-muted px-1 rounded">stream_options.include_usage</code> 获取，OortAPI 会自动注入此参数。客户端无需额外配置。</p>
           </div>
         </section>
 
@@ -347,9 +418,32 @@ console.log(response.choices[0].message.content)`} />
 {
   "error": {
     "message": "Insufficient balance. Please recharge.",
-    type: "gateway_error"
+    "type": "gateway_error"
   }
 }`} />
+          </div>
+        </section>
+
+        {/* ===== Auth ===== */}
+        <section id="auth">
+          <h2 className="text-2xl font-bold mb-2">认证方式</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-border/50 p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">API Key 认证</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">用于所有 AI 模型接口（<code className="text-xs bg-muted px-1 rounded">/api/v1/*</code>）。</p>
+              <CodeBlock code={`Authorization: Bearer sk-oort-YOUR_API_KEY`} />
+            </div>
+            <div className="rounded-xl border border-border/50 p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="h-4 w-4 text-amber-400" />
+                <h3 className="font-semibold text-sm">Cookie 认证</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">用于控制台管理接口（<code className="text-xs bg-muted px-1 rounded">/api/dashboard/*</code>）。登录后自动设置。</p>
+              <CodeBlock code={`# 浏览器自动携带 cookie，无需手动设置`} />
+            </div>
           </div>
         </section>
 
