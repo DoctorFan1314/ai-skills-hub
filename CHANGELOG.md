@@ -6,6 +6,30 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.1] — 2026-05-13
+
+### Token Plan Subscription System, Currency Toggle, VIP Card Effects & Number Format Fix
+
+#### New Features
+- **Token Plan Subscription System** — New `/token-plan` page with 4 subscription tiers (Spark/Flare/Pulse/Nova), supporting monthly/yearly billing toggle and USD/CNY currency switching
+- **Subscription Logic** — Supports new subscriptions, upgrades (prorated by remaining period), and downgrades (blocks if consumed credits exceed target plan's monthly limit)
+- **SubscriptionCard Component** — 4-tier themed designs (spark blue-purple, flare green, pulse orange, nova purple) with CSS box-shadow glow effects and decorative background circles
+- **Admin Plans Management** — `/dashboard/admin/plans` page with unified currency toggle, enlarged edit dialog (`max-w-4xl`)
+- **Timezone Configuration** — System settings now include timezone option (default Asia/Shanghai), configurable by admin in settings page
+- **System Settings API** — `timezone` added to `ALLOWED_KEYS`
+
+#### UI Improvements
+- **Number Format Fix** — All token counts now use `toLocaleString()` with thousand separators (e.g., 473,600), replacing K/M abbreviations
+- **Subscription Dashboard Card** — My subscription uses compact SubscriptionCard, removed concurrency and credits details display
+- **Token Plan Page** — Homepage shows 4 themed subscription cards, buttons adapt to current subscription status (current plan/upgrade/switch/subscribe)
+- **Downgrade Protection** — Blocks downgrade when consumed credits exceed target plan's monthly credits limit, returns 409 error
+
+#### Bug Fixes
+- **Yearly Billing Toggle Unresponsive** — Token Plan page yearly button not responding, fixed billingCycle prop passing
+- **Edit Dialog Credits Truncation** — Credits field showing "7000" instead of "70000000", enlarged dialog and reorganized layout
+
+---
+
 ## [v3.3.0] — 2026-05-12
 
 ### Analytics Charts, Tool Calling Fix, Profile Redesign & UX Improvements

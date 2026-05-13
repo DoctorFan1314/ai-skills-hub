@@ -170,7 +170,10 @@ oortapi/
 │   │   │   │   └── billing/            # Balance, usage & redeem
 │   │   │   ├── auth/                   # Login, register, profile
 │   │   │   ├── dashboard/              # Stats, keys, channels, users, redeem, models, multiplier, settings CRUD
+│   │   │   ├── subscribe/              # Subscription API (new/upgrade/downgrade)
+│   │   │   └── plans/                  # Plans listing API
 │   │   │   └── docs/                   # OpenAPI spec endpoint
+│   │   ├── token-plan/                 # Token Plan subscription page
 │   │   ├── models/                     # Model marketplace (standalone page)
 │   │   │   └── page.tsx               # Card grid with search, provider filter, currency toggle, 4-price display
 │   │   ├── profile/                    # User profile (overview + settings)
@@ -190,7 +193,7 @@ oortapi/
 │   │   └── layout.tsx
 │   ├── lib/
 │   │   ├── db.ts                       # SQLite connection (lazy singleton)
-│   │   ├── schema.sql                  # Database schema (8 tables)
+│   │   ├── schema.sql                  # Database schema (14 tables)
 │   │   ├── auth.ts                     # JWT + password hashing + AES-256-GCM encryption
 │   │   ├── api-gateway.ts              # Unified gateway logic
 │   │   ├── channel-manager.ts          # Smart channel routing
@@ -217,6 +220,7 @@ oortapi/
 After registering, users get access to a full dashboard:
 
 - **Overview** — Today's calls, success rate, cost, latency, model consumption charts (ECharts: stacked bar, pie, trend line)
+- **Token Plan** — Subscription page at `/token-plan` with 4 tiers (Spark/Flare/Pulse/Nova), monthly/yearly toggle, USD/CNY currency switching, prorated upgrade/downgrade
 - **Models** — Standalone page at `/models` with card grid, search, provider filter, USD/CNY toggle, 4-price display
 - **API Keys** — Create/manage keys with per-key rate limits
 - **Usage** — Detailed call history with token breakdown (input, output, cache hit, cache create), currency-aware cost display, timezone-correct timestamps
@@ -224,6 +228,7 @@ After registering, users get access to a full dashboard:
 - **Channels** — Admin: configure AI provider channels with smart routing, connection testing, model sync, health monitoring (24h success rate, latency, call count)
 - **Users** — Admin: user management with role control, balance adjustment, enable/disable, password reset
 - **Redeem Codes** — Admin: batch generate codes for balance top-ups
+- **Plans** — Admin: manage subscription plans at `/dashboard/admin/plans` with currency toggle and plan-model bindings
 - **Multiplier** — Admin: per-model and time-based pricing multiplier rules
 
 ---
