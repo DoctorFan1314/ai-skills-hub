@@ -6,36 +6,6 @@ Thank you for your interest in OortAPI! We welcome all forms of contributions.
 
 ## How to Contribute
 
-### Configure AI Provider Channels (Most Welcome!)
-
-The platform needs upstream AI provider channels to function. Adding and testing channels is the most valuable contribution:
-
-1. Fork this repo and add a new channel configuration
-2. Or submit channel info via GitHub Issues with provider name, base URL, and supported models
-
-#### Channel Requirements
-
-Each channel should include:
-
-- **Provider Type**: openai, anthropic, google, deepseek, alibaba, etc.
-- **Base URL**: API endpoint URL
-- **Supported Models**: List of available models
-- **API Key**: Will be encrypted with AES-256-GCM on storage
-
-#### Quality Standards
-
-- Channel must pass connection test (`GET /v1/models` or equivalent)
-- Model list should be accurate and up-to-date
-- Response latency should be reasonable (< 10s for standard requests)
-
-### Submit Model Rate Updates
-
-Help keep pricing accurate:
-
-1. Check model provider official pricing pages
-2. Submit updated rates via PR to `src/lib/schema.sql` (seed data section)
-3. Include: model_name, input_rate, output_rate, cache_rate, cache_creation_rate (per 1K tokens)
-
 ### Report Bugs
 
 Submit bug reports in [Issues](../../issues), including:
@@ -120,18 +90,6 @@ src/
 
 ---
 
-## Key Architecture Decisions
-
-- **SQLite** with `better-sqlite3` — no ORM, direct SQL queries
-- **JWT + httpOnly cookies** for authentication (not localStorage)
-- **AES-256-GCM** for channel API key encryption at rest
-- **OpenAI-compatible format** — all endpoints follow OpenAI API spec
-- **Smart routing** — weighted random selection with automatic failover
-- **3-tier cache pricing** — separate rates for input, cache read, cache write, output
-- **Prorated subscriptions** — upgrades/downgrades use remaining-period ratio
-
----
-
 ## Commit Convention
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:
@@ -147,9 +105,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 Examples:
 ```
-feat: add DeepSeek channel support with model sync
+feat: add subscription downgrade protection
 fix: fix tool_calls not forwarded to upstream providers
-docs: update CHANGELOG with v3.3.1 subscription system
+docs: update CHANGELOG with v3.3.1
 ```
 
 ---
