@@ -51,6 +51,45 @@ export async function POST(request: NextRequest) {
     }
 
     // Redeem the code
+    if (redeemCode.code_type === 'subscription' && redeemCode.plan_id) {
+      // Subscription redeem
+      const plan = db.prepare('SELECT * FROM subscription_plans WHERE id = ?').get(redeemCode.plan_id) as { id: number; display_name: string; monthly_credits: number } | undefined;
+      if (!plan) {
+        return NextResponse.json({ error: 'Subscription plan not found' }, { status: 404 });
+      }
+
+      const txn = db.transaction(() => {
+        // Cancel any existing active subscription
+        db.prepare("UPDATE user_subscriptions SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND status = 'active'").run(userId);
+
+        const duration = redeemCode.duration_months || 1;
+        const now = new Date();
+        const periodEnd = new Date(now);
+        periodEnd.setMonth(periodEnd.getMonth() + duration);
+
+        db.prepare(
+          "INSERT INTO user_subscriptions (user_id, plan_id, billing_cycle, status, credits_remaining, credits_total, current_period_start, current_period_end, is_first_purchase, auto_renew) VALUES (?, ?, ?, 'active', ?, ?, datetime('now'), ?, 0, 0)"
+        ).run(userId, plan.id, redeemCode.billing_cycle || 'monthly', plan.monthly_credits, plan.monthly_credits, periodEnd.toISOString());
+
+        const newUses = redeemCode.current_uses + 1;
+        db.prepare('UPDATE redeem_codes SET current_uses = ? WHERE id = ?').run(newUses, redeemCode.id);
+        if (newUses >= redeemCode.max_uses) {
+          db.prepare('UPDATE redeem_codes SET enabled = 0 WHERE id = ?').run(redeemCode.id);
+        }
+      });
+      txn();
+
+      return NextResponse.json({
+        success: true,
+        codeType: 'subscription',
+        planName: plan.display_name,
+        credits: plan.monthly_credits,
+        duration: redeemCode.duration_months || 1,
+        code: redeemCode.code,
+      });
+    }
+
+    // Balance redeem
     const txn = db.transaction(() => {
       const result = addBalance(userId!, redeemCode.amount, 'gift', `Redeem code: ${redeemCode.code}`);
       if (!result.success) throw new Error(result.error);
@@ -69,6 +108,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      codeType: 'balance',
       amount: redeemCode.amount,
       newBalance,
       code: redeemCode.code,

@@ -13,11 +13,23 @@ interface RedeemCode {
   id: number;
   code: string;
   amount: number;
+  code_type: string;
+  plan_id: number | null;
+  billing_cycle: string;
+  duration_months: number;
   enabled: number;
   max_uses: number;
   current_uses: number;
   created_at: string;
   expires_at: string | null;
+  plan_display_name?: string;
+  plan_monthly_credits?: number;
+}
+
+interface Plan {
+  id: number;
+  display_name: string;
+  monthly_credits: number;
 }
 
 const LABELS = {
@@ -29,6 +41,8 @@ const LABELS = {
     disable: "禁用", enable: "启用", delete: "删除",
     noCodes: "暂无兑换码", deleteConfirm: "确定要删除此兑换码吗？",
     copyAll: "复制全部", copied: "已复制!", batchResult: "批量生成结果",
+    codeType: "兑换类型", balanceType: "余额充值", subType: "Token Plan 套餐",
+    selectPlan: "选择套餐", duration: "时长（月）", credits: "Credits",
   },
   en: {
     title: "Redeem Codes", generate: "Generate Codes", amount: "Amount ($)", count: "Count", maxUses: "Max Uses",
@@ -38,6 +52,8 @@ const LABELS = {
     disable: "Disable", enable: "Enable", delete: "Delete",
     noCodes: "No redeem codes yet", deleteConfirm: "Delete this redeem code?",
     copyAll: "Copy All", copied: "Copied!", batchResult: "Batch Result",
+    codeType: "Code Type", balanceType: "Balance Top-up", subType: "Token Plan Subscription",
+    selectPlan: "Select Plan", duration: "Duration (months)", credits: "Credits",
   },
 };
 
@@ -51,13 +67,17 @@ export default function RedeemPage() {
 
   // Generate dialog
   const [genOpen, setGenOpen] = useState(false);
+  const [genCodeType, setGenCodeType] = useState<"balance" | "subscription">("balance");
   const [genAmount, setGenAmount] = useState("10");
   const [genCount, setGenCount] = useState("5");
   const [genMaxUses, setGenMaxUses] = useState("1");
   const [genExpires, setGenExpires] = useState("");
+  const [genPlanId, setGenPlanId] = useState<number>(0);
+  const [genDuration, setGenDuration] = useState("1");
   const [genLoading, setGenLoading] = useState(false);
   const [genResult, setGenResult] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [plans, setPlans] = useState<Plan[]>([]);
 
   // Delete dialog
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -75,50 +95,73 @@ export default function RedeemPage() {
   }, [page]);
 
   useEffect(() => { fetchCodes(); }, [fetchCodes]);
+  useEffect(() => { fetch("/api/plans").then(r => r.json()).then(d => setPlans(d.plans || [])).catch(() => {}); }, []);
 
   async function handleGenerate() {
     setGenLoading(true);
     setGenResult([]);
     try {
+      const body: Record<string, unknown> = {
+        codeType: genCodeType,
+        count: parseInt(genCount, 10),
+        maxUses: parseInt(genMaxUses, 10),
+        expiresAt: genExpires || undefined,
+      };
+      if (genCodeType === "balance") {
+        body.amount = parseFloat(genAmount);
+      } else {
+        body.planId = genPlanId;
+        body.durationMonths = parseInt(genDuration, 10);
+        body.billingCycle = "monthly";
+      }
       const res = await fetch("/api/dashboard/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          amount: parseFloat(genAmount),
-          count: parseInt(genCount, 10),
-          maxUses: parseInt(genMaxUses, 10),
-          expiresAt: genExpires || undefined,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (data.codes) {
+      if (res.ok && data.codes) {
         setGenResult(data.codes);
         fetchCodes();
+      } else {
+        alert(data.error || "Generation failed");
       }
-    } catch { /* ignore */ }
+    } catch { alert("Network error"); }
     setGenLoading(false);
   }
 
   async function handleToggle(id: number, enabled: number) {
-    await fetch("/api/dashboard/redeem", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ id, enabled: !enabled }),
-    });
+    try {
+      const res = await fetch("/api/dashboard/redeem", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, enabled: !enabled }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Operation failed");
+      }
+    } catch { alert("Network error"); }
     fetchCodes();
   }
 
   async function handleDelete() {
     if (!deleteId) return;
     setDeleteLoading(true);
-    await fetch("/api/dashboard/redeem", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ id: deleteId }),
-    });
+    try {
+      const res = await fetch("/api/dashboard/redeem", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: deleteId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Delete failed");
+      }
+    } catch { alert("Network error"); }
     setDeleteLoading(false);
     setDeleteId(null);
     fetchCodes();
@@ -158,6 +201,7 @@ export default function RedeemPage() {
                 <thead>
                   <tr className="border-b border-border/50">
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.code}</th>
+                    <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.codeType}</th>
                     <th className="text-right py-3 px-4 text-muted-foreground font-medium">{t.amount}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.uses}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.status}</th>
@@ -171,7 +215,24 @@ export default function RedeemPage() {
                     return (
                       <tr key={c.id} className="border-b border-border/20 hover:bg-muted/30">
                         <td className="py-3 px-4 font-mono text-xs">{c.code}</td>
-                        <td className="py-3 px-4 text-right font-mono">${c.amount.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-center">
+                          {c.code_type === 'subscription' ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              {c.plan_display_name || 'Subscription'}
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              {t.balanceType}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono">
+                          {c.code_type === 'subscription' ? (
+                            <span className="text-xs">{c.duration_months}{lang === "zh" ? "个月" : "mo"} / {(c.plan_monthly_credits || 0).toLocaleString()} credits</span>
+                          ) : (
+                            `$${c.amount.toFixed(2)}`
+                          )}
+                        </td>
                         <td className="py-3 px-4 text-center text-xs">{c.current_uses}/{c.max_uses}</td>
                         <td className="py-3 px-4 text-center">
                           <Badge variant="secondary" className={st.cls}>{st.label}</Badge>
@@ -202,7 +263,7 @@ export default function RedeemPage() {
       {(page > 1 || hasMore) && (
         <div className="flex justify-center gap-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>←</Button>
-          <span className="text-sm text-muted-foreground py-1.5">Page {page}</span>
+          <span className="text-sm text-muted-foreground py-1.5">{lang === "zh" ? `第 ${page} 页` : `Page ${page}`}</span>
           <Button variant="outline" size="sm" disabled={!hasMore} onClick={() => setPage(p => p + 1)}>→</Button>
         </div>
       )}
@@ -215,16 +276,48 @@ export default function RedeemPage() {
           </DialogHeader>
           {genResult.length === 0 ? (
             <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm text-foreground mb-1.5 block">{t.amount}</label>
-                  <Input type="number" min="0.01" step="0.01" value={genAmount} onChange={(e) => setGenAmount(e.target.value)} className="bg-secondary border-border" />
-                </div>
-                <div>
-                  <label className="text-sm text-foreground mb-1.5 block">{t.count}</label>
-                  <Input type="number" min="1" max="100" value={genCount} onChange={(e) => setGenCount(e.target.value)} className="bg-secondary border-border" />
+              {/* Code type toggle */}
+              <div>
+                <label className="text-sm text-foreground mb-1.5 block">{t.codeType}</label>
+                <div className="flex gap-2">
+                  <button onClick={() => setGenCodeType("balance")} className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${genCodeType === "balance" ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border"}`}>{t.balanceType}</button>
+                  <button onClick={() => setGenCodeType("subscription")} className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${genCodeType === "subscription" ? "bg-amber-500/10 text-amber-400 border-amber-500/30" : "bg-secondary text-muted-foreground border-border"}`}>{t.subType}</button>
                 </div>
               </div>
+
+              {genCodeType === "balance" ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-foreground mb-1.5 block">{t.amount}</label>
+                    <Input type="number" min="0.01" step="0.01" value={genAmount} onChange={(e) => setGenAmount(e.target.value)} className="bg-secondary border-border" />
+                  </div>
+                  <div>
+                    <label className="text-sm text-foreground mb-1.5 block">{t.count}</label>
+                    <Input type="number" min="1" max="100" value={genCount} onChange={(e) => setGenCount(e.target.value)} className="bg-secondary border-border" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-foreground mb-1.5 block">{t.selectPlan}</label>
+                    <select className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" value={genPlanId} onChange={e => setGenPlanId(+e.target.value)}>
+                      <option value={0}>{lang === "zh" ? "选择套餐" : "Select plan"}</option>
+                      {plans.map(p => <option key={p.id} value={p.id}>{p.display_name} ({p.monthly_credits.toLocaleString()} credits)</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm text-foreground mb-1.5 block">{t.duration}</label>
+                      <Input type="number" min="1" max="12" value={genDuration} onChange={(e) => setGenDuration(e.target.value)} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-sm text-foreground mb-1.5 block">{t.count}</label>
+                      <Input type="number" min="1" max="100" value={genCount} onChange={(e) => setGenCount(e.target.value)} className="bg-secondary border-border" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm text-foreground mb-1.5 block">{t.maxUses}</label>
@@ -237,7 +330,7 @@ export default function RedeemPage() {
               </div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setGenOpen(false)}>{t.cancel}</Button>
-                <Button onClick={handleGenerate} disabled={genLoading}>{genLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.create}</Button>
+                <Button onClick={handleGenerate} disabled={genLoading || (genCodeType === "subscription" && !genPlanId)}>{genLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.create}</Button>
               </div>
             </div>
           ) : (

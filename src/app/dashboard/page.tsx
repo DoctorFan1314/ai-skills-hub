@@ -5,6 +5,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { ModelAnalytics } from "@/components/dashboard/model-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Code } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const LABELS = {
   zh: { title: "快速开始", description: "使用以下代码开始调用 OortAPI" },
@@ -14,6 +15,13 @@ const LABELS = {
 export default function DashboardPage() {
   const { lang } = useI18n();
   const t = LABELS[lang];
+  const [baseUrl, setBaseUrl] = useState("https://your-domain.com");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setBaseUrl(window.location.origin);
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -34,7 +42,7 @@ export default function DashboardPage() {
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">{t.description}</p>
           <pre className="bg-muted/50 rounded-lg p-4 overflow-x-auto text-sm font-mono">
-{`curl https://your-domain.com/api/v1/chat/completions \\
+{`curl ${baseUrl}/api/v1/chat/completions \\
   -H "Authorization: Bearer sk-oort-YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{

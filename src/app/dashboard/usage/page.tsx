@@ -14,6 +14,9 @@ interface UsageLog {
   tokens_in_cache: number;
   tokens_cache_creation: number;
   cost: number;
+  credits_used: number;
+  deduction_source: string;
+  credit_rate: number | null;
   latency_ms: number | null;
   success: number;
   cached: number;
@@ -64,6 +67,9 @@ const LABELS = {
     nonCachedTokens: "非缓存输入",
     total: "合计",
     noRateData: "未找到模型费率，使用默认费率",
+    notes: "备注",
+    subUser: "套餐用户",
+    balanceUser: "余额扣费",
   },
   en: {
     title: "Call Logs",
@@ -96,6 +102,9 @@ const LABELS = {
     nonCachedTokens: "Non-cached Input",
     total: "Total",
     noRateData: "Model rate not found, using default rate",
+    notes: "Notes",
+    subUser: "Subscription",
+    balanceUser: "Balance",
   },
 };
 
@@ -129,8 +138,6 @@ export default function UsagePage() {
   }, []);
 
   const formatTokens = (n: number) => {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return n.toLocaleString();
   };
 
@@ -144,74 +151,91 @@ export default function UsagePage() {
 
   // Render detailed cost breakdown for a log entry
   const renderBreakdown = (log: UsageLog) => {
+    const isCredits = log.deduction_source === 'credits';
     const inputRate = log.input_rate ?? 0.001;
     const outputRate = log.output_rate ?? 0.002;
     const cacheRate = log.cache_rate ?? 0;
     const cacheCreationRate = log.cache_creation_rate && log.cache_creation_rate > 0
       ? log.cache_creation_rate
       : inputRate * 1.25;
+    const creditRate = log.credit_rate ?? 1.0;
     const mult = log.multiplier ?? 1.0;
+    const totalTokens = log.tokens_in + log.tokens_out;
 
-    // Non-cached input = total input - cache_hit - cache_creation
+    if (isCredits) {
+      // Subscription user — show credits breakdown
+      const creditsUsed = log.credits_used || Math.ceil(totalTokens * creditRate);
+      return (
+        <div className="text-xs space-y-3 font-mono">
+          <p className="font-semibold text-sm">{lang === "zh" ? "额度明细" : "Credits Breakdown"}</p>
+          <div className="text-muted-foreground space-y-0.5">
+            <p>{lang === "zh" ? "Credit 倍率" : "Credit Rate"}: 1 token = {creditRate} credits</p>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">{lang === "zh" ? "输入 Tokens" : "Input Tokens"}: {log.tokens_in.toLocaleString()} × {creditRate}</span>
+              <span>= {(log.tokens_in * creditRate).toLocaleString()} credits</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">{lang === "zh" ? "输出 Tokens" : "Output Tokens"}: {log.tokens_out.toLocaleString()} × {creditRate}</span>
+              <span>= {(log.tokens_out * creditRate).toLocaleString()} credits</span>
+            </div>
+          </div>
+          <div className="border-t border-border/30 pt-1">
+            <div className="flex justify-between gap-4 font-semibold text-sm">
+              <span>{lang === "zh" ? "总计消耗" : "Total Credits Used"}</span>
+              <span className="text-amber-400">{creditsUsed.toLocaleString()} credits</span>
+            </div>
+            <p className="text-emerald-500 text-[11px] mt-1">{lang === "zh" ? "套餐用户，不扣余额" : "Subscription user — no balance charged"}</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Non-subscription user — show dollar breakdown
     const nonCachedIn = Math.max(0, log.tokens_in - log.tokens_in_cache - log.tokens_cache_creation);
-
     const inputCost = nonCachedIn * inputRate / 1000;
     const cacheHitCost = log.tokens_in_cache * cacheRate / 1000;
     const cacheCreationCost = log.tokens_cache_creation * cacheCreationRate / 1000;
     const outputCost = log.tokens_out * outputRate / 1000;
     const baseCost = inputCost + cacheHitCost + cacheCreationCost + outputCost;
     const finalCost = baseCost * mult;
-
     const rateSource = log.input_rate != null ? "" : ` (${t.noRateData})`;
 
     return (
       <div className="text-xs space-y-3 font-mono">
         <p className="font-semibold text-sm">{t.costBreakdown}</p>
-
-        {/* Rate info */}
         <div className="text-muted-foreground space-y-0.5">
           <p>{lang === "zh" ? "模型费率" : "Model Rates"}{rateSource}:</p>
           <p className="pl-3">input = {formatRate(inputRate)}, output = {formatRate(outputRate)}</p>
           <p className="pl-3">cache_read = {formatRate(cacheRate)}, cache_create = {formatRate(cacheCreationRate)}</p>
         </div>
-
-        {/* Calculation lines */}
         <div className="space-y-1">
           {nonCachedIn > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">
-                {t.inputCost}: {nonCachedIn.toLocaleString()} × {inputRate.toFixed(4)} / 1000
-              </span>
+              <span className="text-muted-foreground">{t.inputCost}: {nonCachedIn.toLocaleString()} × {inputRate.toFixed(4)} / 1000</span>
               <span>= {formatCostDisplay(inputCost)}</span>
             </div>
           )}
           {log.tokens_in_cache > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">
-                {t.cacheReadCost}: {log.tokens_in_cache.toLocaleString()} × {cacheRate.toFixed(4)} / 1000
-              </span>
+              <span className="text-muted-foreground">{t.cacheReadCost}: {log.tokens_in_cache.toLocaleString()} × {cacheRate.toFixed(4)} / 1000</span>
               <span>= {formatCostDisplay(cacheHitCost)}</span>
             </div>
           )}
           {log.tokens_cache_creation > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">
-                {t.cacheWriteCost}: {log.tokens_cache_creation.toLocaleString()} × {cacheCreationRate.toFixed(4)} / 1000
-              </span>
+              <span className="text-muted-foreground">{t.cacheWriteCost}: {log.tokens_cache_creation.toLocaleString()} × {cacheCreationRate.toFixed(4)} / 1000</span>
               <span>= {formatCostDisplay(cacheCreationCost)}</span>
             </div>
           )}
           {log.tokens_out > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">
-                {t.outputCost}: {log.tokens_out.toLocaleString()} × {outputRate.toFixed(4)} / 1000
-              </span>
+              <span className="text-muted-foreground">{t.outputCost}: {log.tokens_out.toLocaleString()} × {outputRate.toFixed(4)} / 1000</span>
               <span>= {formatCostDisplay(outputCost)}</span>
             </div>
           )}
         </div>
-
-        {/* Subtotal and multiplier */}
         <div className="border-t border-border/30 pt-1 space-y-1">
           <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">{lang === "zh" ? "小计 (base cost)" : "Subtotal (base cost)"}</span>
@@ -219,9 +243,7 @@ export default function UsagePage() {
           </div>
           {mult !== 1.0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">
-                × {lang === "zh" ? "倍率" : "Multiplier"}: {mult.toFixed(2)}x
-              </span>
+              <span className="text-muted-foreground">× {lang === "zh" ? "倍率" : "Multiplier"}: {mult.toFixed(2)}x</span>
               <span></span>
             </div>
           )}
@@ -299,6 +321,7 @@ export default function UsagePage() {
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.multiplier}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.cost}</th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.details}</th>
+                    <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.notes}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.latency}</th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.status}</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.time}</th>
@@ -320,7 +343,13 @@ export default function UsagePage() {
                           {(log.multiplier ?? 1.0).toFixed(2)}x
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-right font-mono">{formatCostDisplay(log.cost)}</td>
+                      <td className="py-2 px-3 text-right font-mono">
+                        {log.deduction_source === 'credits' ? (
+                          <span className="text-emerald-500">$0.00</span>
+                        ) : (
+                          formatCostDisplay(log.cost)
+                        )}
+                      </td>
                       <td className="py-2 px-3 text-center">
                         <button
                           onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
@@ -328,6 +357,13 @@ export default function UsagePage() {
                         >
                           {t.details}
                         </button>
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {log.deduction_source === 'credits' ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400">{t.subUser}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">{t.balanceUser}</span>
+                        )}
                       </td>
                       <td className="py-2 px-3 text-right font-mono">{log.latency_ms ? `${log.latency_ms}ms` : "-"}</td>
                       <td className="py-2 px-3 text-center">
@@ -339,7 +375,7 @@ export default function UsagePage() {
                     </tr>
                     {expandedId === log.id && (
                       <tr className="border-b border-border/20 bg-muted/20">
-                        <td colSpan={13} className="px-6 py-4">
+                        <td colSpan={14} className="px-6 py-4">
                           {renderBreakdown(log)}
                         </td>
                       </tr>

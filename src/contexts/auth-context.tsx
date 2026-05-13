@@ -113,8 +113,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const updated = await res.json();
         setUser(updated.user);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Profile update failed");
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      throw e instanceof Error ? e : new Error("Network error");
+    }
   }, [user]);
 
   const changePassword = useCallback(async (currentPw: string, newPw: string): Promise<boolean> => {
@@ -125,9 +130,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: "include",
         body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
       });
-      return res.ok;
-    } catch {
-      return false;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Password change failed");
+      }
+      return true;
+    } catch (e) {
+      throw e instanceof Error ? e : new Error("Network error");
     }
   }, []);
 

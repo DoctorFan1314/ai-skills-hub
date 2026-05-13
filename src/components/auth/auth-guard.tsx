@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Component, type ReactNode, type ErrorInfo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+
+class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error("AuthGuard error:", error, info); }
+  render() { return this.state.hasError ? this.props.fallback : this.props.children; }
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loaded } = useAuth();
@@ -28,5 +35,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  return <>{children}</>;
+  return (
+    <ErrorBoundary fallback={
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
+        <p className="text-muted-foreground">Something went wrong. Please try refreshing the page.</p>
+      </div>
+    }>
+      {children}
+    </ErrorBoundary>
+  );
 }

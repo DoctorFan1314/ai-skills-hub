@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import RegisterClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Register — AI Skills Hub",
-  description: "Create an AI Skills Hub account to unlock all high-quality LLM skill templates.",
+  title: "Register — OortAPI",
+  description: "Create an OortAPI account to access the unified AI API relay platform.",
 };
 
 export default function RegisterPage() {

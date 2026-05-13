@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import LoginClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Login — AI Skills Hub",
-  description: "Sign in to your AI Skills Hub account and continue exploring high-quality LLM skill templates.",
+  title: "Login — OortAPI",
+  description: "Sign in to your OortAPI account to access the unified AI API relay platform.",
 };
 
 export default function LoginPage() {

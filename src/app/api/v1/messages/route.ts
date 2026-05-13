@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest } from '@/lib/api-gateway';
-import { deductBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
+import { deductCreditsOrBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +35,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Convert Anthropic tools format to OpenAI format for the gateway
+    const convertedTools = Array.isArray(body.tools) ? body.tools.map((tool: { name: string; description?: string; input_schema?: Record<string, unknown> }) => ({
+      type: 'function' as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.input_schema,
+      },
+    })) : undefined;
 
     // Convert Anthropic format to internal gateway format
     const gatewayBody = {
@@ -105,9 +115,15 @@ export async function POST(request: NextRequest) {
       temperature: body.temperature,
       top_p: body.top_p,
       stream: body.stream || false,
-      // Forward tools if provided (convert Anthropic tools format to OpenAI if needed)
-      tools: body.tools,
-      tool_choice: body.tool_choice,
+      tools: convertedTools,
+      // Convert Anthropic tool_choice to OpenAI format
+      tool_choice: body.tool_choice ? (() => {
+        const tc = body.tool_choice;
+        if (tc.type === 'auto') return 'auto';
+        if (tc.type === 'any') return 'required';
+        if (tc.type === 'tool') return { type: 'function', function: { name: tc.name } };
+        return undefined;
+      })() : undefined,
     };
 
     // Handle streaming
@@ -153,8 +169,9 @@ export async function POST(request: NextRequest) {
         const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
         const cost = baseCost * multiplier;
 
+        let deductResult: { source: string } | undefined;
         if (cost > 0) {
-          deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
+          deductResult = deductCreditsOrBalance(streamData.userId, streamData.model, cost, `API call: ${streamData.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
         }
 
         logUsage({
@@ -163,7 +180,10 @@ export async function POST(request: NextRequest) {
           channelId: streamData.channelId,
           model: streamData.model,
           tokensIn, tokensOut, tokensInCache, tokensCacheCreation,
-          cost, latencyMs, success: true, multiplier,
+          cost,
+          creditsUsed: deductResult?.source === 'credits' ? (tokensIn + tokensOut) : 0,
+          deductionSource: deductResult?.source || 'balance',
+          latencyMs, success: true, multiplier,
         });
       }
 
@@ -174,8 +194,11 @@ export async function POST(request: NextRequest) {
       let sentMessageStart = false;
       let contentBlockIndex = 0;
       let currentText = '';
+      let reasoningText = '';
+      let sentThinkingBlock = false;
       let toolUseBlocks: Array<{ id: string; name: string; input: string }> = [];
       let sentToolBlocks = false;
+      let lastEventLine = '';
 
       const transformStream = new TransformStream({
         transform(chunk, controller) {
@@ -187,11 +210,9 @@ export async function POST(request: NextRequest) {
           for (const line of lines) {
             if (!line.startsWith('data: ') && !line.startsWith('event: ')) continue;
 
-            // Check if upstream is Anthropic format
+            // Track Anthropic event lines (forward later with data)
             if (line.startsWith('event: ')) {
-              // Anthropic SSE — forward events directly but capture usage
-              const eventType = line.slice(7).trim();
-              // We'll handle the data line that follows
+              lastEventLine = line.slice(7).trim();
               continue;
             }
 
@@ -201,9 +222,8 @@ export async function POST(request: NextRequest) {
             try {
               const parsed = JSON.parse(data);
 
-              // Detect Anthropic format (has 'type' field)
+              // Detect Anthropic format (has 'type' field matching Anthropic events)
               if (parsed.type === 'message_start') {
-                // Anthropic streaming — forward as-is, capture usage
                 tokensIn = parsed.message?.usage?.input_tokens || tokensIn;
                 tokensInCache = parsed.message?.usage?.cache_read_input_tokens || tokensInCache;
                 tokensCacheCreation = parsed.message?.usage?.cache_creation_input_tokens || tokensCacheCreation;
@@ -220,13 +240,9 @@ export async function POST(request: NextRequest) {
               if (parsed.type === 'content_block_delta') {
                 const deltaType = parsed.delta?.type;
                 if (deltaType === 'text_delta') {
-                  const deltaText = parsed.delta?.text || '';
-                  if (deltaText) {
-                    currentText += deltaText;
-                    completionText += deltaText;
-                  }
+                  currentText += parsed.delta?.text || '';
+                  completionText += parsed.delta?.text || '';
                 }
-                // tool_use deltas (input_json_delta) are forwarded as-is
                 controller.enqueue(encoder.encode(`event: content_block_delta\ndata: ${JSON.stringify(parsed)}\n\n`));
                 continue;
               }
@@ -275,15 +291,23 @@ export async function POST(request: NextRequest) {
                   sentMessageStart = true;
                 }
 
+                // Handle reasoning_content (Qwen/o1 extended thinking)
+                if (delta?.reasoning_content) {
+                  if (!sentThinkingBlock) {
+                    // Anthropic doesn't have a standard thinking block in all versions,
+                    // so we skip emitting thinking blocks and just accumulate for token counting
+                    sentThinkingBlock = true;
+                  }
+                  reasoningText += delta.reasoning_content;
+                  // Don't forward reasoning as content — it's internal thinking
+                }
+
                 // Handle text content
                 if (delta?.content) {
-                  if (!sentToolBlocks && toolUseBlocks.length === 0) {
-                    // Only emit text block if no tool calls were seen
-                    // (Anthropic puts text and tool_use as separate content blocks)
-                  }
                   completionText += delta.content;
                   // If this is the first text content, emit a text block_start
                   if (currentText === '') {
+                    // Close reasoning block if it was open
                     const blockStart = { type: 'content_block_start', index: contentBlockIndex, content_block: { type: 'text', text: '' } };
                     controller.enqueue(encoder.encode(`event: content_block_start\ndata: ${JSON.stringify(blockStart)}\n\n`));
                   }
@@ -296,7 +320,6 @@ export async function POST(request: NextRequest) {
                 if (delta?.tool_calls) {
                   for (const tc of delta.tool_calls) {
                     const idx = tc.index ?? 0;
-                    // Ensure tool block exists
                     while (toolUseBlocks.length <= idx) {
                       toolUseBlocks.push({ id: '', name: '', input: '' });
                     }
@@ -323,7 +346,7 @@ export async function POST(request: NextRequest) {
                     currentText = '';
                   }
 
-                  // Emit tool_use blocks (convert from OpenAI tool_calls to Anthropic tool_use)
+                  // Emit tool_use blocks
                   if (toolUseBlocks.length > 0) {
                     for (const tb of toolUseBlocks) {
                       const toolBlockStart = {
@@ -333,7 +356,6 @@ export async function POST(request: NextRequest) {
                       };
                       controller.enqueue(encoder.encode(`event: content_block_start\ndata: ${JSON.stringify(toolBlockStart)}\n\n`));
 
-                      // Send input as a single input_json_delta
                       if (tb.input) {
                         const inputDelta = {
                           type: 'content_block_delta',
@@ -350,7 +372,6 @@ export async function POST(request: NextRequest) {
                     sentToolBlocks = true;
                   }
 
-                  // Map finish reason to Anthropic stop_reason
                   const stopReason = finishReason === 'stop' ? 'end_turn'
                     : finishReason === 'length' ? 'max_tokens'
                     : finishReason === 'tool_calls' ? 'tool_use'
@@ -364,12 +385,12 @@ export async function POST(request: NextRequest) {
                   controller.enqueue(encoder.encode(`event: message_stop\ndata: ${JSON.stringify({ type: 'message_stop' })}\n\n`));
                 }
               }
+              // If parsed has no 'choices' and no 'type' matching Anthropic events, skip silently
             } catch {
               // Not valid JSON, skip
             }
           }
-
-          controller.enqueue(encoder.encode(text));
+          // Do NOT forward raw text — all output goes through the conversion above
         },
         flush() {
           doLogUsage();

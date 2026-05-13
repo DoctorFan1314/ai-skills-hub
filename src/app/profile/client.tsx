@@ -170,8 +170,6 @@ export default function ProfileClient() {
   };
 
   const formatTokens = (n: number) => {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return n.toLocaleString();
   };
 
@@ -185,8 +183,21 @@ export default function ProfileClient() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <button
               type="button"
-              onClick={() => {}}
-              className="relative h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-2xl font-bold text-primary shrink-0 overflow-hidden"
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/jpeg,image/png";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) { toast("File too large (max 5MB)", "error"); return; }
+                  const reader = new FileReader();
+                  reader.onload = (ev) => setCropImage(ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                };
+                input.click();
+              }}
+              className="relative h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-2xl font-bold text-primary shrink-0 overflow-hidden cursor-pointer hover:border-primary/60 transition-colors"
             >
               {user.avatar ? (
                 <Image src={user.avatar} alt={user.username} fill className="rounded-full object-cover" unoptimized />
@@ -355,7 +366,7 @@ export default function ProfileClient() {
                           <tr key={log.id} className="border-b border-border/20 hover:bg-muted/30">
                             <td className="py-2 px-3 font-mono text-xs">{log.model}</td>
                             <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out).toLocaleString()}</td>
-                            <td className="py-2 px-3 text-right font-mono">${log.cost.toFixed(6)}</td>
+                            <td className="py-2 px-3 text-right font-mono">{formatPrice(log.cost)}</td>
                             <td className="py-2 px-3 text-right font-mono">{log.latency_ms ? `${log.latency_ms}ms` : "-"}</td>
                             <td className="py-2 px-3 text-center">
                               <span className={`text-xs px-2 py-0.5 rounded-full ${log.success ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
@@ -398,8 +409,21 @@ export default function ProfileClient() {
                     <div className="flex items-center gap-4">
                       <button
                         type="button"
-                        onClick={() => {}}
-                        className="relative h-14 w-14 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-xl font-bold text-primary shrink-0 overflow-hidden"
+                        onClick={() => {
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = "image/jpeg,image/png";
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) { toast("File too large (max 5MB)", "error"); return; }
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setCropImage(ev.target?.result as string);
+                            reader.readAsDataURL(file);
+                          };
+                          input.click();
+                        }}
+                        className="relative h-14 w-14 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-xl font-bold text-primary shrink-0 overflow-hidden cursor-pointer hover:border-primary/60 transition-colors"
                       >
                         {user.avatar ? (
                           <Image src={user.avatar} alt={user.username} fill className="rounded-full object-cover" unoptimized />
@@ -408,7 +432,20 @@ export default function ProfileClient() {
                         )}
                       </button>
                       <div>
-                        <Button type="button" variant="outline" size="sm">
+                        <Button type="button" variant="outline" size="sm" onClick={() => {
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = "image/jpeg,image/png";
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) { toast("File too large (max 5MB)", "error"); return; }
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setCropImage(ev.target?.result as string);
+                            reader.readAsDataURL(file);
+                          };
+                          input.click();
+                        }}>
                           <Camera className="h-3.5 w-3.5 mr-1.5" />{t.changeAvatar}
                         </Button>
                       </div>

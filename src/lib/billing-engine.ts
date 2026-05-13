@@ -1,5 +1,5 @@
 import db from './db';
-import type { DBBillingRecord, DBUsageLog } from './db';
+import type { DBBillingRecord, DBUsageLog, DBUserSubscription, DBSubscriptionPlan } from './db';
 
 export interface BillingResult {
   success: boolean;
@@ -8,18 +8,19 @@ export interface BillingResult {
 }
 
 export function deductBalance(userId: number, amount: number, description: string): BillingResult {
-  const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number } | undefined;
-  if (!user) return { success: false, error: 'User not found' };
-  if (user.balance < amount) return { success: false, error: 'Insufficient balance', newBalance: user.balance };
-
-  const newBalance = user.balance - amount;
   const txn = db.transaction(() => {
-    db.prepare('UPDATE users SET balance = ? WHERE id = ?').run(newBalance, userId);
-    db.prepare('INSERT INTO billing_records (user_id, amount, type, description, balance_after) VALUES (?, ?, ?, ?, ?)').run(userId, -amount, 'deduct', description, newBalance);
+    // Atomic: only deduct if sufficient balance (prevents TOCTOU race)
+    const result = db.prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?').run(amount, userId, amount);
+    if (result.changes === 0) {
+      const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number } | undefined;
+      if (!user) return { success: false, error: 'User not found' };
+      return { success: false, error: 'Insufficient balance', newBalance: user.balance };
+    }
+    const updated = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number };
+    db.prepare('INSERT INTO billing_records (user_id, amount, type, description, balance_after) VALUES (?, ?, ?, ?, ?)').run(userId, -amount, 'deduct', description, updated.balance);
+    return { success: true, newBalance: updated.balance };
   });
-  txn();
-
-  return { success: true, newBalance };
+  return txn();
 }
 
 export function addBalance(userId: number, amount: number, type: 'recharge' | 'refund' | 'gift', description: string): BillingResult {
@@ -124,6 +125,8 @@ export function logUsage(data: {
   tokensInCache?: number;
   tokensCacheCreation?: number;
   cost: number;
+  creditsUsed?: number;
+  deductionSource?: string;
   latencyMs?: number;
   success: boolean;
   errorMessage?: string;
@@ -131,11 +134,115 @@ export function logUsage(data: {
   multiplier?: number;
 }) {
   db.prepare(
-    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, latency_ms, success, error_message, cached, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, credits_used, deduction_source, latency_ms, success, error_message, cached, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     data.userId, data.apiKeyId ?? null, data.channelId ?? null, data.model,
     data.tokensIn, data.tokensOut, data.tokensInCache ?? 0, data.tokensCacheCreation ?? 0,
-    data.cost, data.latencyMs ?? null,
+    data.cost, data.creditsUsed ?? 0, data.deductionSource ?? 'balance', data.latencyMs ?? null,
     data.success ? 1 : 0, data.errorMessage ?? null, data.cached ? 1 : 0, data.multiplier ?? 1.0
   );
+}
+
+// --- Subscription Credits functions ---
+
+export interface SubscriptionInfo {
+  subscription: DBUserSubscription;
+  plan: DBSubscriptionPlan;
+}
+
+export function getActiveSubscription(userId: number): SubscriptionInfo | null {
+  const sub = db.prepare(
+    "SELECT * FROM user_subscriptions WHERE user_id = ? AND status = 'active' AND current_period_end > datetime('now') ORDER BY created_at DESC LIMIT 1"
+  ).get(userId) as DBUserSubscription | undefined;
+
+  if (!sub) return null;
+
+  const plan = db.prepare(
+    'SELECT * FROM subscription_plans WHERE id = ?'
+  ).get(sub.plan_id) as DBSubscriptionPlan | undefined;
+
+  if (!plan) return null;
+
+  return { subscription: sub, plan };
+}
+
+export interface DeductCreditsResult {
+  success: boolean;
+  source: 'credits' | 'balance' | 'blocked';
+  creditsRemaining?: number;
+  newBalance?: number;
+  overageMultiplier?: number;
+  error?: string;
+}
+
+export function calculateCredits(model: string, tokensIn: number, tokensOut: number, tokensInCache: number = 0, tokensCacheCreation: number = 0): number {
+  const rate = db.prepare('SELECT credit_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { credit_rate: number } | undefined;
+  const creditRate = rate?.credit_rate ?? 1.0;
+  const totalTokens = tokensIn + tokensOut;
+  return Math.ceil(totalTokens * creditRate);
+}
+
+export function deductCreditsOrBalance(
+  userId: number,
+  model: string,
+  cost: number,
+  description: string,
+  tokensIn: number = 0,
+  tokensOut: number = 0,
+  tokensInCache: number = 0,
+  tokensCacheCreation: number = 0,
+): DeductCreditsResult {
+  const subInfo = getActiveSubscription(userId);
+
+  if (subInfo) {
+    const { subscription, plan } = subInfo;
+
+    // Calculate credits based on token count * credit_rate (1 token = 1 credit by default)
+    const creditsCost = calculateCredits(model, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
+
+    if (subscription.credits_remaining >= creditsCost) {
+      // Sufficient credits — deduct from subscription
+      db.prepare(
+        'UPDATE user_subscriptions SET credits_remaining = credits_remaining - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).run(creditsCost, subscription.id);
+
+      // Log subscription usage
+      db.prepare(
+        'INSERT INTO subscription_usage_logs (subscription_id, user_id, model, credits_used, source) VALUES (?, ?, ?, ?, ?)'
+      ).run(subscription.id, userId, model, creditsCost, 'credits');
+
+      const updatedSub = db.prepare('SELECT credits_remaining FROM user_subscriptions WHERE id = ?').get(subscription.id) as { credits_remaining: number };
+
+      return { success: true, source: 'credits', creditsRemaining: updatedSub.credits_remaining };
+    }
+
+    // Insufficient credits — fall back to balance with overage multiplier
+    const overageMultiplier = plan.overage_rate_multiplier;
+    const overageCost = cost * overageMultiplier;
+
+    const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number } | undefined;
+    if (!user || user.balance < overageCost) {
+      return { success: false, source: 'blocked', error: 'Credits exhausted and insufficient balance', overageMultiplier };
+    }
+
+    const deductResult = deductBalance(userId, overageCost, `${description} (overage, ${plan.name} x${overageMultiplier})`);
+    if (!deductResult.success) {
+      return { success: false, source: 'blocked', error: deductResult.error, overageMultiplier };
+    }
+
+    // Log subscription usage
+    db.prepare(
+      'INSERT INTO subscription_usage_logs (subscription_id, user_id, model, credits_used, source) VALUES (?, ?, ?, ?, ?)'
+    ).run(subscription.id, userId, model, 0, 'balance');
+
+    return { success: true, source: 'balance', newBalance: deductResult.newBalance, overageMultiplier };
+  }
+
+  // No subscription — pure balance deduction
+  const deductResult = deductBalance(userId, cost, description);
+  if (!deductResult.success) {
+    return { success: false, source: 'blocked', error: deductResult.error };
+  }
+
+  return { success: true, source: 'balance', newBalance: deductResult.newBalance };
 }

@@ -19,6 +19,7 @@ interface ChannelModel {
   output_rate: number;
   cache_rate: number;
   cache_creation_rate: number;
+  credit_rate: number;
   rate_id: number | null;
   display_name: string | null;
 }
@@ -56,6 +57,8 @@ const LABELS = {
     search: "搜索模型名称、供应商...",
     all: "全部",
     displayName: "显示名称",
+    creditRate: "Credit 倍率",
+    creditRateHint: "1 token = N credits",
     modelsCount: "个模型",
   },
   en: {
@@ -78,6 +81,8 @@ const LABELS = {
     search: "Search models, providers...",
     all: "All",
     displayName: "Display Name",
+    creditRate: "Credit Rate",
+    creditRateHint: "1 token = N credits",
     modelsCount: "models",
   },
 };
@@ -93,7 +98,7 @@ export default function ModelsPage() {
   const [currency, setCurrency] = useState<Currency>("USD");
   const [exchangeRate, setExchangeRate] = useState(7.3);
   const [editingModel, setEditingModel] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ input_rate: 0, output_rate: 0, cache_rate: 0, cache_creation_rate: 0, display_name: "" });
+  const [editForm, setEditForm] = useState({ input_rate: 0, output_rate: 0, cache_rate: 0, cache_creation_rate: 0, credit_rate: 1.0, display_name: "" });
   const [search, setSearch] = useState("");
   const [providerFilter, setProviderFilter] = useState("all");
   const [syncing, setSyncing] = useState(false);
@@ -123,17 +128,17 @@ export default function ModelsPage() {
     try {
       const chRes = await fetch("/api/dashboard/channels", { credentials: "include" });
       const chData = await chRes.json();
-      const channels = chData.channels || [];
-      for (const ch of channels) {
-        if (ch.enabled) {
-          await fetch("/api/dashboard/channels", {
+      const channels = (chData.channels || []).filter((ch: { enabled: number }) => ch.enabled);
+      await Promise.allSettled(
+        channels.map((ch: { id: number }) =>
+          fetch("/api/dashboard/channels", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ action: "sync-models", id: ch.id }),
-          });
-        }
-      }
+          })
+        )
+      );
     } catch { /* ignore */ }
     setSyncing(false);
     fetchModels();
@@ -146,6 +151,7 @@ export default function ModelsPage() {
       output_rate: m.output_rate,
       cache_rate: m.cache_rate,
       cache_creation_rate: m.cache_creation_rate,
+      credit_rate: m.credit_rate ?? 1.0,
       display_name: m.display_name || m.model_name,
     });
   };
@@ -342,6 +348,22 @@ export default function ModelsPage() {
                             </div>
                           ))}
                         </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">{t.creditRate}</label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">1 token =</span>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              value={editForm.credit_rate}
+                              onChange={(e) => setEditForm((f) => ({ ...f, credit_rate: parseFloat(e.target.value) || 1.0 }))}
+                              className="h-8 text-xs w-24"
+                            />
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">credits</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1">{t.creditRateHint}</p>
+                        </div>
                         <div className="flex gap-2 pt-1">
                           <Button size="sm" onClick={() => savePrice(m.model_name)} className="h-7 text-xs">
                             <Save className="h-3 w-3 mr-1" />{t.save}
@@ -383,6 +405,9 @@ export default function ModelsPage() {
                               <PriceCell label={t.outputPrice} value={fmtPrice(m.output_rate)} currency={currency} />
                               <PriceCell label={t.cacheRead} value={fmtPrice(m.cache_rate)} currency={currency} />
                               <PriceCell label={t.cacheCreate} value={fmtPrice(m.cache_creation_rate)} currency={currency} />
+                            </div>
+                            <div className="px-3 py-1.5 border-t border-border/50 bg-muted/30">
+                              <span className="text-[10px] text-muted-foreground">{t.creditRate}: 1 token = {m.credit_rate ?? 1.0} credits</span>
                             </div>
                           </div>
                         ) : (

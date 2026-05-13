@@ -30,8 +30,11 @@ export async function GET(request: NextRequest) {
 
     const total = (db.prepare('SELECT COUNT(*) as count FROM redeem_codes').get() as { count: number }).count;
     const codes = db.prepare(
-      'SELECT * FROM redeem_codes ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    ).all(limit, offset) as DBRedeemCode[];
+      `SELECT rc.*, sp.display_name as plan_display_name, sp.monthly_credits as plan_monthly_credits
+       FROM redeem_codes rc
+       LEFT JOIN subscription_plans sp ON rc.plan_id = sp.id
+       ORDER BY rc.created_at DESC LIMIT ? OFFSET ?`
+    ).all(limit, offset) as (DBRedeemCode & { plan_display_name?: string; plan_monthly_credits?: number })[];
 
     return NextResponse.json({ codes, total, page, limit, has_more: offset + codes.length < total });
   } catch (error) {
@@ -47,10 +50,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { count, amount, maxUses, expiresAt } = await request.json();
+    const { count, amount, maxUses, expiresAt, codeType, planId, billingCycle, durationMonths } = await request.json();
 
-    if (!amount || amount <= 0) {
+    const type = codeType || 'balance';
+
+    if (type === 'balance' && (!amount || amount <= 0)) {
       return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 });
+    }
+    if (type === 'subscription' && !planId) {
+      return NextResponse.json({ error: 'Plan ID is required for subscription codes' }, { status: 400 });
     }
 
     const codeCount = Math.min(100, Math.max(1, count || 1));
@@ -58,25 +66,24 @@ export async function POST(request: NextRequest) {
     const generated: string[] = [];
 
     const insert = db.prepare(
-      'INSERT INTO redeem_codes (code, amount, max_uses, created_by, expires_at) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO redeem_codes (code, amount, code_type, plan_id, billing_cycle, duration_months, max_uses, created_by, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
 
     const txn = db.transaction(() => {
       for (let i = 0; i < codeCount; i++) {
         let code = generateCode();
-        // Ensure uniqueness
         let attempts = 0;
         while (db.prepare('SELECT id FROM redeem_codes WHERE code = ?').get(code) && attempts < 10) {
           code = generateCode();
           attempts++;
         }
-        insert.run(code, amount, uses, auth.user!.id, expiresAt || null);
+        insert.run(code, amount || 0, type, planId || null, billingCycle || 'monthly', durationMonths || 1, uses, auth.user!.id, expiresAt || null);
         generated.push(code);
       }
     });
     txn();
 
-    return NextResponse.json({ codes: generated, count: generated.length, amount, maxUses: uses });
+    return NextResponse.json({ codes: generated, count: generated.length, amount, maxUses: uses, codeType: type });
   } catch (error) {
     console.error('Redeem code create error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

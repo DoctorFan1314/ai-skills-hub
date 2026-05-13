@@ -346,13 +346,7 @@ export function ModelAnalytics() {
               <TrendingUp className="h-4 w-4 text-green-500" />
               <div>
                 <p className="text-xs text-muted-foreground">{lang === "zh" ? "总 Tokens" : "Total Tokens"}</p>
-                <p className="text-lg font-bold font-mono">
-                  {data.total.tokens >= 1_000_000
-                    ? `${(data.total.tokens / 1_000_000).toFixed(2)}M`
-                    : data.total.tokens >= 1_000
-                      ? `${(data.total.tokens / 1_000).toFixed(1)}K`
-                      : data.total.tokens.toLocaleString()}
-                </p>
+                <p className="text-lg font-bold font-mono">{data.total.tokens.toLocaleString()}</p>
               </div>
             </CardContent>
           </Card>

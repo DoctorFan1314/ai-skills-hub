@@ -86,7 +86,8 @@ export function getTokenFromCookie(cookieHeader: string | null): string | null {
 }
 
 export function setTokenCookie(token: string): string {
-  return `${TOKEN_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${JWT_EXPIRY}`;
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${TOKEN_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${JWT_EXPIRY}`;
 }
 
 export function clearTokenCookie(): string {
@@ -102,11 +103,15 @@ export function generateApiKey(): string {
 
 // --- AES-256-GCM Encryption for channel API keys ---
 
-const ENCRYPTION_KEY_RAW = process.env.ENCRYPTION_KEY || 'oortapi-default-encryption-key-32b!';
+const DEFAULT_ENCRYPTION_KEY = 'oortapi-default-encryption-key-32b!';
 
 function getEncryptionKey(): Buffer {
+  const key = process.env.ENCRYPTION_KEY || DEFAULT_ENCRYPTION_KEY;
+  if (process.env.NODE_ENV === 'production' && key === DEFAULT_ENCRYPTION_KEY) {
+    throw new Error('FATAL: ENCRYPTION_KEY must be set in production. Define a strong 32-byte ENCRYPTION_KEY environment variable.');
+  }
   // Derive a 32-byte key from whatever is provided
-  return pbkdf2Sync(ENCRYPTION_KEY_RAW, 'oortapi-salt', 10000, 32, 'sha256');
+  return pbkdf2Sync(key, 'oortapi-salt', 10000, 32, 'sha256');
 }
 
 export function encrypt(plaintext: string): string {

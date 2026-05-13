@@ -3,7 +3,7 @@ import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
 import { addBalance, deductBalance } from '@/lib/billing-engine';
 import { generateSalt, hashPassword } from '@/lib/auth';
-import type { DBUser } from '@/lib/db';
+import type { DBUser, DBSubscriptionPlan } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +38,26 @@ export async function GET(request: NextRequest) {
       `SELECT id, email, username, balance, role, enabled, avatar, created_at, updated_at FROM users ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
     ).all(...params, limit, offset) as Omit<DBUser, 'password_hash' | 'salt' | 'bio' | 'preferences'>[];
 
-    return NextResponse.json({ users, total, page, limit, has_more: offset + users.length < total });
+    // Fetch subscriptions for all users in one query
+    const userIds = users.map(u => u.id);
+    const subscriptions = userIds.length > 0 ? db.prepare(
+      `SELECT us.user_id, us.id as sub_id, us.status, us.credits_remaining, us.credits_total, us.billing_cycle, us.current_period_end,
+              sp.display_name as plan_display_name, sp.name as plan_name
+       FROM user_subscriptions us
+       JOIN subscription_plans sp ON us.plan_id = sp.id
+       WHERE us.user_id IN (${userIds.map(() => '?').join(',')}) AND us.status = 'active'
+       ORDER BY us.created_at DESC`
+    ).all(...userIds) as { user_id: number; sub_id: number; status: string; credits_remaining: number; credits_total: number; billing_cycle: string; current_period_end: string; plan_display_name: string; plan_name: string }[] : [];
+
+    const subMap = new Map<number, typeof subscriptions[0]>();
+    for (const s of subscriptions) { if (!subMap.has(s.user_id)) subMap.set(s.user_id, s); }
+
+    const usersWithSubs = users.map(u => ({
+      ...u,
+      subscription: subMap.get(u.id) || null,
+    }));
+
+    return NextResponse.json({ users: usersWithSubs, total, page, limit, has_more: offset + users.length < total });
   } catch (error) {
     console.error('Users list error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -53,7 +72,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, role, enabled, addBalance: addAmt, deductBalance: deductAmt, resetPassword } = body;
+    const { id, role, enabled, addBalance: addAmt, deductBalance: deductAmt, resetPassword, giftSubscription, cancelSubscription, addCredits } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'User id is required' }, { status: 400 });
@@ -85,16 +104,27 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Add balance
-    if (addAmt && addAmt > 0) {
-      const result = addBalance(id, addAmt, 'gift', `Admin credited by ${auth.user.email}`);
+    if (addAmt !== undefined) {
+      const amt = Number(addAmt);
+      if (typeof amt !== 'number' || isNaN(amt) || amt <= 0) {
+        return NextResponse.json({ error: 'addBalance must be a positive number' }, { status: 400 });
+      }
+      if (amt > 1_000_000) {
+        return NextResponse.json({ error: 'addBalance exceeds maximum limit' }, { status: 400 });
+      }
+      const result = addBalance(id, amt, 'gift', `Admin credited by ${auth.user.email}`);
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
     }
 
     // Deduct balance
-    if (deductAmt && deductAmt > 0) {
-      const result = deductBalance(id, deductAmt, `Admin deducted by ${auth.user.email}`);
+    if (deductAmt !== undefined) {
+      const amt = Number(deductAmt);
+      if (typeof amt !== 'number' || isNaN(amt) || amt <= 0) {
+        return NextResponse.json({ error: 'deductBalance must be a positive number' }, { status: 400 });
+      }
+      const result = deductBalance(id, amt, `Admin deducted by ${auth.user.email}`);
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
@@ -112,8 +142,43 @@ export async function PATCH(request: NextRequest) {
       db.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(passwordHash, salt, id);
     }
 
+    // Gift subscription
+    if (giftSubscription && giftSubscription.planId) {
+      const plan = db.prepare('SELECT * FROM subscription_plans WHERE id = ?').get(giftSubscription.planId) as DBSubscriptionPlan | undefined;
+      if (!plan) {
+        return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+      }
+      // Cancel any existing active subscription
+      db.prepare("UPDATE user_subscriptions SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND status = 'active'").run(id);
+      const credits = giftSubscription.credits || plan.monthly_credits;
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+      db.prepare(
+        "INSERT INTO user_subscriptions (user_id, plan_id, billing_cycle, status, credits_remaining, credits_total, current_period_start, current_period_end, is_first_purchase, auto_renew) VALUES (?, ?, 'monthly', 'active', ?, ?, datetime('now'), ?, 0, 0)"
+      ).run(id, plan.id, credits, credits, periodEnd.toISOString());
+    }
+
+    // Cancel subscription
+    if (cancelSubscription === true) {
+      db.prepare("UPDATE user_subscriptions SET status = 'cancelled', auto_renew = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND status = 'active'").run(id);
+    }
+
+    // Add credits to existing subscription
+    if (addCredits && typeof addCredits === 'number' && addCredits > 0) {
+      const activeSub = db.prepare("SELECT id, credits_remaining, credits_total FROM user_subscriptions WHERE user_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1").get(id) as { id: number; credits_remaining: number; credits_total: number } | undefined;
+      if (activeSub) {
+        db.prepare('UPDATE user_subscriptions SET credits_remaining = credits_remaining + ?, credits_total = credits_total + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(addCredits, addCredits, activeSub.id);
+      } else {
+        return NextResponse.json({ error: 'No active subscription to add credits to' }, { status: 400 });
+      }
+    }
+
     const updated = db.prepare('SELECT id, email, username, balance, role, enabled, avatar, created_at, updated_at FROM users WHERE id = ?').get(id);
-    return NextResponse.json({ user: updated, newPassword });
+    // Only return password in response once — admin must copy it immediately
+    const response: Record<string, unknown> = { user: updated };
+    if (newPassword) response.newPassword = newPassword;
+    return NextResponse.json(response);
   } catch (error) {
     console.error('User update error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

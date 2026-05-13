@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS model_rates (
   output_rate REAL NOT NULL DEFAULT 0,
   cache_rate REAL DEFAULT 0,
   cache_creation_rate REAL DEFAULT 0,
+  credit_rate REAL NOT NULL DEFAULT 1.0,
   enabled INTEGER DEFAULT 1,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -77,6 +78,8 @@ CREATE TABLE IF NOT EXISTS usage_logs (
   tokens_in_cache INTEGER DEFAULT 0,
   tokens_cache_creation INTEGER DEFAULT 0,
   cost REAL DEFAULT 0,
+  credits_used INTEGER DEFAULT 0,
+  deduction_source TEXT DEFAULT 'balance',
   latency_ms INTEGER,
   success INTEGER DEFAULT 1,
   error_message TEXT,
@@ -101,14 +104,19 @@ CREATE TABLE IF NOT EXISTS billing_records (
 CREATE TABLE IF NOT EXISTS redeem_codes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   code TEXT UNIQUE NOT NULL,
-  amount REAL NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  code_type TEXT NOT NULL DEFAULT 'balance' CHECK(code_type IN ('balance', 'subscription')),
+  plan_id INTEGER,
+  billing_cycle TEXT DEFAULT 'monthly',
+  duration_months INTEGER DEFAULT 1,
   enabled INTEGER DEFAULT 1,
   max_uses INTEGER DEFAULT 1,
   current_uses INTEGER DEFAULT 0,
   created_by INTEGER NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME,
-  FOREIGN KEY (created_by) REFERENCES users(id)
+  FOREIGN KEY (created_by) REFERENCES users(id),
+  FOREIGN KEY (plan_id) REFERENCES subscription_plans(id)
 );
 
 -- Multiplier rules table (per-model multiplier)
@@ -140,6 +148,73 @@ CREATE TABLE IF NOT EXISTS system_settings (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Subscription plans table
+CREATE TABLE IF NOT EXISTS subscription_plans (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,               -- 'spark', 'flare', 'pulse', 'nova'
+  display_name TEXT NOT NULL,       -- 'Spark 火花'
+  tagline TEXT,                     -- '点燃你的 AI 之旅'
+  tier INTEGER NOT NULL,            -- 1, 2, 3, 4 (排序用)
+  monthly_price REAL NOT NULL,      -- 月付价格
+  yearly_price REAL NOT NULL,       -- 年付价格
+  currency TEXT NOT NULL DEFAULT 'CNY', -- 价格货币 CNY/USD
+  monthly_credits INTEGER NOT NULL, -- 每月 Credits 额度
+  first_purchase_discount REAL DEFAULT 0.3, -- 首购折扣 (0.3 = 7折)
+  overage_rate_multiplier REAL DEFAULT 1.0, -- 超出费率系数
+  max_concurrency INTEGER DEFAULT 10,       -- 最大并发
+  route_priority TEXT DEFAULT 'standard',   -- standard/priority/ultra/exclusive
+  off_peak_discount REAL DEFAULT 0,         -- 非高峰折扣 (0.2 = 8折, 仅Nova)
+  support_level TEXT DEFAULT 'community',   -- community/email/priority/dedicated
+  enabled INTEGER DEFAULT 1,
+  popular INTEGER DEFAULT 0,        -- 是否显示 "Most Popular" 标签
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Plan-Model binding table
+CREATE TABLE IF NOT EXISTS plan_models (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  plan_id INTEGER NOT NULL,
+  model_name TEXT NOT NULL,
+  enabled INTEGER DEFAULT 1,
+  FOREIGN KEY (plan_id) REFERENCES subscription_plans(id) ON DELETE CASCADE,
+  UNIQUE(plan_id, model_name)
+);
+
+-- User subscriptions table
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  plan_id INTEGER NOT NULL,
+  billing_cycle TEXT NOT NULL CHECK(billing_cycle IN ('monthly', 'yearly')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'expired', 'cancelled', 'paused')),
+  credits_remaining INTEGER NOT NULL,
+  credits_total INTEGER NOT NULL,
+  current_period_start DATETIME NOT NULL,
+  current_period_end DATETIME NOT NULL,
+  is_first_purchase INTEGER DEFAULT 1,
+  auto_renew INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (plan_id) REFERENCES subscription_plans(id)
+);
+
+-- Subscription usage logs table
+CREATE TABLE IF NOT EXISTS subscription_usage_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subscription_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  model TEXT NOT NULL,
+  tokens_in INTEGER DEFAULT 0,
+  tokens_out INTEGER DEFAULT 0,
+  credits_used INTEGER DEFAULT 0,
+  source TEXT NOT NULL CHECK(source IN ('credits', 'balance')), -- 扣费来源
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_value ON api_keys(key_value);
@@ -147,11 +222,19 @@ CREATE INDEX IF NOT EXISTS idx_usage_logs_user ON usage_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_created ON usage_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_model ON usage_logs(model);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_channel ON usage_logs(channel_id);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_user_created ON usage_logs(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_billing_records_user ON billing_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_billing_records_user_created ON billing_records(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_channels_type ON channels(type);
 CREATE INDEX IF NOT EXISTS idx_channels_enabled ON channels(enabled);
 CREATE INDEX IF NOT EXISTS idx_redeem_codes_code ON redeem_codes(code);
 CREATE INDEX IF NOT EXISTS idx_multiplier_rules_model ON multiplier_rules(model_name);
+CREATE INDEX IF NOT EXISTS idx_subscription_plans_tier ON subscription_plans(tier);
+CREATE INDEX IF NOT EXISTS idx_plan_models_plan ON plan_models(plan_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user ON user_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON user_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_subscription_usage_logs_user ON subscription_usage_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscription_usage_logs_sub ON subscription_usage_logs(subscription_id);
 
 -- Default system settings
 INSERT OR IGNORE INTO system_settings (key, value) VALUES
@@ -161,7 +244,8 @@ INSERT OR IGNORE INTO system_settings (key, value) VALUES
   ('default_balance', '10.0'),
   ('maintenance_mode', 'false'),
   ('currency', 'USD'),
-  ('exchange_rate', '7.3');
+  ('exchange_rate', '7.3'),
+  ('timezone', 'Asia/Shanghai');
 
 -- Default model rates (popular models)
 INSERT OR IGNORE INTO model_rates (model_name, display_name, provider, input_rate, output_rate, cache_rate, cache_creation_rate) VALUES
@@ -177,3 +261,27 @@ INSERT OR IGNORE INTO model_rates (model_name, display_name, provider, input_rat
   ('gemini-2.0-flash', 'Gemini 2.0 Flash', 'google', 0.0001, 0.0004, 0.00005, 0.000125),
   ('gemini-1.5-pro', 'Gemini 1.5 Pro', 'google', 0.00125, 0.005, 0.000625, 0.0015625),
   ('qwen-max', 'Qwen Max', 'alibaba', 0.0016, 0.0064, 0.0008, 0.002);
+
+-- Default subscription plans (use REPLACE to update if exists)
+DELETE FROM subscription_plans;
+INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular) VALUES
+  ('spark', 'Lite', '尝鲜入门', 1, 9, 92, 9000000, 0.23, 1.0, 10, 'standard', 0.8, 'community', 0),
+  ('flare', 'Standard', '适合进阶用户', 2, 29, 296, 30000000, 0.23, 0.95, 30, 'priority', 0.8, 'email', 0),
+  ('pulse', 'Pro', '适合专业开发者', 3, 79, 806, 85000000, 0.23, 0.85, 100, 'ultra', 0.8, 'priority', 1),
+  ('nova', 'Max', '适合编程开发发烧友', 4, 199, 2030, 220000000, 0.23, 0.75, 500, 'exclusive', 0.8, 'dedicated', 0);
+
+-- Default plan-model bindings
+DELETE FROM plan_models;
+INSERT INTO plan_models (plan_id, model_name, enabled) VALUES
+  (1, 'gpt-4o-mini', 1),
+  (1, 'deepseek-chat', 1),
+  (1, 'gemini-2.0-flash', 1),
+  (1, 'gpt-3.5-turbo', 1),
+  (2, 'gpt-4o', 1),
+  (2, 'claude-3-5-sonnet-20241022', 1),
+  (2, 'claude-3-5-haiku-20241022', 1),
+  (2, 'deepseek-reasoner', 1),
+  (2, 'gemini-1.5-pro', 1),
+  (2, 'qwen-max', 1),
+  (3, 'gpt-4-turbo', 1),
+  (3, 'claude-3-opus-20240229', 1);

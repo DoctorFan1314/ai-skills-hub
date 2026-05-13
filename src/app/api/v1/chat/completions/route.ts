@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest } from '@/lib/api-gateway';
-import { deductBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
+import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,8 +69,9 @@ export async function POST(request: NextRequest) {
         const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
         const cost = baseCost * multiplier;
 
+        let deductResult: { source: string } | undefined;
         if (cost > 0) {
-          deductBalance(streamData.userId, cost, `API call: ${streamData.model}`);
+          deductResult = deductCreditsOrBalance(streamData.userId, streamData.model, cost, `API call: ${streamData.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
         }
 
         logUsage({
@@ -83,6 +84,8 @@ export async function POST(request: NextRequest) {
           tokensInCache,
           tokensCacheCreation,
           cost,
+          creditsUsed: deductResult?.source === 'credits' ? (tokensIn + tokensOut) : 0,
+          deductionSource: deductResult?.source || 'balance',
           latencyMs,
           success: true,
           multiplier,

@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyPassword, signToken, setTokenCookie, TOKEN_NAME } from '@/lib/auth';
+import { checkIpRateLimit } from '@/lib/rate-limiter';
 import type { DBUser } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 attempts per IP per minute
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = checkIpRateLimit(`login:${ip}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 });
+    }
+
     const { email, password } = await request.json();
 
     if (!email || !password) {

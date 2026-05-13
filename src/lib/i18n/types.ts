@@ -249,6 +249,10 @@ export interface Dictionary {
     copyright: string; platforms: string;
     emailRequired: string; emailInvalid: string; alreadySubscribed: string; subscribeSuccess: string;
     comingSoon: string;
+    product: string; features: string; modelMarket: string; apiDocs: string; dashboard: string;
+    pricing: string; unifiedApi: string; smartRouting: string; usageBilling: string;
+    multiProtocol: string; agentSkills: string; promptTemplates: string; categories: string;
+    guide: string;
   };
   rateLimit: {
     tooFast: string;

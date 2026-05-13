@@ -8,6 +8,7 @@ import { ToastProvider } from "@/contexts/toast-context";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { I18nProvider } from "@/contexts/i18n-context";
+import { CurrencyProvider } from "@/contexts/currency-context";
 import { Toaster } from "@/components/ui/toast";
 import { ScrollToTop } from "@/components/shared/scroll-to-top";
 import { HtmlLangUpdater } from "@/components/shared/html-lang-updater";
@@ -89,7 +90,7 @@ export default function RootLayout({
           id="lang-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var l=localStorage.getItem('ai-skills-hub-language');if(l==='en')document.documentElement.lang='en-US';else if(l==='zh')document.documentElement.lang='zh-CN';}catch(e){}})()`,
+            __html: `(function(){try{var l=localStorage.getItem('oortapi-language');if(l==='en')document.documentElement.lang='en-US';else if(l==='zh')document.documentElement.lang='zh-CN';}catch(e){}})()`,
           }}
         />
       </head>
@@ -97,6 +98,7 @@ export default function RootLayout({
         <ToastProvider>
           <ThemeProvider>
             <I18nProvider>
+              <CurrencyProvider>
               <AuthProvider>
                 <HtmlLangUpdater />
                 <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm">
@@ -109,6 +111,7 @@ export default function RootLayout({
                 <CommandPalette />
                 <ScrollToTop />
               </AuthProvider>
+              </CurrencyProvider>
             </I18nProvider>
           </ThemeProvider>
         </ToastProvider>

@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { hashPassword, generateSalt, signToken, setTokenCookie } from '@/lib/auth';
+import { checkIpRateLimit } from '@/lib/rate-limiter';
 import type { DBUser } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 registrations per IP per minute
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = checkIpRateLimit(`register:${ip}`, 5, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: 'Too many registration attempts. Try again later.' }, { status: 429 });
+    }
+
     const { username, email, password } = await request.json();
 
     if (!username || !email || !password) {
       return NextResponse.json({ error: 'Username, email and password are required' }, { status: 400 });
+    }
+
+    // Username validation
+    if (typeof username !== 'string' || username.length < 2 || username.length > 32) {
+      return NextResponse.json({ error: 'Username must be 2-32 characters' }, { status: 400 });
+    }
+    if (!/^[a-zA-Z0-9_\-一-鿿]+$/.test(username)) {
+      return NextResponse.json({ error: 'Username can only contain letters, numbers, underscores, hyphens, and Chinese characters' }, { status: 400 });
     }
 
     if (password.length < 6) {
@@ -21,6 +37,12 @@ export async function POST(request: NextRequest) {
     const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
     if (existing) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+    }
+
+    // Check if username already exists
+    const existingUsername = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+    if (existingUsername) {
+      return NextResponse.json({ error: 'Username already taken' }, { status: 409 });
     }
 
     const salt = generateSalt();

@@ -18,6 +18,24 @@ interface UserItem {
   role: "user" | "admin";
   enabled: number;
   created_at: string;
+  subscription?: {
+    sub_id: number;
+    status: string;
+    credits_remaining: number;
+    credits_total: number;
+    billing_cycle: string;
+    current_period_end: string;
+    plan_display_name: string;
+    plan_name: string;
+  } | null;
+}
+
+interface Plan {
+  id: number;
+  name: string;
+  display_name: string;
+  monthly_credits: number;
+  monthly_price: number;
 }
 
 const LABELS = {
@@ -75,6 +93,12 @@ export default function UsersPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Subscription management
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [giftPlanId, setGiftPlanId] = useState<number>(0);
+  const [giftCredits, setGiftCredits] = useState("");
+  const [subActionLoading, setSubActionLoading] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: "20" });
@@ -92,6 +116,10 @@ export default function UsersPage() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+  useEffect(() => {
+    fetch("/api/plans").then(r => r.json()).then(d => setPlans(d.plans || [])).catch(() => {});
+  }, []);
+
   function openEdit(u: UserItem) {
     setEditUser(u);
     setEditRole(u.role);
@@ -108,12 +136,18 @@ export default function UsersPage() {
     const deductAmt = parseFloat(editDeduct);
     if (addAmt > 0) body.addBalance = addAmt;
     if (deductAmt > 0) body.deductBalance = deductAmt;
-    await fetch("/api/dashboard/users", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch("/api/dashboard/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Operation failed");
+      }
+    } catch { alert("Network error"); }
     setEditSaving(false);
     setEditUser(null);
     fetchUsers();
@@ -122,12 +156,18 @@ export default function UsersPage() {
   async function handleDelete() {
     if (!deleteUser) return;
     setDeleteLoading(true);
-    await fetch("/api/dashboard/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ id: deleteUser.id }),
-    });
+    try {
+      const res = await fetch("/api/dashboard/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: deleteUser.id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Delete failed");
+      }
+    } catch { alert("Network error"); }
     setDeleteLoading(false);
     setDeleteUser(null);
     fetchUsers();
@@ -144,10 +184,12 @@ export default function UsersPage() {
         body: JSON.stringify({ id: editUser.id, resetPassword: true }),
       });
       const data = await res.json();
-      if (data.newPassword) {
+      if (res.ok && data.newPassword) {
         setResetResult({ email: editUser.email, password: data.newPassword });
+      } else {
+        alert(data.error || "Password reset failed");
       }
-    } catch { /* ignore */ }
+    } catch { alert("Network error"); }
     setResetLoading(false);
   }
 
@@ -155,7 +197,70 @@ export default function UsersPage() {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {});
+    }).catch(() => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  async function handleGiftSubscription() {
+    if (!editUser || !giftPlanId) return;
+    setSubActionLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: editUser.id, giftSubscription: { planId: giftPlanId, credits: giftCredits ? parseInt(giftCredits) : undefined } }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Operation failed"); }
+    } catch { alert("Network error"); }
+    setSubActionLoading(false);
+    setEditUser(null);
+    fetchUsers();
+  }
+
+  async function handleCancelSubscription() {
+    if (!editUser?.subscription) return;
+    setSubActionLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: editUser.id, cancelSubscription: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Operation failed"); }
+    } catch { alert("Network error"); }
+    setSubActionLoading(false);
+    setEditUser(null);
+    fetchUsers();
+  }
+
+  async function handleAddCredits() {
+    if (!editUser?.subscription || !giftCredits) return;
+    setSubActionLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: editUser.id, addCredits: parseInt(giftCredits) }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Operation failed"); }
+    } catch { alert("Network error"); }
+    setSubActionLoading(false);
+    setEditUser(null);
+    fetchUsers();
   }
 
   const roleFilters = [
@@ -211,6 +316,7 @@ export default function UsersPage() {
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.email}</th>
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.username}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.role}</th>
+                    <th className="text-center py-3 px-4 text-muted-foreground font-medium">{lang === "zh" ? "订阅" : "Plan"}</th>
                     <th className="text-right py-3 px-4 text-muted-foreground font-medium">{t.balance}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.status}</th>
                     <th className="text-right py-3 px-4 text-muted-foreground font-medium">{t.registered}</th>
@@ -227,6 +333,15 @@ export default function UsersPage() {
                           {u.role === "admin" && <Shield className="h-3 w-3 mr-1" />}
                           {u.role}
                         </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {u.subscription ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            {u.subscription.plan_display_name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right font-mono">${u.balance.toFixed(2)}</td>
                       <td className="py-3 px-4 text-center">
@@ -258,7 +373,7 @@ export default function UsersPage() {
       {(page > 1 || hasMore) && (
         <div className="flex justify-center gap-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>←</Button>
-          <span className="text-sm text-muted-foreground py-1.5">Page {page}</span>
+          <span className="text-sm text-muted-foreground py-1.5">{lang === "zh" ? `第 ${page} 页` : `Page ${page}`}</span>
           <Button variant="outline" size="sm" disabled={!hasMore} onClick={() => setPage(p => p + 1)}>→</Button>
         </div>
       )}
@@ -271,6 +386,41 @@ export default function UsersPage() {
             <DialogDescription>{editUser?.email}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {/* Subscription Info */}
+            {editUser?.subscription ? (
+              <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-foreground">{editUser.subscription.plan_display_name}</span>
+                  <span className="text-xs text-amber-400">{editUser.subscription.credits_remaining.toLocaleString()} / {editUser.subscription.credits_total.toLocaleString()} Credits</span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-1">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${editUser.subscription.credits_total > 0 ? ((editUser.subscription.credits_total - editUser.subscription.credits_remaining) / editUser.subscription.credits_total) * 100 : 0}%` }} />
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-2">{lang === "zh" ? "有效期至" : "Valid until"} {new Date(editUser.subscription.current_period_end).toLocaleDateString()}</p>
+                <div className="flex items-center gap-2">
+                  <Input type="number" min="0" placeholder={lang === "zh" ? "添加额度" : "Add credits"} value={giftCredits} onChange={e => setGiftCredits(e.target.value)} className="h-8 text-xs bg-secondary border-border" />
+                  <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleAddCredits} disabled={subActionLoading || !giftCredits}>
+                    {lang === "zh" ? "添加" : "Add"}
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-8 text-xs text-red-400 hover:text-red-300 shrink-0" onClick={handleCancelSubscription} disabled={subActionLoading}>
+                    {lang === "zh" ? "取消订阅" : "Cancel"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground mb-2">{lang === "zh" ? "该用户暂无订阅" : "No subscription"}</p>
+                <div className="flex items-center gap-2">
+                  <select className="flex-1 h-8 px-2 rounded-md border border-input bg-background text-xs" value={giftPlanId} onChange={e => setGiftPlanId(+e.target.value)}>
+                    <option value={0}>{lang === "zh" ? "选择套餐" : "Select plan"}</option>
+                    {plans.map(p => <option key={p.id} value={p.id}>{p.display_name} ({p.monthly_credits.toLocaleString()} credits)</option>)}
+                  </select>
+                  <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleGiftSubscription} disabled={subActionLoading || !giftPlanId}>
+                    {lang === "zh" ? "赠送" : "Gift"}
+                  </Button>
+                </div>
+              </div>
+            )}
             <div>
               <label className="text-sm text-foreground mb-1.5 block">{t.changeRole}</label>
               <div className="flex gap-2">

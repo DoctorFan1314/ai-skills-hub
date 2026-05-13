@@ -25,14 +25,14 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50')), 100);
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'));
 
     const logs = db.prepare(
       `SELECT u.id, u.model, u.tokens_in, u.tokens_out, u.tokens_in_cache, u.tokens_cache_creation,
-              u.cost, u.latency_ms, u.success, u.cached, u.created_at, u.channel_id, u.multiplier,
+              u.cost, u.credits_used, u.deduction_source, u.latency_ms, u.success, u.cached, u.created_at, u.channel_id, u.multiplier,
               c.name as channel_name,
-              m.input_rate, m.output_rate, m.cache_rate, m.cache_creation_rate
+              m.input_rate, m.output_rate, m.cache_rate, m.cache_creation_rate, m.credit_rate
        FROM usage_logs u
        LEFT JOIN channels c ON u.channel_id = c.id
        LEFT JOIN model_rates m ON u.model = m.model_name

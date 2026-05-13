@@ -4,26 +4,26 @@ import Link from "next/link";
 import { useI18n } from "@/contexts/i18n-context";
 
 export function Footer() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
 
   const footerSections = [
-    { id: "product", title: lang === "zh" ? "产品" : "Product", links: [
-      { label: lang === "zh" ? "模型市场" : "Models", href: "/models", disabled: false },
-      { label: lang === "zh" ? "API 文档" : "API Docs", href: "/docs", disabled: false },
-      { label: lang === "zh" ? "控制台" : "Dashboard", href: "/dashboard", disabled: false },
-      { label: lang === "zh" ? "定价" : "Pricing", href: "/models", disabled: false },
+    { id: "product", title: t.footer.product, links: [
+      { label: t.footer.modelMarket, href: "/models", disabled: false },
+      { label: t.footer.apiDocs, href: "/docs", disabled: false },
+      { label: t.footer.dashboard, href: "/dashboard", disabled: false },
+      { label: t.footer.pricing, href: "/models", disabled: false },
     ]},
-    { id: "features", title: lang === "zh" ? "功能" : "Features", links: [
-      { label: lang === "zh" ? "统一接口" : "Unified API", href: "/docs", disabled: false },
-      { label: lang === "zh" ? "智能路由" : "Smart Routing", href: "/docs", disabled: false },
-      { label: lang === "zh" ? "用量计费" : "Usage & Billing", href: "/dashboard/usage", disabled: false },
-      { label: lang === "zh" ? "多格式兼容" : "Multi-Protocol", href: "/docs", disabled: false },
+    { id: "features", title: t.footer.features, links: [
+      { label: t.footer.unifiedApi, href: "/docs", disabled: false },
+      { label: t.footer.smartRouting, href: "/docs", disabled: false },
+      { label: t.footer.usageBilling, href: "/dashboard/usage", disabled: false },
+      { label: t.footer.multiProtocol, href: "/docs", disabled: false },
     ]},
     { id: "resources", title: t.footer.resources, links: [
-      { label: lang === "zh" ? "Agent 技能" : "Agent Skills", href: "/skills", disabled: false },
-      { label: lang === "zh" ? "Prompt 模板" : "Prompt Templates", href: "/prompts", disabled: false },
-      { label: lang === "zh" ? "分类浏览" : "Categories", href: "/categories", disabled: false },
-      { label: lang === "zh" ? "新手指南" : "Guide", href: "/guide", disabled: false },
+      { label: t.footer.agentSkills, href: "/skills", disabled: false },
+      { label: t.footer.promptTemplates, href: "/prompts", disabled: false },
+      { label: t.footer.categories, href: "/categories", disabled: false },
+      { label: t.footer.guide, href: "/guide", disabled: false },
     ]},
     { id: "community", title: t.footer.community, links: [
       { label: t.footer.github, href: "#", disabled: true },

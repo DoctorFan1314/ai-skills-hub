@@ -39,15 +39,20 @@ export async function POST(request: NextRequest) {
   }
 
   const { model_name, multiplier, enabled, description } = body;
-  if (!model_name) {
+  if (!model_name || typeof model_name !== 'string') {
     return NextResponse.json({ error: 'model_name is required' }, { status: 400 });
+  }
+
+  const mult = Number(multiplier ?? 1.0);
+  if (isNaN(mult) || mult < 0.01 || mult > 100) {
+    return NextResponse.json({ error: 'multiplier must be between 0.01 and 100' }, { status: 400 });
   }
 
   db.prepare(
     `INSERT INTO multiplier_rules (model_name, multiplier, enabled, description)
      VALUES (?, ?, ?, ?)
      ON CONFLICT(model_name) DO UPDATE SET multiplier=excluded.multiplier, enabled=excluded.enabled, description=excluded.description`
-  ).run(model_name, multiplier ?? 1.0, enabled ? 1 : 0, description || null);
+  ).run(model_name, mult, enabled ? 1 : 0, description || null);
 
   return NextResponse.json({ success: true });
 }

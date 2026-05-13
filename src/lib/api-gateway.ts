@@ -2,7 +2,7 @@ import db from './db';
 import type { DBApiKey, DBUser } from './db';
 import { verifyToken, getTokenFromCookie, decrypt } from './auth';
 import { checkRateLimit, type RateLimitResult } from './rate-limiter';
-import { deductBalance, calculateCost, logUsage, getEffectiveMultiplier } from './billing-engine';
+import { deductBalance, deductCreditsOrBalance, calculateCost, logUsage, getEffectiveMultiplier, getActiveSubscription } from './billing-engine';
 import { selectChannel, reportChannelFailure, reportChannelSuccess } from './channel-manager';
 
 export interface GatewayRequest {
@@ -102,8 +102,9 @@ export async function processGatewayRequest(
     };
   }
 
-  // 3. Check balance
-  if (user.balance <= 0) {
+  // 3. Check balance (allow through if user has subscription credits)
+  const subInfo = getActiveSubscription(user.id);
+  if (user.balance <= 0 && (!subInfo || subInfo.subscription.credits_remaining <= 0)) {
     return { success: false, error: 'Insufficient balance. Please recharge.', statusCode: 402 };
   }
 
@@ -157,7 +158,12 @@ export async function processGatewayRequest(
         errorMessage: errorText,
       });
 
-      return { success: false, error: `Upstream error: ${errorText}`, statusCode: upstreamRes.status };
+      // Sanitize: don't leak upstream provider details to client
+      const safeStatus = upstreamRes.status >= 500 ? 502 : upstreamRes.status;
+      const safeError = upstreamRes.status >= 500
+        ? `Upstream service error (${upstreamRes.status})`
+        : `Upstream error: ${errorText.slice(0, 200)}`;
+      return { success: false, error: safeError, statusCode: safeStatus };
     }
 
     // Handle streaming response
@@ -193,10 +199,10 @@ export async function processGatewayRequest(
     const baseCost = calculateCost(req.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
     const cost = baseCost * multiplier;
 
-    // Deduct balance
-    const deductResult = deductBalance(user.id, cost, `API call: ${req.model}`);
+    // Deduct from credits or balance (subscription-aware)
+    const deductResult = deductCreditsOrBalance(user.id, req.model, cost, `API call: ${req.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
     if (!deductResult.success) {
-      console.error('Failed to deduct balance:', deductResult.error);
+      console.error('Failed to deduct:', deductResult.error);
     }
 
     // Log usage
@@ -210,6 +216,8 @@ export async function processGatewayRequest(
       tokensInCache,
       tokensCacheCreation,
       cost,
+      creditsUsed: deductResult.source === 'credits' ? (tokensIn + tokensOut) : 0,
+      deductionSource: deductResult.source,
       latencyMs,
       success: true,
       multiplier,
@@ -233,7 +241,7 @@ export async function processGatewayRequest(
       errorMessage: String(error),
     });
 
-    return { success: false, error: `Gateway error: ${error}`, statusCode: 502 };
+    return { success: false, error: 'Gateway error: upstream request failed', statusCode: 502 };
   }
 }
 
@@ -252,26 +260,69 @@ function buildUpstreamUrl(baseUrl: string, endpoint: string, providerType: strin
 // Build upstream request body based on provider type
 function buildUpstreamRequest(req: GatewayRequest, providerType: string): unknown {
   if (providerType === 'anthropic') {
-    // Anthropic format: only supported fields
-    return {
+    // Convert OpenAI-format tools back to Anthropic format for Anthropic upstream
+    const anthropicTools = Array.isArray(req.tools) ? req.tools.map((tool) => {
+      // Already in Anthropic format (no type/function wrapper)
+      if (!('type' in tool) || (tool as { type?: string }).type !== 'function') {
+        return tool;
+      }
+      // Convert from OpenAI format to Anthropic format
+      const fn = (tool as { function?: { name?: string; description?: string; parameters?: unknown } }).function;
+      return {
+        name: fn?.name || (tool as { name?: string }).name,
+        description: fn?.description || (tool as { description?: string }).description,
+        input_schema: fn?.parameters || { type: 'object', properties: {} },
+      };
+    }) : undefined;
+
+    // Convert tool_choice from OpenAI format to Anthropic format
+    let anthropicToolChoice: unknown = req.tool_choice;
+    if (typeof anthropicToolChoice === 'string') {
+      if (anthropicToolChoice === 'auto') anthropicToolChoice = { type: 'auto' };
+      else if (anthropicToolChoice === 'required') anthropicToolChoice = { type: 'any' };
+    } else if (anthropicToolChoice && typeof anthropicToolChoice === 'object' && (anthropicToolChoice as Record<string, unknown>).type === 'function') {
+      const fn = (anthropicToolChoice as Record<string, unknown>).function as { name?: string } | undefined;
+      anthropicToolChoice = { type: 'tool', name: fn?.name };
+    }
+
+    const anthropicBody: Record<string, unknown> = {
       model: req.model,
       messages: req.messages,
       max_tokens: req.max_tokens || 4096,
       stream: req.stream || false,
-      temperature: req.temperature,
-      top_p: req.top_p,
-      tools: req.tools,
-      tool_choice: req.tool_choice,
-      stop_sequences: req.stop,
+      tools: anthropicTools,
+      tool_choice: anthropicToolChoice,
     };
+    // Pass through Anthropic-specific fields if present
+    const reqObj = req as Record<string, unknown>;
+    if (reqObj.system) anthropicBody.system = reqObj.system;
+    if (reqObj.thinking) anthropicBody.thinking = reqObj.thinking;
+    if (req.temperature != null) anthropicBody.temperature = req.temperature;
+    if (req.top_p != null) anthropicBody.top_p = req.top_p;
+    if (req.stop) anthropicBody.stop_sequences = req.stop;
+
+    // Clean "[undefined]" string values
+    for (const key of Object.keys(anthropicBody)) {
+      if (anthropicBody[key] === '[undefined]') delete anthropicBody[key];
+    }
+
+    return anthropicBody;
   }
 
-  // OpenAI-compatible (default): pass through ALL client params
-  const body: Record<string, unknown> = { ...req };
+  // OpenAI-compatible (default): pass through client params, strip Anthropic-only fields
+  const { system: _system, thinking: _thinking, ...rest } = req as Record<string, unknown>;
+  const body: Record<string, unknown> = { ...rest };
 
   // Ensure stream_options is set for streaming usage data
   if (req.stream) {
     body.stream_options = { include_usage: true };
+  }
+
+  // Clean up "[undefined]" string values sent by some clients
+  for (const key of Object.keys(body)) {
+    if (body[key] === '[undefined]') {
+      delete body[key];
+    }
   }
 
   return body;

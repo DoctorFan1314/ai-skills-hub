@@ -32,11 +32,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
+    const ALLOWED_KEYS = ['site_name', 'registration_enabled', 'default_rate_limit', 'default_balance', 'maintenance_mode', 'currency', 'exchange_rate', 'timezone'];
     const stmt = db.prepare('INSERT OR REPLACE INTO system_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)');
 
     const txn = db.transaction(() => {
       for (const [key, value] of Object.entries(body)) {
-        if (typeof key === 'string' && typeof value === 'string') {
+        if (typeof key === 'string' && typeof value === 'string' && ALLOWED_KEYS.includes(key)) {
           stmt.run(key, value);
         }
       }
