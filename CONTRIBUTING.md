@@ -1,46 +1,49 @@
 # Contributing
 
-Thank you for your interest in AI Skills Hub! We welcome all forms of contributions.
+Thank you for your interest in OortAPI! We welcome all forms of contributions.
 
 ---
 
 ## How to Contribute
 
-### Submit Skill Templates (Most Welcome!)
+### Configure AI Provider Channels (Most Welcome!)
 
-This is the simplest and most valuable way to contribute:
+The platform needs upstream AI provider channels to function. Adding and testing channels is the most valuable contribution:
 
-1. Use the "Submit Template" feature directly on the website
-2. Or fork this repo, add a new Skill object in `src/lib/mock-data.ts`, and submit a PR
+1. Fork this repo and add a new channel configuration
+2. Or submit channel info via GitHub Issues with provider name, base URL, and supported models
 
-#### Skill Template Requirements
+#### Channel Requirements
 
-Each template must include:
+Each channel should include:
 
-- **Title**: Clear description of functionality, with version number (e.g., `v2.1`)
-- **Subtitle**: One-line description, no more than 50 characters
-- **Online Prompt**: For ChatGPT / Claude / Grok and similar platforms
-- **Local Prompt**: For LM Studio / Ollama and similar local tools
-- **Variable Definitions**: Variables the user needs to fill in (e.g., `{{topic}}`)
-- **Before/After Example**: At least one real input/output comparison
-- **Recommended Models**: Note recommended models and their use cases
-- **Usage Steps**: Separate instructions for online and local usage
+- **Provider Type**: openai, anthropic, google, deepseek, alibaba, etc.
+- **Base URL**: API endpoint URL
+- **Supported Models**: List of available models
+- **API Key**: Will be encrypted with AES-256-GCM on storage
 
 #### Quality Standards
 
-- Prompts must be tested on at least 2 different models
-- Output should be natural and free of obvious AI-sounding text
-- Cover real productivity scenarios, not just demos
+- Channel must pass connection test (`GET /v1/models` or equivalent)
+- Model list should be accurate and up-to-date
+- Response latency should be reasonable (< 10s for standard requests)
+
+### Submit Model Rate Updates
+
+Help keep pricing accurate:
+
+1. Check model provider official pricing pages
+2. Submit updated rates via PR to `src/lib/schema.sql` (seed data section)
+3. Include: model_name, input_rate, output_rate, cache_rate, cache_creation_rate (per 1K tokens)
 
 ### Report Bugs
 
 Submit bug reports in [Issues](../../issues), including:
 
-- Problem description
+- Problem description and expected behavior
 - Steps to reproduce
-- Expected behavior vs. actual behavior
+- API endpoint and request/response (redact API keys)
 - Browser and operating system information
-- Screenshots (if applicable)
 
 ### Feature Requests
 
@@ -64,8 +67,8 @@ Submit feature requests in [Issues](../../issues), describing:
 
 ```bash
 # Clone your fork
-git clone https://github.com/your-username/ai-skills-hub.git
-cd ai-skills-hub
+git clone https://github.com/your-username/oortapi.git
+cd oortapi
 
 # Install dependencies
 npm install
@@ -82,17 +85,50 @@ Open http://localhost:3000 in your browser.
 
 ```
 src/
-├── app/              # Page routes
-├── components/       # Components
-│   ├── ui/           # shadcn/ui base components
-│   ├── layout/       # Layout components (Navbar, Footer)
-│   ├── home/         # Homepage components
-│   └── skill/        # Skill-related components
-└── lib/
-    ├── types.ts      # Type definitions
-    ├── mock-data.ts  # Data source (add new templates here)
-    └── categories.ts # Category definitions
+├── app/
+│   ├── api/
+│   │   ├── v1/              # OpenAI-compatible API endpoints
+│   │   │   ├── chat/        # Chat completions (streaming)
+│   │   │   ├── messages/    # Anthropic Messages API
+│   │   │   ├── models/      # Model listing
+│   │   │   └── billing/     # Balance, usage, redeem
+│   │   ├── auth/            # Login, register, profile
+│   │   ├── dashboard/       # Admin & user dashboard APIs
+│   │   ├── subscribe/       # Subscription API
+│   │   └── plans/           # Plans listing API
+│   ├── dashboard/           # Dashboard pages
+│   ├── token-plan/          # Token Plan subscription page
+│   ├── models/              # Model marketplace
+│   └── profile/             # User profile
+├── components/
+│   ├── dashboard/           # Dashboard UI components
+│   ├── shared/              # Shared components (SubscriptionCard, etc.)
+│   ├── layout/              # Navbar, Footer
+│   └── ui/                  # shadcn/ui base components
+├── lib/
+│   ├── db.ts                # SQLite connection (better-sqlite3)
+│   ├── schema.sql           # Database schema (14 tables)
+│   ├── auth.ts              # JWT + PBKDF2 + AES-256-GCM
+│   ├── api-gateway.ts       # Unified API gateway
+│   ├── billing-engine.ts    # Per-token billing engine
+│   ├── channel-manager.ts   # Smart channel routing
+│   └── i18n/                # Internationalization (zh/en)
+└── contexts/
+    ├── auth-context.tsx     # JWT-based auth
+    └── currency-context.tsx # USD/CNY currency switching
 ```
+
+---
+
+## Key Architecture Decisions
+
+- **SQLite** with `better-sqlite3` — no ORM, direct SQL queries
+- **JWT + httpOnly cookies** for authentication (not localStorage)
+- **AES-256-GCM** for channel API key encryption at rest
+- **OpenAI-compatible format** — all endpoints follow OpenAI API spec
+- **Smart routing** — weighted random selection with automatic failover
+- **3-tier cache pricing** — separate rates for input, cache read, cache write, output
+- **Prorated subscriptions** — upgrades/downgrades use remaining-period ratio
 
 ---
 
@@ -111,9 +147,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 Examples:
 ```
-feat: add "Short Video Script Generator" skill template
-fix: fix mobile nav menu not closing properly
-docs: update README with deployment instructions
+feat: add DeepSeek channel support with model sync
+fix: fix tool_calls not forwarded to upstream providers
+docs: update CHANGELOG with v3.3.1 subscription system
 ```
 
 ---
@@ -130,7 +166,6 @@ docs: update README with deployment instructions
 ## Contact
 
 - GitHub Issues: Submit bugs or suggestions
-- Email: [TBD]
 
 ---
 
