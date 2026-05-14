@@ -221,6 +221,7 @@ function MappingEditor({
           <button
             onClick={() => removeEntry(key)}
             className="text-muted-foreground hover:text-red-500 shrink-0"
+            aria-label="Remove mapping"
           >
             <MinusCircle className="h-4 w-4" />
           </button>
@@ -682,6 +683,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                           disabled={syncingId === ch.id}
                           className="text-muted-foreground hover:text-green-500 disabled:opacity-50"
                           title={t.syncModels}
+                          aria-label={t.syncModels}
                         >
                           {syncingId === ch.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -694,6 +696,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                           disabled={testingId === ch.id}
                           className="text-muted-foreground hover:text-yellow-500 disabled:opacity-50"
                           title={t.test}
+                          aria-label={t.test}
                         >
                           {testingId === ch.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -705,6 +708,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                           onClick={() => startEdit(ch)}
                           className="text-muted-foreground hover:text-blue-500"
                           title={t.edit}
+                          aria-label={t.edit}
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -713,6 +717,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                             toggleChannel(ch.id, !ch.enabled)
                           }
                           className="text-muted-foreground hover:text-foreground"
+                          aria-label={ch.enabled ? "Disable channel" : "Enable channel"}
                         >
                           {ch.enabled ? (
                             <ToggleRight className="h-5 w-5 text-green-500" />
@@ -724,6 +729,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                           onClick={() => setDeleteTarget(ch)}
                           className="text-muted-foreground hover:text-red-500"
                           title={t.delete}
+                          aria-label={t.delete}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

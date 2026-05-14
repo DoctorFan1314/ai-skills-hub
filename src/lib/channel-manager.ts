@@ -31,7 +31,6 @@ export function selectChannel(requestedModel: string): ChannelSelection | null {
   const available = eligible.filter(ch => {
     if (ch.fail_count < FAIL_THRESHOLD) return true;
     if (ch.last_fail_at && now - new Date(ch.last_fail_at).getTime() > RECOVERY_TIME_MS) {
-      // Reset fail count for recovery
       db.prepare('UPDATE channels SET fail_count = 0 WHERE id = ?').run(ch.id);
       return true;
     }
@@ -40,13 +39,37 @@ export function selectChannel(requestedModel: string): ChannelSelection | null {
 
   if (available.length === 0) return null;
 
-  // Weighted random selection
-  const totalWeight = available.reduce((sum, ch) => sum + ch.weight, 0);
+  // Get recent latency stats for available channels (last 100 requests)
+  const channelIds = available.map(ch => ch.id);
+  const placeholders = channelIds.map(() => '?').join(',');
+  const latencyStats = db.prepare(
+    `SELECT api_key_id as channel_id, AVG(latency_ms) as avg_latency, COUNT(*) as request_count
+     FROM usage_logs
+     WHERE api_key_id IN (${placeholders}) AND created_at > datetime('now', '-1 hour')
+     GROUP BY api_key_id`
+  ).all(...channelIds) as { channel_id: number; avg_latency: number; request_count: number }[];
+
+  const statsMap = new Map(latencyStats.map(s => [s.channel_id, s]));
+
+  // Weighted selection with latency boost
+  const scored = available.map(ch => {
+    const stats = statsMap.get(ch.id);
+    let effectiveWeight = ch.weight;
+    if (stats && stats.request_count >= 3) {
+      // Boost channels with lower latency (clamp between 0.5x and 2x)
+      const avgLatency = stats.avg_latency;
+      const medianLatency = 2000; // 2s baseline
+      const latencyFactor = Math.max(0.5, Math.min(2, medianLatency / avgLatency));
+      effectiveWeight = Math.round(ch.weight * latencyFactor);
+    }
+    return { channel: ch, effectiveWeight: Math.max(1, effectiveWeight) };
+  });
+
+  const totalWeight = scored.reduce((sum, s) => sum + s.effectiveWeight, 0);
   let random = Math.random() * totalWeight;
-  for (const ch of available) {
-    random -= ch.weight;
+  for (const { channel: ch, effectiveWeight } of scored) {
+    random -= effectiveWeight;
     if (random <= 0) {
-      // Apply model mapping
       const mapping: Record<string, string> = JSON.parse(ch.model_mapping || '{}');
       const actualModel = mapping[requestedModel] || requestedModel;
       return { channel: ch, model: actualModel };

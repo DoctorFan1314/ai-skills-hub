@@ -37,12 +37,21 @@ export function setRateLimitHeaders(headers: Headers, rateLimit?: { limit: numbe
   headers.set('X-RateLimit-Reset', String(Math.ceil(rateLimit.resetAt / 1000)));
 }
 
+export function setDeprecationHeader(headers: Headers, warning?: string) {
+  if (warning) {
+    headers.set('X-Deprecation-Warning', warning);
+    headers.set('Sunset', 'Sat, 01 Jan 2027 00:00:00 GMT');
+  }
+}
+
 export interface GatewayResponse {
   success: boolean;
   data?: unknown;
   error?: string;
   statusCode?: number;
   rateLimit?: { limit: number; remaining: number; resetAt: number };
+  deprecationWarning?: string;
+  headers?: Record<string, string>;
 }
 
 // Validate API Key from Authorization header
@@ -100,6 +109,14 @@ export async function processGatewayRequest(
 
   const { apiKey, user } = auth;
 
+  // 1.5. Check model permissions
+  try {
+    const perms = JSON.parse(apiKey.permissions || '{"models":["*"]}');
+    if (perms.models && !perms.models.includes('*') && !perms.models.includes(req.model)) {
+      return { success: false, error: `API key does not have permission to use model: ${req.model}`, statusCode: 403 };
+    }
+  } catch { /* invalid JSON — allow all */ }
+
   // 2. Check rate limit
   const rateLimit = checkRateLimit(apiKey.id, apiKey.rate_limit);
   const rateLimitInfo = { limit: rateLimit.limit, remaining: rateLimit.remaining, resetAt: rateLimit.resetAt };
@@ -115,15 +132,28 @@ export async function processGatewayRequest(
   // 3. Check balance (allow through if user has subscription credits)
   const subInfo = getActiveSubscription(user.id);
   if (user.balance <= 0 && (!subInfo || subInfo.subscription.credits_remaining <= 0)) {
-    return { success: false, error: 'Insufficient balance. Please recharge.', statusCode: 402 };
+    return { success: false, error: 'Insufficient balance. Please recharge.', statusCode: 402, rateLimit: rateLimitInfo };
   }
+
+  // 3.5. Resolve model alias and check deprecation
+  let resolvedModel = req.model;
+  let deprecationWarning: string | undefined;
+  try {
+    const modelInfo = db.prepare('SELECT alias_for, deprecated, deprecated_message FROM model_rates WHERE model_name = ? AND enabled = 1').get(req.model) as { alias_for: string | null; deprecated: number; deprecated_message: string | null } | undefined;
+    if (modelInfo?.alias_for) {
+      resolvedModel = modelInfo.alias_for;
+    }
+    if (modelInfo?.deprecated) {
+      deprecationWarning = modelInfo.deprecated_message || `Model "${req.model}" is deprecated and will be removed in a future version.`;
+    }
+  } catch { /* ignore */ }
 
   // 4. Select channel with failover retry
   const MAX_RETRIES = 3;
   let lastError: GatewayResponse | null = null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const selection = selectChannel(req.model);
+    const selection = selectChannel(resolvedModel);
     if (!selection) {
       if (!lastError) {
         return { success: false, error: `No available channel for model: ${req.model}`, statusCode: 503, rateLimit: rateLimitInfo };
@@ -134,6 +164,7 @@ export async function processGatewayRequest(
     const { channel, model: actualModel } = selection;
     const result = await executeChannelRequest(req, apiKey.id, user.id, channel, actualModel, endpoint);
     result.rateLimit = rateLimitInfo;
+    if (deprecationWarning) result.deprecationWarning = deprecationWarning;
 
     if (result.success) return result;
 
@@ -142,7 +173,13 @@ export async function processGatewayRequest(
     if (result.statusCode && result.statusCode < 500) return result;
   }
 
-  return lastError || { success: false, error: 'Gateway error: upstream request failed', statusCode: 502, rateLimit: rateLimitInfo };
+  return lastError || {
+    success: false,
+    error: 'All upstream channels failed. Please retry after a few seconds.',
+    statusCode: 503,
+    rateLimit: rateLimitInfo,
+    headers: { 'Retry-After': '5' },
+  };
 }
 
 // Execute a request against a single channel

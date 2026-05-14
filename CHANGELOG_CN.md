@@ -47,6 +47,50 @@
 #### 中间件
 - **请求体大小限制** — API 路由现在拒绝 `Content-Length > 10MB` 的请求（返回 413）
 
+#### v3.3.3 追加改进
+
+#### 确认对话框与无障碍
+- **确认对话框替换** — `api-key-table.tsx` 和 `token-plan/page.tsx` 中的原生 `confirm()` 替换为 UI Dialog 组件
+- **aria-label 无障碍** — 为所有仅图标的交互按钮添加 `aria-label`（7 个文件，15 处）
+
+#### 智能渠道选择
+- **延迟感知负载均衡** — 渠道选择现在基于近期平均延迟动态调整权重，低延迟渠道优先
+
+#### 订阅自动续费
+- **自动续费逻辑** — `processAutoRenewals()` 函数自动续费到期订阅（余额充足时扣费并重置周期）
+- **维护端点** — `POST /api/dashboard/maintenance` 支持 `action=auto_renew` 手动触发续费
+
+#### Webhook 支持
+- **Webhook 表** — 新增 `webhooks` 表存储 URL、密钥和事件订阅
+- **Webhook API** — `GET/POST/PATCH/DELETE /api/dashboard/webhooks` 管理 webhook
+- **Webhook 分发** — `dispatchWebhook()` 在关键事件后异步发送 HMAC 签名的 POST 请求
+
+#### 优雅降级
+- **503 + Retry-After** — 所有渠道失败时返回 503 状态码和 `Retry-After: 5` 头
+- **错误头转发** — 网关响应头（如 `Retry-After`）现在正确传递到客户端
+
+#### OpenAPI 规范补全
+- **新增端点文档** — 添加 `/v1/messages`、`/v1/billing/redeem`、`/api/dashboard/models`、`/api/dashboard/users`、`/api/dashboard/audit`、`/api/dashboard/webhooks`、`/api/health`、`/api/plans` 的 OpenAPI 定义
+
+#### 会话管理
+- **会话追踪** — 登录创建会话记录，最多 10 个并发会话/用户
+- **登出清理** — `DELETE /api/auth/me` 删除当前会话
+
+#### 数据库备份与维护
+- **备份端点** — `GET /api/dashboard/backup` 使用 `VACUUM INTO` 生成 SQLite 一致备份
+- **维护端点** — `POST /api/dashboard/maintenance` 支持日志清理和 VACUUM
+
+#### 模型别名与弃用
+- **模型别名** — `model_rates` 表支持 `alias_for` 字段，请求自动路由到别名目标
+- **弃用警告** — 弃用模型在响应头中返回 `X-Deprecation-Warning`
+
+#### API Key 权限
+- **权限检查** — 网关现在解析 API Key 的 `permissions` JSON，强制执行模型白名单
+
+#### 限流持久化
+- **SQLite 持久化** — 限流器使用 `rate_limit_counters` 表持久化，重启后不丢失
+- **内存缓存** — 内存缓存 + 定期同步到 DB（每 5 次递增同步一次）
+
 ---
 
 ## [v3.3.2] — 2026-05-14

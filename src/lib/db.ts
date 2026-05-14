@@ -33,11 +33,24 @@ function getDb(): Database.Database {
     'ALTER TABLE redeem_codes ADD COLUMN billing_cycle TEXT DEFAULT \'monthly\'',
     'ALTER TABLE redeem_codes ADD COLUMN duration_months INTEGER DEFAULT 1',
     'ALTER TABLE subscription_plans ADD COLUMN currency TEXT NOT NULL DEFAULT \'CNY\'',
+    'ALTER TABLE model_rates ADD COLUMN alias_for TEXT',
+    'ALTER TABLE model_rates ADD COLUMN deprecated INTEGER DEFAULT 0',
+    'ALTER TABLE model_rates ADD COLUMN deprecated_message TEXT',
     // Performance indexes (IF NOT EXISTS — safe to re-run)
     'CREATE INDEX IF NOT EXISTS idx_model_rates_name ON model_rates(model_name)',
     'CREATE INDEX IF NOT EXISTS idx_user_subscriptions_active ON user_subscriptions(user_id, status, current_period_end)',
     'CREATE INDEX IF NOT EXISTS idx_channels_enabled_priority ON channels(enabled, priority)',
     'CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key ON usage_logs(api_key_id)',
+    // Webhooks table
+    `CREATE TABLE IF NOT EXISTS webhooks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      url TEXT NOT NULL,
+      secret TEXT NOT NULL,
+      events TEXT NOT NULL DEFAULT '[]',
+      enabled INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
   ];
   for (const sql of migrations) {
     try {

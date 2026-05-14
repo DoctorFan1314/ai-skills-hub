@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { verifyPassword, signToken, setTokenCookie, TOKEN_NAME } from '@/lib/auth';
+import { verifyPassword, signToken, setTokenCookie, TOKEN_NAME, createSession } from '@/lib/auth';
 import { checkIpRateLimit } from '@/lib/rate-limiter';
 import type { DBUser } from '@/lib/db';
 
@@ -36,6 +36,10 @@ export async function POST(request: NextRequest) {
 
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
     const cookie = setTokenCookie(token);
+
+    // Track session
+    const ua = request.headers.get('user-agent') || undefined;
+    createSession(user.id, token, ip, ua);
 
     const { password_hash, salt, ...safeUser } = user;
     const response = NextResponse.json({ user: safeUser });

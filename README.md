@@ -168,6 +168,15 @@ Supports full `tool_use` / `tool_result` conversion between Anthropic and OpenAI
 - **OpenAPI spec** — `GET /api/v1/openapi` for full API documentation
 - **Health check** — `GET /api/health` for monitoring and uptime
 - **Real-time stats** — Homepage shows live platform metrics (calls, uptime, latency, models)
+- **Smart channel selection** — Latency-aware load balancing, automatically prefers faster channels
+- **Subscription auto-renew** — Auto-renews expired subscriptions when balance is sufficient
+- **Webhook support** — Admin-configured webhooks with HMAC-signed POST notifications after key events
+- **Database backup** — `GET /api/dashboard/backup` generates consistent SQLite backup
+- **Session management** — Login tracking, max 10 concurrent sessions, logout cleanup
+- **Model aliases & deprecation** — Model alias routing and deprecation warning headers
+- **API key permissions** — Parses permissions JSON, enforces model whitelist
+- **Rate limiter persistence** — SQLite-persisted rate limit counters, survives restarts
+- **Accessibility** — aria-labels on all icon buttons, Dialog replaces native confirm
 
 ---
 

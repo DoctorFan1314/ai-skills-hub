@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Copy, Eye, EyeOff, Plus, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { useToast } from "@/contexts/toast-context";
 import { dashboardSWRConfig } from "@/lib/swr-fetcher";
@@ -60,6 +61,7 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const [showKey, setShowKey] = useState<Record<number, boolean>>({});
   const [newKeyName, setNewKeyName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const { toast: showToast } = useToast();
   const t = LABELS[lang];
 
@@ -92,14 +94,15 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
     mutate();
   };
 
-  const deleteKey = async (id: number) => {
-    if (!confirm(t.confirmDelete)) return;
+  const confirmDelete = async () => {
+    if (deleteTarget === null) return;
     await fetch("/api/dashboard/keys", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: deleteTarget }),
     });
+    setDeleteTarget(null);
     mutate();
   };
 
@@ -149,10 +152,10 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
                     <code className="text-xs font-mono text-muted-foreground">
                       {showKey[k.id] ? k.key_value : maskKey(k.key_value)}
                     </code>
-                    <button onClick={() => setShowKey(p => ({ ...p, [k.id]: !p[k.id] }))} className="text-muted-foreground hover:text-foreground">
+                    <button onClick={() => setShowKey(p => ({ ...p, [k.id]: !p[k.id] }))} className="text-muted-foreground hover:text-foreground" aria-label={showKey[k.id] ? "Hide key" : "Show key"}>
                       {showKey[k.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                     </button>
-                    <button onClick={() => copyKey(k.key_value)} className="text-muted-foreground hover:text-foreground">
+                    <button onClick={() => copyKey(k.key_value)} className="text-muted-foreground hover:text-foreground" aria-label="Copy key">
                       <Copy className="h-3 w-3" />
                     </button>
                   </div>
@@ -162,10 +165,10 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
                   <div>{t.lastUsed}: {k.last_used_at || t.never}</div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => toggleKey(k.id, !k.enabled)} className="text-muted-foreground hover:text-foreground">
+                  <button onClick={() => toggleKey(k.id, !k.enabled)} className="text-muted-foreground hover:text-foreground" aria-label={k.enabled ? t.disabled : t.enabled}>
                     {k.enabled ? <ToggleRight className="h-5 w-5 text-green-500" /> : <ToggleLeft className="h-5 w-5" />}
                   </button>
-                  <button onClick={() => deleteKey(k.id)} className="text-muted-foreground hover:text-red-500">
+                  <button onClick={() => setDeleteTarget(k.id)} className="text-muted-foreground hover:text-red-500" aria-label={t.confirmDelete}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -174,6 +177,19 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
           </div>
         )}
       </CardContent>
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t.title}</DialogTitle>
+            <DialogDescription>{t.confirmDelete}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{lang === "zh" ? "取消" : "Cancel"}</Button>
+            <Button onClick={confirmDelete} className="bg-red-600 text-white hover:bg-red-700">{lang === "zh" ? "确认删除" : "Delete"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

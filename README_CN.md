@@ -168,6 +168,15 @@ curl https://your-domain.com/api/v1/messages \
 - **OpenAPI 规范** — `GET /api/v1/openapi` 返回完整 API 文档
 - **健康检查** — `GET /api/health` 用于监控和可用性检测
 - **实时统计** — 首页展示真实平台指标（调用量、可用率、延迟、模型数）
+- **智能渠道选择** — 延迟感知负载均衡，自动优先选择低延迟渠道
+- **订阅自动续费** — 到期订阅自动续费（余额充足时）
+- **Webhook 支持** — 管理员可配置 Webhook，在关键事件后发送 HMAC 签名通知
+- **数据库备份** — `GET /api/dashboard/backup` 生成 SQLite 一致备份
+- **会话管理** — 登录追踪、最多 10 并发会话、登出清理
+- **模型别名与弃用** — 支持模型别名路由和弃用警告头
+- **API Key 权限** — 解析 permissions JSON，强制执行模型白名单
+- **限流持久化** — SQLite 持久化限流计数器，重启不丢失
+- **无障碍** — 所有图标按钮添加 aria-label，Dialog 替换原生 confirm
 
 ---
 

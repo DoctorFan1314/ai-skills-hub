@@ -19,6 +19,8 @@ const spec = {
     { name: "Auth", description: "用户认证" },
     { name: "Dashboard", description: "仪表盘与管理" },
     { name: "System", description: "系统信息" },
+    { name: "Anthropic", description: "Anthropic Messages API 兼容接口" },
+    { name: "Admin", description: "管理员接口" },
   ],
   components: {
     securitySchemes: {
@@ -695,6 +697,159 @@ const spec = {
           content: { "application/json": { schema: { type: "object", required: ["id"], properties: { id: { type: "integer" } } } } },
         },
         responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+    },
+    // ─── Anthropic Compatible ───
+    "/v1/messages": {
+      post: {
+        tags: ["Anthropic"],
+        summary: "Anthropic Messages API",
+        description: "兼容 Anthropic Messages API 格式的中转接口。",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["model", "messages"],
+                properties: {
+                  model: { type: "string", example: "claude-sonnet-4-20250514" },
+                  messages: { type: "array" },
+                  max_tokens: { type: "integer" },
+                  stream: { type: "boolean" },
+                },
+              },
+            },
+          },
+        },
+        responses: { "200": { description: "成功" }, "401": { description: "无效的 API Key" } },
+      },
+    },
+    // ─── Additional Billing ───
+    "/v1/billing/redeem": {
+      post: {
+        tags: ["Billing"],
+        summary: "兑换码",
+        description: "使用兑换码充值余额或激活订阅。",
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["code"], properties: { code: { type: "string" } } } } },
+        },
+        responses: { "200": { description: "成功" }, "400": { description: "无效或已使用的兑换码" } },
+      },
+    },
+    // ─── Dashboard Management ───
+    "/api/dashboard/models": {
+      get: {
+        tags: ["Dashboard"],
+        summary: "模型定价列表",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" } },
+      },
+      post: {
+        tags: ["Dashboard"],
+        summary: "创建模型定价",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+      patch: {
+        tags: ["Dashboard"],
+        summary: "更新模型定价",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+      delete: {
+        tags: ["Dashboard"],
+        summary: "删除模型定价",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+    },
+    "/api/dashboard/users": {
+      get: {
+        tags: ["Admin"],
+        summary: "用户列表",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+      patch: {
+        tags: ["Admin"],
+        summary: "更新用户（角色/余额/密码重置）",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+      delete: {
+        tags: ["Admin"],
+        summary: "删除用户",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+    },
+    "/api/dashboard/audit": {
+      get: {
+        tags: ["Admin"],
+        summary: "审计日志",
+        security: [{ CookieAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 50 } },
+        ],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+    },
+    "/api/dashboard/webhooks": {
+      get: {
+        tags: ["Admin"],
+        summary: "Webhook 列表",
+        security: [{ CookieAuth: [] }],
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+      post: {
+        tags: ["Admin"],
+        summary: "创建 Webhook",
+        security: [{ CookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["url", "events"], properties: { url: { type: "string" }, events: { type: "array", items: { type: "string" } } } } } },
+        },
+        responses: { "200": { description: "成功" }, "403": { description: "需要管理员权限" } },
+      },
+    },
+    // ─── System ───
+    "/api/health": {
+      get: {
+        tags: ["System"],
+        summary: "健康检查",
+        description: "返回系统健康状态、数据库延迟、渠道数、活跃用户数。无需认证。",
+        responses: {
+          "200": {
+            description: "成功",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "ok" },
+                    version: { type: "string" },
+                    db_latency_ms: { type: "number" },
+                    channels: { type: "integer" },
+                    active_users_24h: { type: "integer" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/plans": {
+      get: {
+        tags: ["System"],
+        summary: "订阅计划列表",
+        description: "获取所有可用的订阅计划。无需认证。",
+        responses: { "200": { description: "成功" } },
       },
     },
   },

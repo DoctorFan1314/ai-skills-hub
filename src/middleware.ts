@@ -6,6 +6,7 @@ export function middleware(request: NextRequest) {
   // X-Request-Id for all responses (Web Crypto API — works in Edge runtime)
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   response.headers.set('X-Request-Id', requestId);
+  response.headers.set('X-API-Version', '1');
 
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');

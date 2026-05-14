@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processGatewayRequest, estimateTokens, setRateLimitHeaders } from '@/lib/api-gateway';
+import { processGatewayRequest, estimateTokens, setRateLimitHeaders, setDeprecationHeader } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 import { reportChannelSuccess } from '@/lib/channel-manager';
 
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
           { status: result.statusCode || 500 }
         );
         setRateLimitHeaders(res.headers, result.rateLimit);
+        if (result.headers) {
+          for (const [k, v] of Object.entries(result.headers)) res.headers.set(k, v);
+        }
         return res;
       }
 
@@ -184,11 +187,15 @@ export async function POST(request: NextRequest) {
         { status: result.statusCode || 500 }
       );
       setRateLimitHeaders(res.headers, result.rateLimit);
+      if (result.headers) {
+        for (const [k, v] of Object.entries(result.headers)) res.headers.set(k, v);
+      }
       return res;
     }
 
     const res = NextResponse.json(result.data);
     setRateLimitHeaders(res.headers, result.rateLimit);
+    setDeprecationHeader(res.headers, result.deprecationWarning);
     return res;
   } catch (error) {
     console.error('Chat completions error:', error);

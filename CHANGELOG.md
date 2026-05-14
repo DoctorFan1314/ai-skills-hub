@@ -47,6 +47,50 @@ All notable changes to this project will be documented in this file.
 #### Middleware
 - **Request body size limit** — API routes now reject requests with `Content-Length > 10MB` (returns 413)
 
+#### v3.3.3 Additions
+
+#### Confirm Dialogs & Accessibility
+- **Confirm dialog replacement** — Native `confirm()` in `api-key-table.tsx` and `token-plan/page.tsx` replaced with UI Dialog components
+- **aria-label accessibility** — Added `aria-label` to all icon-only interactive buttons (7 files, 15 instances)
+
+#### Smart Channel Selection
+- **Latency-aware load balancing** — Channel selection now dynamically adjusts weights based on recent average latency, preferring faster channels
+
+#### Subscription Auto-Renew
+- **Auto-renew logic** — `processAutoRenewals()` automatically renews expired subscriptions when balance is sufficient
+- **Maintenance endpoint** — `POST /api/dashboard/maintenance` supports `action=auto_renew` for manual renewal trigger
+
+#### Webhook Support
+- **Webhooks table** — New `webhooks` table stores URL, secret, and event subscriptions
+- **Webhook API** — `GET/POST/PATCH/DELETE /api/dashboard/webhooks` for webhook management
+- **Webhook dispatch** — `dispatchWebhook()` sends HMAC-signed POST requests after key events
+
+#### Graceful Degradation
+- **503 + Retry-After** — Returns 503 status with `Retry-After: 5` header when all channels fail
+- **Header forwarding** — Gateway response headers (e.g. `Retry-After`) now correctly propagated to clients
+
+#### OpenAPI Spec Expansion
+- **New endpoint docs** — Added OpenAPI definitions for `/v1/messages`, `/v1/billing/redeem`, `/api/dashboard/models`, `/api/dashboard/users`, `/api/dashboard/audit`, `/api/dashboard/webhooks`, `/api/health`, `/api/plans`
+
+#### Session Management
+- **Session tracking** — Login creates session record, max 10 concurrent sessions per user
+- **Logout cleanup** — `DELETE /api/auth/me` deletes current session
+
+#### Database Backup & Maintenance
+- **Backup endpoint** — `GET /api/dashboard/backup` uses `VACUUM INTO` for consistent SQLite backup
+- **Maintenance endpoint** — `POST /api/dashboard/maintenance` supports log cleanup and VACUUM
+
+#### Model Aliases & Deprecation
+- **Model aliases** — `model_rates` table supports `alias_for` field; requests auto-route to alias target
+- **Deprecation warning** — Deprecated models return `X-Deprecation-Warning` header
+
+#### API Key Permissions
+- **Permission enforcement** — Gateway now parses API Key `permissions` JSON and enforces model whitelist
+
+#### Rate Limiter Persistence
+- **SQLite persistence** — Rate limiter uses `rate_limit_counters` table; survives restarts
+- **In-memory cache** — Memory cache with periodic DB sync (every 5 increments)
+
 ---
 
 ## [v3.3.2] — 2026-05-14

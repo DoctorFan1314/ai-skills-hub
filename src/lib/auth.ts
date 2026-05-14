@@ -94,6 +94,48 @@ export function clearTokenCookie(): string {
   return `${TOKEN_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
 
+// --- Session Management ---
+
+const MAX_SESSIONS_PER_USER = 10;
+
+export function createSession(userId: number, token: string, ip?: string, userAgent?: string) {
+  // Lazy import to avoid circular dependency
+  const db = require('./db').default;
+
+  // Clean up expired sessions (older than JWT expiry)
+  db.prepare("DELETE FROM sessions WHERE created_at < datetime('now', '-7 days')").run();
+
+  // Enforce max sessions per user
+  const sessions = db.prepare('SELECT id FROM sessions WHERE user_id = ? ORDER BY last_active_at DESC').all(userId) as { id: number }[];
+  if (sessions.length >= MAX_SESSIONS_PER_USER) {
+    // Remove oldest sessions
+    const toRemove = sessions.slice(MAX_SESSIONS_PER_USER - 1);
+    for (const s of toRemove) {
+      db.prepare('DELETE FROM sessions WHERE id = ?').run(s.id);
+    }
+  }
+
+  // Hash the token for storage (don't store raw JWT)
+  const { createHash } = require('crypto');
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+
+  db.prepare(
+    'INSERT INTO sessions (user_id, token_hash, ip_address, user_agent) VALUES (?, ?, ?, ?)'
+  ).run(userId, tokenHash, ip || null, userAgent || null);
+}
+
+export function deleteSession(token: string) {
+  const db = require('./db').default;
+  const { createHash } = require('crypto');
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(tokenHash);
+}
+
+export function getUserSessions(userId: number): { id: number; ip_address: string | null; user_agent: string | null; created_at: string; last_active_at: string }[] {
+  const db = require('./db').default;
+  return db.prepare('SELECT id, ip_address, user_agent, created_at, last_active_at FROM sessions WHERE user_id = ? ORDER BY last_active_at DESC').all(userId);
+}
+
 // --- Generate API Key ---
 
 export function generateApiKey(): string {

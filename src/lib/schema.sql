@@ -167,6 +167,9 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   support_level TEXT DEFAULT 'community',   -- community/email/priority/dedicated
   enabled INTEGER DEFAULT 1,
   popular INTEGER DEFAULT 0,        -- 是否显示 "Most Popular" 标签
+  alias_for TEXT,                    -- 模型别名：实际映射到哪个模型
+  deprecated INTEGER DEFAULT 0,      -- 是否已弃用
+  deprecated_message TEXT,           -- 弃用提示信息
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -228,6 +231,28 @@ CREATE TABLE IF NOT EXISTS audit_log (
   FOREIGN KEY (admin_id) REFERENCES users(id)
 );
 
+-- Rate limit counters (persistent across restarts)
+CREATE TABLE IF NOT EXISTS rate_limit_counters (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 0,
+  window_start INTEGER NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Active sessions (for concurrent session limiting)
+CREATE TABLE IF NOT EXISTS sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  token_hash TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_value ON api_keys(key_value);
@@ -254,6 +279,17 @@ CREATE INDEX IF NOT EXISTS idx_channels_enabled_priority ON channels(enabled, pr
 CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key ON usage_logs(api_key_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_admin ON audit_log(admin_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
+
+-- Webhooks
+CREATE TABLE IF NOT EXISTS webhooks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  url TEXT NOT NULL,
+  secret TEXT NOT NULL,
+  events TEXT NOT NULL DEFAULT '[]',
+  enabled INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Default system settings
 INSERT OR IGNORE INTO system_settings (key, value) VALUES

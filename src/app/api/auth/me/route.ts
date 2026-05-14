@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { verifyToken, getTokenFromCookie } from '@/lib/auth';
+import { verifyToken, getTokenFromCookie, clearTokenCookie, deleteSession } from '@/lib/auth';
 import type { DBUser } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -32,8 +32,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
+  // Delete session from DB
+  const token = getTokenFromCookie(request.headers.get('cookie'));
+  if (token) {
+    try { deleteSession(token); } catch { /* ignore */ }
+  }
+
   const response = NextResponse.json({ success: true });
-  response.headers.set('Set-Cookie', `${process.env.TOKEN_NAME || 'oortapi_token'}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+  response.headers.set('Set-Cookie', clearTokenCookie());
   return response;
 }

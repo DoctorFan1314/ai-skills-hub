@@ -135,6 +135,9 @@ export async function POST(request: NextRequest) {
           { status: result.statusCode || 500 }
         );
         setRateLimitHeaders(res.headers, result.rateLimit);
+        if (result.headers) {
+          for (const [k, v] of Object.entries(result.headers)) res.headers.set(k, v);
+        }
         return res;
       }
 
@@ -430,6 +433,9 @@ export async function POST(request: NextRequest) {
         { status: result.statusCode || 500 }
       );
       setRateLimitHeaders(res.headers, result.rateLimit);
+      if (result.headers) {
+        for (const [k, v] of Object.entries(result.headers)) res.headers.set(k, v);
+      }
       return res;
     }
 

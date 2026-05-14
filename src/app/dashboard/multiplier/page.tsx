@@ -315,6 +315,7 @@ export default function MultiplierPage() {
                         <button
                           onClick={() => handleDeleteRule(rule.model_name)}
                           className="text-red-500 hover:text-red-400 transition-colors"
+                          aria-label={lang === "zh" ? "删除" : "Delete"}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

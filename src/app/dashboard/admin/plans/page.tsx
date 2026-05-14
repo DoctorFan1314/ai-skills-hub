@@ -149,7 +149,7 @@ function AdminPlansContent() {
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => { setModelDialogPlan(plan); setNewModel(""); fetchPlanModels(plan.id); }}><LinkIcon className="h-3.5 w-3.5 mr-1" />{lang === "zh" ? "模型" : "Models"}</Button>
                   <Button variant="outline" size="sm" onClick={() => setEditPlan({ ...plan })}><Pencil className="h-3.5 w-3.5 mr-1" />{lang === "zh" ? "编辑" : "Edit"}</Button>
-                  <Button variant="outline" size="sm" className="text-red-400 hover:text-red-300" onClick={() => setDeletePlan(plan)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  <Button variant="outline" size="sm" className="text-red-400 hover:text-red-300" onClick={() => setDeletePlan(plan)} aria-label={lang === "zh" ? "删除" : "Delete"}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>
             </CardContent></Card>

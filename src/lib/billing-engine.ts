@@ -314,3 +314,88 @@ export function getAuditLogs(page: number = 1, limit: number = 50): { logs: unkn
   const total = (db.prepare('SELECT COUNT(*) as count FROM audit_log').get() as { count: number }).count;
   return { logs, total, has_more: offset + logs.length < total };
 }
+
+// --- Subscription Auto-Renew ---
+
+export function processAutoRenewals(): { renewed: number; failed: number } {
+  const expired = db.prepare(
+    `SELECT us.*, sp.monthly_credits, sp.monthly_price, sp.yearly_price, sp.name as plan_name
+     FROM user_subscriptions us
+     JOIN subscription_plans sp ON us.plan_id = sp.id
+     WHERE us.auto_renew = 1 AND us.status = 'active' AND us.current_period_end <= datetime('now')`
+  ).all() as (DBUserSubscription & { monthly_credits: number; monthly_price: number; yearly_price: number; plan_name: string })[];
+
+  let renewed = 0;
+  let failed = 0;
+
+  for (const sub of expired) {
+    try {
+      const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(sub.user_id) as { balance: number } | undefined;
+      if (!user) { failed++; continue; }
+
+      const renewCost = sub.billing_cycle === 'yearly' ? sub.yearly_price : sub.monthly_price;
+
+      if (user.balance < renewCost) {
+        // Insufficient balance — mark as expired
+        db.prepare("UPDATE user_subscriptions SET status = 'expired', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(sub.id);
+        failed++;
+        continue;
+      }
+
+      // Deduct balance and renew
+      const txn = db.transaction(() => {
+        db.prepare('UPDATE users SET balance = balance - ? WHERE id = ?').run(renewCost, sub.user_id);
+
+        const newStart = new Date().toISOString();
+        const newEnd = new Date(Date.now() + (sub.billing_cycle === 'yearly' ? 365 : 30) * 86400000).toISOString();
+
+        db.prepare(
+          `UPDATE user_subscriptions SET
+            credits_remaining = ?, credits_total = ?,
+            current_period_start = ?, current_period_end = ?,
+            updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?`
+        ).run(sub.monthly_credits, sub.monthly_credits, newStart, newEnd, sub.id);
+
+        const updated = db.prepare('SELECT balance FROM users WHERE id = ?').get(sub.user_id) as { balance: number };
+        db.prepare('INSERT INTO billing_records (user_id, amount, type, description, balance_after) VALUES (?, ?, ?, ?, ?)').run(
+          sub.user_id, -renewCost, 'deduct', `Subscription renewal: ${sub.plan_name} (${sub.billing_cycle})`, updated.balance
+        );
+      });
+      txn();
+      renewed++;
+    } catch {
+      failed++;
+    }
+  }
+
+  return { renewed, failed };
+}
+
+// --- Webhook Dispatch ---
+
+export function dispatchWebhook(event: string, payload: Record<string, unknown>) {
+  try {
+    const hooks = db.prepare(
+      "SELECT * FROM webhooks WHERE enabled = 1 AND events LIKE ?"
+    ).all(`%${event}%`) as { id: number; url: string; secret: string }[];
+
+    for (const hook of hooks) {
+      // Fire-and-forget — don't await
+      const body = JSON.stringify({ event, timestamp: new Date().toISOString(), payload });
+      const { createHmac } = require('crypto');
+      const signature = createHmac('sha256', hook.secret).update(body).digest('hex');
+
+      fetch(hook.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Event': event,
+          'X-Webhook-Signature': `sha256=${signature}`,
+        },
+        body,
+        signal: AbortSignal.timeout(10_000),
+      }).catch(() => { /* silently ignore delivery failures */ });
+    }
+  } catch { /* ignore */ }
+}

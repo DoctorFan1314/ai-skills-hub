@@ -356,10 +356,10 @@ export default function UsersPage() {
                       <td className="py-3 px-4 text-right text-xs text-muted-foreground">{new Date(u.created_at + "Z").toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1">
-                          <button onClick={() => openEdit(u)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={t.edit}>
+                          <button onClick={() => openEdit(u)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={t.edit} aria-label={t.edit}>
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
-                          <button onClick={() => setDeleteUser(u)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors" title={t.delete}>
+                          <button onClick={() => setDeleteUser(u)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors" title={t.delete} aria-label={t.delete}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>

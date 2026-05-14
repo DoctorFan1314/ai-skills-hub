@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { SubscriptionCard } from "@/components/shared/subscription-card";
 import { Sparkles, XCircle, CheckCircle, AlertTriangle, Copy, CheckCheck, Key, Globe } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface Subscription {
   id: number;
@@ -65,6 +66,7 @@ function TokenPlanContent() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [showKey, setShowKey] = useState<number | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -78,19 +80,23 @@ function TokenPlanContent() {
   }, []);
 
   async function handleCancel(subscriptionId: number) {
-    if (!confirm(lang === "zh" ? "确定要取消订阅吗？当前周期结束后将不再续费。" : "Cancel subscription? It remains active until end of current period.")) return;
-    setActionLoading(subscriptionId);
+    setCancelTarget(subscriptionId);
+  }
+
+  async function confirmCancel() {
+    if (cancelTarget === null) return;
+    setActionLoading(cancelTarget);
     try {
       const res = await fetch("/api/dashboard/subscription", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ subscription_id: subscriptionId, action: "cancel" }),
+        body: JSON.stringify({ subscription_id: cancelTarget, action: "cancel" }),
       });
       if (res.ok) {
         const data = await res.json();
-        setSubscriptions(prev => prev.map(s => s.id === subscriptionId ? { ...s, status: "cancelled" as const, auto_renew: 0 } : s));
+        setSubscriptions(prev => prev.map(s => s.id === cancelTarget ? { ...s, status: "cancelled" as const, auto_renew: 0 } : s));
       }
-    } catch {} finally { setActionLoading(null); }
+    } catch {} finally { setActionLoading(null); setCancelTarget(null); }
   }
 
   async function handleToggleAutoRenew(subscriptionId: number) {
@@ -247,7 +253,7 @@ function TokenPlanContent() {
                     <button onClick={() => setShowKey(showKey === k.id ? null : k.id)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">
                       {showKey === k.id ? text.hide : text.show}
                     </button>
-                    <button onClick={() => handleCopy(k.key_value, `key-${k.id}`)} className="shrink-0">
+                    <button onClick={() => handleCopy(k.key_value, `key-${k.id}`)} className="shrink-0" aria-label="Copy API key">
                       {copied === `key-${k.id}` ? <CheckCheck className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />}
                     </button>
                   </div>
@@ -264,14 +270,14 @@ function TokenPlanContent() {
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border border-border">
                 <span className="text-xs text-muted-foreground shrink-0">{text.openai}</span>
                 <code className="flex-1 text-xs font-mono text-foreground truncate">{baseUrl}/api/v1</code>
-                <button onClick={() => handleCopy(`${baseUrl}/api/v1`, "oai")} className="shrink-0">
+                <button onClick={() => handleCopy(`${baseUrl}/api/v1`, "oai")} className="shrink-0" aria-label="Copy OpenAI base URL">
                   {copied === "oai" ? <CheckCheck className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />}
                 </button>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border border-border">
                 <span className="text-xs text-muted-foreground shrink-0">{text.anthropic}</span>
                 <code className="flex-1 text-xs font-mono text-foreground truncate">{baseUrl}/api/v1/messages</code>
-                <button onClick={() => handleCopy(`${baseUrl}/api/v1/messages`, "ant")} className="shrink-0">
+                <button onClick={() => handleCopy(`${baseUrl}/api/v1/messages`, "ant")} className="shrink-0" aria-label="Copy Anthropic base URL">
                   {copied === "ant" ? <CheckCheck className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />}
                 </button>
               </div>
@@ -308,6 +314,19 @@ function TokenPlanContent() {
           )}
         </div>
       )}
+
+      <Dialog open={cancelTarget !== null} onOpenChange={(open) => { if (!open) setCancelTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{lang === "zh" ? "取消订阅" : "Cancel Subscription"}</DialogTitle>
+            <DialogDescription>{lang === "zh" ? "确定要取消订阅吗？当前周期结束后将不再续费。" : "Cancel subscription? It remains active until end of current period."}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>{lang === "zh" ? "取消" : "Cancel"}</Button>
+            <Button onClick={confirmCancel} disabled={actionLoading !== null} className="bg-red-600 text-white hover:bg-red-700">{lang === "zh" ? "确认取消" : "Confirm Cancel"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

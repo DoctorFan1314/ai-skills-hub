@@ -247,7 +247,7 @@ export default function RedeemPage() {
                             <button onClick={() => handleToggle(c.id, c.enabled)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-xs" title={c.enabled ? t.disable : t.enable}>
                               {c.enabled ? t.disable : t.enable}
                             </button>
-                            <button onClick={() => setDeleteId(c.id)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors" title={t.delete}>
+                            <button onClick={() => setDeleteId(c.id)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors" title={t.delete} aria-label={t.delete}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
