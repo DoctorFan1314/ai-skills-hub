@@ -50,25 +50,21 @@ function getDb(): Database.Database {
   const schema = readFileSync(join(process.cwd(), 'src', 'lib', 'schema.sql'), 'utf-8');
   _db.exec(schema);
 
-  // Migration: reset subscription plans to correct defaults (Lite/Standard/Pro/Max)
+  // Seed default subscription plans on every startup
   try {
-    const planCount = _db.prepare('SELECT COUNT(*) as c FROM subscription_plans').get() as { c: number };
-    if (planCount.c > 0) {
-      // Always reset plans on startup to ensure correct pricing
-      _db.exec('DELETE FROM plan_models');
-      _db.exec('DELETE FROM subscription_plans');
-      _db.exec(`INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular) VALUES
-        ('spark', 'Lite', '尝鲜入门', 1, 9, 92, 9000000, 0.23, 1.0, 10, 'standard', 0.8, 'community', 0),
-        ('flare', 'Standard', '适合进阶用户', 2, 29, 296, 30000000, 0.23, 0.95, 30, 'priority', 0.8, 'email', 0),
-        ('pulse', 'Pro', '适合专业开发者', 3, 79, 806, 85000000, 0.23, 0.85, 100, 'ultra', 0.8, 'priority', 1),
-        ('nova', 'Max', '适合编程开发发烧友', 4, 199, 2030, 220000000, 0.23, 0.75, 500, 'exclusive', 0.8, 'dedicated', 0)`);
-      _db.exec(`INSERT INTO plan_models (plan_id, model_name, enabled) VALUES
-        (1, 'gpt-4o-mini', 1), (1, 'deepseek-chat', 1), (1, 'gemini-2.0-flash', 1), (1, 'gpt-3.5-turbo', 1),
-        (2, 'gpt-4o', 1), (2, 'claude-3-5-sonnet-20241022', 1), (2, 'claude-3-5-haiku-20241022', 1), (2, 'deepseek-reasoner', 1), (2, 'gemini-1.5-pro', 1), (2, 'qwen-max', 1),
-        (3, 'gpt-4-turbo', 1), (3, 'claude-3-opus-20240229', 1)`);
-    }
+    _db.exec('DELETE FROM plan_models');
+    _db.exec('DELETE FROM subscription_plans');
+    _db.exec(`INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular) VALUES
+      ('spark', 'Lite', '尝鲜入门', 1, 9, 92, 9000000, 0.23, 1.0, 10, 'standard', 0.8, 'community', 0),
+      ('flare', 'Standard', '适合进阶用户', 2, 29, 296, 30000000, 0.23, 0.95, 30, 'priority', 0.8, 'email', 0),
+      ('pulse', 'Pro', '适合专业开发者', 3, 79, 806, 85000000, 0.23, 0.85, 100, 'ultra', 0.8, 'priority', 1),
+      ('nova', 'Max', '适合编程开发发烧友', 4, 199, 2030, 220000000, 0.23, 0.75, 500, 'exclusive', 0.8, 'dedicated', 0)`);
+    _db.exec(`INSERT INTO plan_models (plan_id, model_name, enabled) VALUES
+      (1, 'gpt-4o-mini', 1), (1, 'deepseek-chat', 1), (1, 'gemini-2.0-flash', 1), (1, 'gpt-3.5-turbo', 1),
+      (2, 'gpt-4o', 1), (2, 'claude-3-5-sonnet-20241022', 1), (2, 'claude-3-5-haiku-20241022', 1), (2, 'deepseek-reasoner', 1), (2, 'gemini-1.5-pro', 1), (2, 'qwen-max', 1),
+      (3, 'gpt-4-turbo', 1), (3, 'claude-3-opus-20240229', 1)`);
   } catch (e) {
-    console.error('Plan migration error:', e);
+    console.error('Plan seed error:', e);
   }
 
   return _db;
