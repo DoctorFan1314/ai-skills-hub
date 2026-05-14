@@ -215,6 +215,19 @@ CREATE TABLE IF NOT EXISTS subscription_usage_logs (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Admin audit log
+CREATE TABLE IF NOT EXISTS audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admin_id INTEGER NOT NULL,
+  action TEXT NOT NULL,
+  target_type TEXT,
+  target_id INTEGER,
+  details TEXT,
+  ip_address TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_value ON api_keys(key_value);
@@ -239,6 +252,8 @@ CREATE INDEX IF NOT EXISTS idx_model_rates_name ON model_rates(model_name);
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_active ON user_subscriptions(user_id, status, current_period_end);
 CREATE INDEX IF NOT EXISTS idx_channels_enabled_priority ON channels(enabled, priority);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key ON usage_logs(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_admin ON audit_log(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
 
 -- Default system settings
 INSERT OR IGNORE INTO system_settings (key, value) VALUES

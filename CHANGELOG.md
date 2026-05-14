@@ -8,26 +8,41 @@ All notable changes to this project will be documented in this file.
 
 ## [v3.3.3] — 2026-05-14
 
-### Security Fixes, Race Condition Patches, Rate Limit Headers & Performance
+### Security Fixes, Race Condition Patches, Rate Limit Headers, Audit Log & Performance
 
 #### Critical Security Fixes
 - **Disabled user blocking** — Login now returns 403 for disabled accounts; `/api/auth/me` and cookie validation check `enabled = 1`
 - **Redeem race condition** — Atomic `UPDATE ... WHERE current_uses < max_uses` prevents double-spend on redeem codes
 - **Credits race condition** — Atomic `UPDATE ... WHERE credits_remaining >= ?` prevents TOCTOU on subscription credit deduction
+- **Error message sanitization** — Gateway no longer leaks upstream error details to clients
 
 #### Gateway Improvements
 - **Upstream fetch timeout** — Added 180s `AbortSignal.timeout` to upstream fetch; returns 504 on timeout instead of hanging
 - **Rate limit headers** — All v1 API responses now include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` headers
+- **Input validation** — Chat completions now validates `temperature` (0-2), `max_tokens` (1-1M), and non-empty messages array
+
+#### Security Headers & CORS
+- **Security headers** — Middleware now sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `HSTS` (production)
+- **CORS configuration** — API routes support configurable origins via `CORS_ORIGINS` env var; preflight OPTIONS handled
+
+#### Admin Audit Log
+- **Audit log system** — New `audit_log` table tracks all admin actions (user/channel/model/redeem management)
+- **Audit log API** — `GET /api/dashboard/audit` returns paginated audit trail for admins
+- **Audit logging** — User updates/deletes, channel CRUD, model rate CRUD, redeem code CRUD all logged
+
+#### New Endpoints
+- **Health check** — `GET /api/health` returns service status, DB latency, channel count, active users
 
 #### Data Integrity
 - **Plan seed no longer overwrites admin config** — Changed `ON CONFLICT DO UPDATE` to `ON CONFLICT DO NOTHING` for subscription plans; `plan_models` seed uses `INSERT OR IGNORE` instead of `DELETE + INSERT`
 
 #### Performance
-- **New DB indexes** — Added `model_rates(model_name)`, `user_subscriptions(user_id, status, current_period_end)`, `channels(enabled, priority)`, `usage_logs(api_key_id)` for faster queries
+- **New DB indexes** — Added `model_rates(model_name)`, `user_subscriptions(user_id, status, current_period_end)`, `channels(enabled, priority)`, `usage_logs(api_key_id)`, `audit_log(admin_id, created_at)`
 
 #### UI Fixes
 - **Balance display precision** — All balance/price displays now use `formatPrice()` from currency context (consistent USD/CNY formatting)
 - **Billing history auto-refresh** — Billing history component now uses SWR instead of manual `useState` + `useEffect`
+- **Usage log pagination** — Usage page now has Previous/Next pagination (50 per page)
 
 #### Middleware
 - **Request body size limit** — API routes now reject requests with `Content-Length > 10MB` (returns 413)

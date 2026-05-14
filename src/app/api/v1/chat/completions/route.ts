@@ -10,16 +10,30 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const body = await request.json();
 
-    if (!body.model) {
+    if (!body.model || typeof body.model !== 'string') {
       return NextResponse.json(
         { error: { message: 'model is required', type: 'invalid_request_error' } },
         { status: 400 }
       );
     }
 
-    if (!body.messages || !Array.isArray(body.messages)) {
+    if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
       return NextResponse.json(
-        { error: { message: 'messages array is required', type: 'invalid_request_error' } },
+        { error: { message: 'messages array is required and must not be empty', type: 'invalid_request_error' } },
+        { status: 400 }
+      );
+    }
+
+    // Validate optional numeric params
+    if (body.temperature != null && (typeof body.temperature !== 'number' || body.temperature < 0 || body.temperature > 2)) {
+      return NextResponse.json(
+        { error: { message: 'temperature must be a number between 0 and 2', type: 'invalid_request_error' } },
+        { status: 400 }
+      );
+    }
+    if (body.max_tokens != null && (typeof body.max_tokens !== 'number' || body.max_tokens < 1 || body.max_tokens > 1000000)) {
+      return NextResponse.json(
+        { error: { message: 'max_tokens must be a number between 1 and 1000000', type: 'invalid_request_error' } },
         { status: 400 }
       );
     }

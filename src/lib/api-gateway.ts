@@ -192,9 +192,10 @@ async function executeChannelRequest(
       });
 
       const safeStatus = upstreamRes.status >= 500 ? 502 : upstreamRes.status;
+      // Don't leak internal upstream error details to clients
       const safeError = upstreamRes.status >= 500
         ? `Upstream service error (${upstreamRes.status})`
-        : `Upstream error: ${errorText.slice(0, 200)}`;
+        : `Upstream request failed (${upstreamRes.status})`;
       return { success: false, error: safeError, statusCode: safeStatus };
     }
 

@@ -295,3 +295,22 @@ function deductCreditsOrBalance_fallback(
   db.prepare('INSERT INTO subscription_usage_logs (subscription_id, user_id, model, credits_used, source) VALUES (?, ?, ?, ?, ?)').run(subscription.id, userId, 'unknown', 0, 'balance');
   return { success: true, source: 'balance', newBalance: deductResult.newBalance, overageMultiplier };
 }
+
+// --- Audit Log ---
+
+export function logAdminAction(adminId: number, action: string, targetType?: string, targetId?: number, details?: string, ip?: string) {
+  db.prepare(
+    'INSERT INTO audit_log (admin_id, action, target_type, target_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(adminId, action, targetType || null, targetId || null, details || null, ip || null);
+}
+
+export function getAuditLogs(page: number = 1, limit: number = 50): { logs: unknown[]; total: number; has_more: boolean } {
+  const offset = (page - 1) * limit;
+  const logs = db.prepare(
+    `SELECT a.*, u.email as admin_email FROM audit_log a
+     LEFT JOIN users u ON a.admin_id = u.id
+     ORDER BY a.created_at DESC LIMIT ? OFFSET ?`
+  ).all(limit, offset);
+  const total = (db.prepare('SELECT COUNT(*) as count FROM audit_log').get() as { count: number }).count;
+  return { logs, total, has_more: offset + logs.length < total };
+}

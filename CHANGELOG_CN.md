@@ -8,26 +8,41 @@
 
 ## [v3.3.3] — 2026-05-14
 
-### 安全修复、竞态补丁、限流头与性能优化
+### 安全修复、竞态补丁、限流头、审计日志与性能优化
 
 #### 关键安全修复
 - **禁用用户拦截** — 登录现在对已禁用账号返回 403；`/api/auth/me` 和 Cookie 验证检查 `enabled = 1`
 - **兑换码竞态** — 原子 `UPDATE ... WHERE current_uses < max_uses` 防止兑换码双重消费
 - **积分竞态** — 原子 `UPDATE ... WHERE credits_remaining >= ?` 防止订阅积分扣除的 TOCTOU 竞态
+- **错误消息脱敏** — 网关不再向客户端泄露上游错误详情
 
 #### 网关改进
 - **上游请求超时** — 为上游 fetch 添加 180 秒 `AbortSignal.timeout`；超时返回 504 而非挂起
 - **限流响应头** — 所有 v1 API 响应现在包含 `X-RateLimit-Limit`、`X-RateLimit-Remaining`、`X-RateLimit-Reset` 头
+- **输入验证** — Chat Completions 现在验证 `temperature`（0-2）、`max_tokens`（1-1M）和非空 messages 数组
+
+#### 安全头与 CORS
+- **安全响应头** — 中间件现在设置 `X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy` 和 `HSTS`（生产环境）
+- **CORS 配置** — API 路由支持通过 `CORS_ORIGINS` 环境变量配置允许的源；预检 OPTIONS 请求已处理
+
+#### 管理员审计日志
+- **审计日志系统** — 新增 `audit_log` 表跟踪所有管理员操作（用户/渠道/套餐/兑换管理）
+- **审计日志 API** — `GET /api/dashboard/audit` 返回分页审计记录（仅管理员）
+- **审计日志记录** — 用户更新/删除、渠道 CRUD、套餐费率 CRUD、兑换码 CRUD 全部记录
+
+#### 新端点
+- **健康检查** — `GET /api/health` 返回服务状态、数据库延迟、渠道数、活跃用户数
 
 #### 数据完整性
 - **套餐种子不再覆盖管理员配置** — 订阅套餐的 `ON CONFLICT DO UPDATE` 改为 `ON CONFLICT DO NOTHING`；`plan_models` 种子改用 `INSERT OR IGNORE` 替代 `DELETE + INSERT`
 
 #### 性能
-- **新增数据库索引** — 添加 `model_rates(model_name)`、`user_subscriptions(user_id, status, current_period_end)`、`channels(enabled, priority)`、`usage_logs(api_key_id)` 加速查询
+- **新增数据库索引** — 添加 `model_rates(model_name)`、`user_subscriptions(user_id, status, current_period_end)`、`channels(enabled, priority)`、`usage_logs(api_key_id)`、`audit_log(admin_id, created_at)`
 
 #### UI 修复
 - **余额显示精度** — 所有余额/价格显示现在使用货币上下文的 `formatPrice()`（统一 USD/CNY 格式）
 - **账单历史自动刷新** — 账单历史组件改用 SWR 替代手动 `useState` + `useEffect`
+- **用量日志分页** — 用量页面新增上一页/下一页分页（每页 50 条）
 
 #### 中间件
 - **请求体大小限制** — API 路由现在拒绝 `Content-Length > 10MB` 的请求（返回 413）

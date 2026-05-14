@@ -66,6 +66,9 @@ const LABELS = {
     notes: "备注",
     subUser: "套餐用户",
     balanceUser: "余额扣费",
+    showing: "显示",
+    prev: "上一页",
+    next: "下一页",
   },
   en: {
     title: "Call Logs",
@@ -101,6 +104,9 @@ const LABELS = {
     notes: "Notes",
     subUser: "Subscription",
     balanceUser: "Balance",
+    showing: "Showing",
+    prev: "Previous",
+    next: "Next",
   },
 };
 
@@ -113,14 +119,16 @@ export default function UsagePage() {
   const { lang } = useI18n();
   const { currency, exchangeRate, formatPrice, symbol } = useCurrency();
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
   const t = LABELS[lang];
 
-  const { data, isLoading } = useSWR<{ data: UsageLog[]; total: number }>(
-    "/api/v1/billing/usage?limit=50",
+  const { data, isLoading } = useSWR<{ data: UsageLog[]; total: number; has_more: boolean }>(
+    `/api/v1/billing/usage?limit=50&offset=${(page - 1) * 50}`,
     dashboardSWRConfig,
   );
 
   const logs = data?.data || [];
+  const hasMore = data?.has_more || false;
   const summary = useMemo(() => {
     const totalTokens = logs.reduce((s, l) => s + l.tokens_in + l.tokens_out + l.tokens_in_cache + l.tokens_cache_creation, 0);
     const totalCost = logs.reduce((s, l) => s + l.cost, 0);
@@ -374,6 +382,26 @@ export default function UsagePage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {/* Pagination */}
+          {(page > 1 || hasMore) && (
+            <div className="flex items-center justify-between pt-3 border-t border-border/20">
+              <span className="text-xs text-muted-foreground">
+                {t.showing || "Showing"} {logs.length} / {data?.total || 0}
+              </span>
+              <div className="flex gap-2">
+                {page > 1 && (
+                  <button onClick={() => setPage(p => p - 1)} className="px-3 py-1 text-xs rounded-md bg-muted hover:bg-muted/80">
+                    {t.prev || "Previous"}
+                  </button>
+                )}
+                {hasMore && (
+                  <button onClick={() => setPage(p => p + 1)} className="px-3 py-1 text-xs rounded-md bg-muted hover:bg-muted/80">
+                    {t.next || "Next"}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

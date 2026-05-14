@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
+import { logAdminAction } from '@/lib/billing-engine';
 import { randomBytes } from 'crypto';
 import type { DBRedeemCode } from '@/lib/db';
 
@@ -83,6 +84,8 @@ export async function POST(request: NextRequest) {
     });
     txn();
 
+    logAdminAction(auth.user.id, 'create_redeem_codes', 'redeem', undefined, `${generated.length} codes, type=${type}, amount=${amount || 0}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ codes: generated, count: generated.length, amount, maxUses: uses, codeType: type });
   } catch (error) {
     console.error('Redeem code create error:', error);
@@ -119,6 +122,9 @@ export async function DELETE(request: NextRequest) {
     if (!id) return NextResponse.json({ error: 'Code id is required' }, { status: 400 });
 
     db.prepare('DELETE FROM redeem_codes WHERE id = ?').run(id);
+
+    logAdminAction(auth.user.id, 'delete_redeem_code', 'redeem', id, undefined, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Redeem code delete error:', error);

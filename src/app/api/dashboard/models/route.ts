@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
+import { logAdminAction } from '@/lib/billing-engine';
 import type { DBModelRate, DBChannel } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -121,6 +122,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const model = db.prepare('SELECT * FROM model_rates WHERE id = ?').get(id);
+
+    logAdminAction(auth.user.id, 'update_model_rate', 'model_rate', id, `id=${id}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ model });
   } catch (error) {
     console.error('Model rate update error:', error);
@@ -148,6 +152,9 @@ export async function POST(request: NextRequest) {
     ).run(model_name, display_name || model_name, provider || 'unknown', input_rate || 0, output_rate || 0, cache_rate || 0, cache_creation_rate || 0, credit_rate ?? 1.0);
 
     const model = db.prepare('SELECT * FROM model_rates WHERE id = ?').get(result.lastInsertRowid);
+
+    logAdminAction(auth.user.id, 'create_model_rate', 'model_rate', Number(result.lastInsertRowid), `model=${model_name}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ model });
   } catch (error) {
     console.error('Model rate create error:', error);
@@ -166,6 +173,9 @@ export async function DELETE(request: NextRequest) {
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
     db.prepare('DELETE FROM model_rates WHERE id = ?').run(id);
+
+    logAdminAction(auth.user.id, 'delete_model_rate', 'model_rate', id, undefined, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Model rate delete error:', error);

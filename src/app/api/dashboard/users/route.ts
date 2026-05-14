@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
-import { addBalance, deductBalance } from '@/lib/billing-engine';
+import { addBalance, deductBalance, logAdminAction } from '@/lib/billing-engine';
 import { generateSalt, hashPassword } from '@/lib/auth';
 import type { DBUser, DBSubscriptionPlan } from '@/lib/db';
 
@@ -178,6 +178,19 @@ export async function PATCH(request: NextRequest) {
     // Only return password in response once — admin must copy it immediately
     const response: Record<string, unknown> = { user: updated };
     if (newPassword) response.newPassword = newPassword;
+
+    // Audit log
+    const actions: string[] = [];
+    if (role) actions.push(`role=${role}`);
+    if (enabled !== undefined) actions.push(`enabled=${enabled}`);
+    if (addAmt) actions.push(`+balance=${addAmt}`);
+    if (deductAmt) actions.push(`-balance=${deductAmt}`);
+    if (resetPassword) actions.push('reset_password');
+    if (giftSubscription) actions.push(`gift_sub=${giftSubscription}`);
+    if (cancelSubscription) actions.push('cancel_sub');
+    if (addCredits) actions.push(`+credits=${addCredits}`);
+    logAdminAction(auth.user.id, 'update_user', 'user', id, actions.join(', '), request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json(response);
   } catch (error) {
     console.error('User update error:', error);
@@ -209,6 +222,8 @@ export async function DELETE(request: NextRequest) {
 
     // CASCADE handles api_keys, usage_logs, billing_records
     db.prepare('DELETE FROM users WHERE id = ?').run(id);
+
+    logAdminAction(auth.user.id, 'delete_user', 'user', id, undefined, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
 
     return NextResponse.json({ success: true });
   } catch (error) {

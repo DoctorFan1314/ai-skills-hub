@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
 import { encrypt, decrypt } from '@/lib/auth';
+import { logAdminAction } from '@/lib/billing-engine';
 import type { DBChannel } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -144,6 +145,9 @@ export async function POST(request: NextRequest) {
     ).run(name, type, encrypt(api_key_encrypted), base_url || null, weight || 1.0, JSON.stringify(models || []), JSON.stringify(model_mapping || {}), priority || 0);
 
     const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(result.lastInsertRowid);
+
+    logAdminAction(auth.user.id, 'create_channel', 'channel', Number(result.lastInsertRowid), `name=${name}, type=${type}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ channel });
   } catch (error) {
     console.error('Channel create error:', error);
@@ -180,6 +184,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(id);
+
+    logAdminAction(auth.user.id, 'update_channel', 'channel', id, `fields: ${updates.length - 1}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ channel });
   } catch (error) {
     console.error('Channel update error:', error);
@@ -198,6 +205,9 @@ export async function DELETE(request: NextRequest) {
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
     db.prepare('DELETE FROM channels WHERE id = ?').run(id);
+
+    logAdminAction(auth.user.id, 'delete_channel', 'channel', id, undefined, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Channel delete error:', error);
