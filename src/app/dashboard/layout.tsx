@@ -4,8 +4,8 @@ import { useI18n } from "@/contexts/i18n-context";
 import { usePathname } from "next/navigation";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { CurrencyProvider } from "@/contexts/currency-context";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
+import { useMemo } from "react";
 
 const ROUTE_LABELS: Record<string, { zh: string; en: string }> = {
   dashboard: { zh: "控制台", en: "Dashboard" },
@@ -28,33 +28,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   // Generate breadcrumbs from pathname
-  const segments = pathname.split("/").filter(Boolean);
-  const breadcrumbItems = segments
-    .map((seg, i) => {
-      if (seg === "dashboard" && i === 0) return null; // skip root
-      const label = ROUTE_LABELS[seg]?.[lang] || seg;
-      const href = "/" + segments.slice(0, i + 1).join("/");
-      return { label, href };
-    })
-    .filter(Boolean) as { label: string; href?: string }[];
-  // Last item should not be a link
-  if (breadcrumbItems.length > 0) {
-    delete breadcrumbItems[breadcrumbItems.length - 1].href;
-  }
+  const breadcrumbItems = useMemo(() => {
+    const segments = pathname.split("/").filter(Boolean);
+    const items = segments
+      .map((seg, i) => {
+        if (seg === "dashboard" && i === 0) return null; // skip root
+        const label = ROUTE_LABELS[seg]?.[lang] || seg;
+        const href = "/" + segments.slice(0, i + 1).join("/");
+        return { label, href };
+      })
+      .filter(Boolean) as { label: string; href?: string }[];
+    // Last item should not be a link
+    if (items.length > 0) {
+      delete items[items.length - 1].href;
+    }
+    return items;
+  }, [pathname, lang]);
 
   return (
     <AuthGuard>
-      <CurrencyProvider>
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-6">
-          {breadcrumbItems.length > 0 && <Breadcrumb items={breadcrumbItems} />}
-          <div className="flex flex-col lg:flex-row gap-6">
-            <DashboardSidebar />
-            <div className="flex-1 min-w-0">
-              {children}
-            </div>
+      <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-6">
+        {breadcrumbItems.length > 0 && <Breadcrumb items={breadcrumbItems} />}
+        <div className="flex flex-col lg:flex-row gap-6">
+          <DashboardSidebar />
+          <div className="flex-1 min-w-0">
+            {children}
           </div>
         </div>
-      </CurrencyProvider>
+      </div>
     </AuthGuard>
   );
 }
