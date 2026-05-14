@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -9,6 +9,20 @@ import "./swagger-reset.css";
 
 // Dynamic import to avoid SSR issues with swagger-ui
 const SwaggerUI = dynamic(() => import("swagger-ui-react"), { ssr: false });
+
+// Suppress React strict mode warnings from swagger-ui-react internals
+function SwaggerUIWrapper(props: Record<string, unknown>) {
+  const origError = useRef<typeof console.error>(undefined);
+  useEffect(() => {
+    origError.current = console.error;
+    console.error = (...args: unknown[]) => {
+      if (typeof args[0] === "string" && args[0].includes("UNSAFE_componentWillReceiveProps")) return;
+      origError.current?.(...args);
+    };
+    return () => { console.error = origError.current!; };
+  }, []);
+  return <SwaggerUI {...props} />;
+}
 
 export default function ApiReferencePage() {
   const [spec, setSpec] = useState(null);
@@ -34,7 +48,7 @@ export default function ApiReferencePage() {
         <div className="rounded-xl border border-border/50 overflow-hidden bg-white dark:bg-zinc-900">
           {spec ? (
             <div className="[&_.swagger-ui]:bg-transparent [&_.swagger-ui_.topbar]:hidden [&_.swagger-ui_.info]:text-foreground [&_.swagger-ui_.scheme-container]:bg-transparent [&_.swagger-ui_.scheme-container]:border-b [&_.swagger-ui_.opblock]:border-border/50 [&_.swagger-ui_.opblock-tag]:text-foreground [&_.swagger-ui_.opblock-summary-description]:text-muted-foreground">
-              <SwaggerUI spec={spec} docExpansion="list" defaultModelsExpandDepth={0} />
+              <SwaggerUIWrapper spec={spec} docExpansion="list" defaultModelsExpandDepth={0} />
             </div>
           ) : (
             <div className="h-96 flex items-center justify-center text-muted-foreground">
