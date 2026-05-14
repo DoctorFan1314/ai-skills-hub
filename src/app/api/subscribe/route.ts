@@ -145,11 +145,19 @@ export async function POST(request: NextRequest) {
     const periodStart = now.toISOString();
     const periodEnd = new Date(now.getTime() + (billing_cycle === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString();
 
+    // Calculate credits for new subscription
+    // For upgrades/switches: carry over consumed credits (don't give full reset)
+    let newCreditsRemaining = plan.monthly_credits;
+    if (activeSub) {
+      const consumedCredits = activeSub.credits_total - activeSub.credits_remaining;
+      newCreditsRemaining = Math.max(0, plan.monthly_credits - consumedCredits);
+    }
+
     // Create subscription
     const result = db.prepare(
       `INSERT INTO user_subscriptions (user_id, plan_id, billing_cycle, status, credits_remaining, credits_total, current_period_start, current_period_end, is_first_purchase)
        VALUES (?, ?, ?, 'active', ?, ?, ?, ?, ?)`
-    ).run(user.id, plan_id, billing_cycle, plan.monthly_credits, plan.monthly_credits, periodStart, periodEnd, isFirstPurchase ? 1 : 0);
+    ).run(user.id, plan_id, billing_cycle, newCreditsRemaining, plan.monthly_credits, periodStart, periodEnd, isFirstPurchase ? 1 : 0);
 
     const subscription = db.prepare(
       'SELECT * FROM user_subscriptions WHERE id = ?'
