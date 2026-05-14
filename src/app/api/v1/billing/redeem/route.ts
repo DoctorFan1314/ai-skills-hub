@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This code has been fully redeemed' }, { status: 400 });
     }
 
-    // Redeem the code
+    // Redeem the code — atomic update to prevent race condition on max_uses
     if (redeemCode.code_type === 'subscription' && redeemCode.plan_id) {
       // Subscription redeem
       const plan = db.prepare('SELECT * FROM subscription_plans WHERE id = ?').get(redeemCode.plan_id) as { id: number; display_name: string; monthly_credits: number } | undefined;
@@ -59,6 +59,20 @@ export async function POST(request: NextRequest) {
       }
 
       const txn = db.transaction(() => {
+        // Atomic: only consume if uses remain (prevents TOCTOU race on max_uses)
+        const update = db.prepare(
+          'UPDATE redeem_codes SET current_uses = current_uses + 1 WHERE id = ? AND current_uses < max_uses'
+        ).run(redeemCode.id);
+        if (update.changes === 0) {
+          throw new Error('Code has been fully redeemed');
+        }
+
+        // Re-read to check if we should disable
+        const updated = db.prepare('SELECT current_uses, max_uses FROM redeem_codes WHERE id = ?').get(redeemCode.id) as { current_uses: number; max_uses: number };
+        if (updated.current_uses >= updated.max_uses) {
+          db.prepare('UPDATE redeem_codes SET enabled = 0 WHERE id = ?').run(redeemCode.id);
+        }
+
         // Cancel any existing active subscription
         db.prepare("UPDATE user_subscriptions SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND status = 'active'").run(userId);
 
@@ -70,12 +84,6 @@ export async function POST(request: NextRequest) {
         db.prepare(
           "INSERT INTO user_subscriptions (user_id, plan_id, billing_cycle, status, credits_remaining, credits_total, current_period_start, current_period_end, is_first_purchase, auto_renew) VALUES (?, ?, ?, 'active', ?, ?, datetime('now'), ?, 0, 0)"
         ).run(userId, plan.id, redeemCode.billing_cycle || 'monthly', plan.monthly_credits, plan.monthly_credits, periodEnd.toISOString());
-
-        const newUses = redeemCode.current_uses + 1;
-        db.prepare('UPDATE redeem_codes SET current_uses = ? WHERE id = ?').run(newUses, redeemCode.id);
-        if (newUses >= redeemCode.max_uses) {
-          db.prepare('UPDATE redeem_codes SET enabled = 0 WHERE id = ?').run(redeemCode.id);
-        }
       });
       txn();
 
@@ -91,15 +99,21 @@ export async function POST(request: NextRequest) {
 
     // Balance redeem
     const txn = db.transaction(() => {
-      const result = addBalance(userId!, redeemCode.amount, 'gift', `Redeem code: ${redeemCode.code}`);
-      if (!result.success) throw new Error(result.error);
+      // Atomic: only consume if uses remain (prevents TOCTOU race on max_uses)
+      const update = db.prepare(
+        'UPDATE redeem_codes SET current_uses = current_uses + 1 WHERE id = ? AND current_uses < max_uses'
+      ).run(redeemCode.id);
+      if (update.changes === 0) {
+        throw new Error('Code has been fully redeemed');
+      }
 
-      const newUses = redeemCode.current_uses + 1;
-      db.prepare('UPDATE redeem_codes SET current_uses = ? WHERE id = ?').run(newUses, redeemCode.id);
-
-      if (newUses >= redeemCode.max_uses) {
+      const updated = db.prepare('SELECT current_uses, max_uses FROM redeem_codes WHERE id = ?').get(redeemCode.id) as { current_uses: number; max_uses: number };
+      if (updated.current_uses >= updated.max_uses) {
         db.prepare('UPDATE redeem_codes SET enabled = 0 WHERE id = ?').run(redeemCode.id);
       }
+
+      const result = addBalance(userId!, redeemCode.amount, 'gift', `Redeem code: ${redeemCode.code}`);
+      if (!result.success) throw new Error(result.error);
 
       return result.newBalance;
     });

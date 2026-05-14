@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownLeft, RefreshCw, Gift } from "lucide-react";
+import { useCurrency } from "@/contexts/currency-context";
+import { dashboardSWRConfig } from "@/lib/swr-fetcher";
 
 interface BillingRecord {
   id: number;
@@ -26,18 +28,12 @@ const LABELS = {
 };
 
 export function BillingHistory({ lang = "zh" }: { lang?: "zh" | "en" }) {
-  const [records, setRecords] = useState<BillingRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useSWR<{ records: BillingRecord[] }>("/api/dashboard/billing", dashboardSWRConfig);
+  const records = data?.records || [];
+  const { formatPrice } = useCurrency();
   const t = LABELS[lang];
 
-  useEffect(() => {
-    fetch("/api/dashboard/billing", { credentials: "include" })
-      .then(res => res.json())
-      .then(d => { setRecords(d.records || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="h-48 animate-pulse bg-muted rounded-lg" />;
+  if (isLoading) return <div className="h-48 animate-pulse bg-muted rounded-lg" />;
 
   return (
     <Card className="glass-card">
@@ -61,10 +57,10 @@ export function BillingHistory({ lang = "zh" }: { lang?: "zh" | "en" }) {
                   </div>
                   <div className="text-right">
                     <div className={`font-mono text-sm ${r.amount > 0 ? "text-green-500" : "text-red-500"}`}>
-                      {r.amount > 0 ? "+" : ""}{r.amount.toFixed(4)}
+                      {r.amount > 0 ? "+" : ""}{formatPrice(Math.abs(r.amount))}
                     </div>
                     {r.balance_after !== null && (
-                      <div className="text-xs text-muted-foreground">{t.balance}: ${r.balance_after.toFixed(2)}</div>
+                      <div className="text-xs text-muted-foreground">{t.balance}: {formatPrice(r.balance_after)}</div>
                     )}
                   </div>
                 </div>

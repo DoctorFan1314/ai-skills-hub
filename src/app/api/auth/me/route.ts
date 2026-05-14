@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.userId) as DBUser | undefined;
+    const user = db.prepare('SELECT * FROM users WHERE id = ? AND enabled = 1').get(payload.userId) as DBUser | undefined;
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'User not found or account disabled' }, { status: 404 });
     }
 
     const { password_hash, salt, ...safeUser } = user;

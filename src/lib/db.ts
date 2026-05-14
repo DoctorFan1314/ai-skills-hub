@@ -33,6 +33,11 @@ function getDb(): Database.Database {
     'ALTER TABLE redeem_codes ADD COLUMN billing_cycle TEXT DEFAULT \'monthly\'',
     'ALTER TABLE redeem_codes ADD COLUMN duration_months INTEGER DEFAULT 1',
     'ALTER TABLE subscription_plans ADD COLUMN currency TEXT NOT NULL DEFAULT \'CNY\'',
+    // Performance indexes (IF NOT EXISTS — safe to re-run)
+    'CREATE INDEX IF NOT EXISTS idx_model_rates_name ON model_rates(model_name)',
+    'CREATE INDEX IF NOT EXISTS idx_user_subscriptions_active ON user_subscriptions(user_id, status, current_period_end)',
+    'CREATE INDEX IF NOT EXISTS idx_channels_enabled_priority ON channels(enabled, priority)',
+    'CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key ON usage_logs(api_key_id)',
   ];
   for (const sql of migrations) {
     try {
@@ -66,19 +71,18 @@ function getDb(): Database.Database {
 
     const upsert = _db.prepare(`INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular)
       VALUES (@name, @display_name, @tagline, @tier, @monthly_price, @yearly_price, @monthly_credits, @first_purchase_discount, @overage_rate_multiplier, @max_concurrency, @route_priority, @off_peak_discount, @support_level, @popular)
-      ON CONFLICT(name) DO UPDATE SET display_name=excluded.display_name, tagline=excluded.tagline, tier=excluded.tier, monthly_price=excluded.monthly_price, yearly_price=excluded.yearly_price, monthly_credits=excluded.monthly_credits, first_purchase_discount=excluded.first_purchase_discount, overage_rate_multiplier=excluded.overage_rate_multiplier, max_concurrency=excluded.max_concurrency, route_priority=excluded.route_priority, off_peak_discount=excluded.off_peak_discount, support_level=excluded.support_level, popular=excluded.popular`);
+      ON CONFLICT(name) DO NOTHING`);
 
     for (const plan of defaultPlans) {
       upsert.run(plan);
     }
 
-    // Ensure plan_models bindings exist
+    // Ensure plan_models bindings exist (only add missing, don't delete admin-added)
     const planIds = _db.prepare('SELECT id, name FROM subscription_plans').all() as { id: number; name: string }[];
     const planIdMap: Record<string, number> = {};
     for (const p of planIds) planIdMap[p.name] = p.id;
 
-    _db.exec('DELETE FROM plan_models');
-    const insertModel = _db.prepare('INSERT INTO plan_models (plan_id, model_name, enabled) VALUES (?, ?, 1)');
+    const insertModel = _db.prepare('INSERT OR IGNORE INTO plan_models (plan_id, model_name, enabled) VALUES (?, ?, 1)');
     const modelBindings: [string, string][] = [
       ['spark', 'gpt-4o-mini'], ['spark', 'deepseek-chat'], ['spark', 'gemini-2.0-flash'], ['spark', 'gpt-3.5-turbo'],
       ['flare', 'gpt-4o'], ['flare', 'claude-3-5-sonnet-20241022'], ['flare', 'claude-3-5-haiku-20241022'], ['flare', 'deepseek-reasoner'], ['flare', 'gemini-1.5-pro'], ['flare', 'qwen-max'],

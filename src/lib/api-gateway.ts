@@ -30,11 +30,19 @@ export interface GatewayRequest {
   [key: string]: unknown;
 }
 
+export function setRateLimitHeaders(headers: Headers, rateLimit?: { limit: number; remaining: number; resetAt: number }) {
+  if (!rateLimit) return;
+  headers.set('X-RateLimit-Limit', String(rateLimit.limit));
+  headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
+  headers.set('X-RateLimit-Reset', String(Math.ceil(rateLimit.resetAt / 1000)));
+}
+
 export interface GatewayResponse {
   success: boolean;
   data?: unknown;
   error?: string;
   statusCode?: number;
+  rateLimit?: { limit: number; remaining: number; resetAt: number };
 }
 
 // Validate API Key from Authorization header
@@ -72,8 +80,8 @@ export function validateUserFromCookie(cookieHeader: string | null): { valid: bo
   const payload = verifyToken(token);
   if (!payload) return { valid: false, error: 'Invalid or expired token' };
 
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.userId) as DBUser | undefined;
-  if (!user) return { valid: false, error: 'User not found' };
+  const user = db.prepare('SELECT * FROM users WHERE id = ? AND enabled = 1').get(payload.userId) as DBUser | undefined;
+  if (!user) return { valid: false, error: 'User not found or account disabled' };
 
   return { valid: true, user };
 }
@@ -94,11 +102,13 @@ export async function processGatewayRequest(
 
   // 2. Check rate limit
   const rateLimit = checkRateLimit(apiKey.id, apiKey.rate_limit);
+  const rateLimitInfo = { limit: rateLimit.limit, remaining: rateLimit.remaining, resetAt: rateLimit.resetAt };
   if (!rateLimit.allowed) {
     return {
       success: false,
       error: `Rate limit exceeded. Try again after ${new Date(rateLimit.resetAt).toISOString()}`,
       statusCode: 429,
+      rateLimit: rateLimitInfo,
     };
   }
 
@@ -115,25 +125,24 @@ export async function processGatewayRequest(
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const selection = selectChannel(req.model);
     if (!selection) {
-      // Only return "no channel" error if first attempt (no prior error to return)
       if (!lastError) {
-        return { success: false, error: `No available channel for model: ${req.model}`, statusCode: 503 };
+        return { success: false, error: `No available channel for model: ${req.model}`, statusCode: 503, rateLimit: rateLimitInfo };
       }
-      break; // No more channels — return last error from a failed attempt
+      break;
     }
 
     const { channel, model: actualModel } = selection;
     const result = await executeChannelRequest(req, apiKey.id, user.id, channel, actualModel, endpoint);
+    result.rateLimit = rateLimitInfo;
 
     if (result.success) return result;
 
     lastError = result;
 
-    // Don't retry if the error is not a server/upstream issue
     if (result.statusCode && result.statusCode < 500) return result;
   }
 
-  return lastError || { success: false, error: 'Gateway error: upstream request failed', statusCode: 502 };
+  return lastError || { success: false, error: 'Gateway error: upstream request failed', statusCode: 502, rateLimit: rateLimitInfo };
 }
 
 // Execute a request against a single channel
@@ -166,6 +175,7 @@ async function executeChannelRequest(
       method: 'POST',
       headers,
       body: JSON.stringify(upstreamBody),
+      signal: AbortSignal.timeout(180_000), // 3 min timeout for LLM requests
     });
 
     const latencyMs = Date.now() - startTime;
@@ -244,6 +254,9 @@ async function executeChannelRequest(
       success: false, errorMessage: String(error),
     });
 
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { success: false, error: 'Upstream request timed out (180s)', statusCode: 504 };
+    }
     return { success: false, error: 'Gateway error: upstream request failed', statusCode: 502 };
   }
 }

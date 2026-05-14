@@ -207,10 +207,16 @@ export function deductCreditsOrBalance(
     const creditsCost = calculateCredits(model, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
 
     if (subscription.credits_remaining >= creditsCost) {
-      // Sufficient credits — deduct from subscription
-      db.prepare(
-        'UPDATE user_subscriptions SET credits_remaining = credits_remaining - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-      ).run(creditsCost, subscription.id);
+      // Sufficient credits — atomic deduct with balance check (prevents TOCTOU race)
+      const result = db.prepare(
+        'UPDATE user_subscriptions SET credits_remaining = credits_remaining - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND credits_remaining >= ?'
+      ).run(creditsCost, subscription.id, creditsCost);
+
+      if (result.changes === 0) {
+        // Credits were consumed between check and update — fall through to balance
+        const freshSub = db.prepare('SELECT credits_remaining FROM user_subscriptions WHERE id = ?').get(subscription.id) as { credits_remaining: number };
+        return deductCreditsOrBalance_fallback(userId, plan, subscription, freshSub.credits_remaining, cost, description, creditsCost);
+      }
 
       // Log subscription usage
       db.prepare(
@@ -251,4 +257,41 @@ export function deductCreditsOrBalance(
   }
 
   return { success: true, source: 'balance', newBalance: deductResult.newBalance };
+}
+
+// Fallback when credits race condition detected: re-check and use balance if needed
+function deductCreditsOrBalance_fallback(
+  userId: number,
+  plan: DBSubscriptionPlan,
+  subscription: DBUserSubscription,
+  creditsRemaining: number,
+  cost: number,
+  description: string,
+  creditsCost: number,
+): DeductCreditsResult {
+  if (creditsRemaining >= creditsCost) {
+    // Another request freed up credits — retry with atomic check
+    const result = db.prepare(
+      'UPDATE user_subscriptions SET credits_remaining = credits_remaining - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND credits_remaining >= ?'
+    ).run(creditsCost, subscription.id, creditsCost);
+    if (result.changes > 0) {
+      db.prepare('INSERT INTO subscription_usage_logs (subscription_id, user_id, model, credits_used, source) VALUES (?, ?, ?, ?, ?)').run(subscription.id, userId, 'unknown', creditsCost, 'credits');
+      const updatedSub = db.prepare('SELECT credits_remaining FROM user_subscriptions WHERE id = ?').get(subscription.id) as { credits_remaining: number };
+      return { success: true, source: 'credits', creditsRemaining: updatedSub.credits_remaining };
+    }
+  }
+
+  // Fall back to balance with overage multiplier
+  const overageMultiplier = plan.overage_rate_multiplier;
+  const overageCost = cost * overageMultiplier;
+  const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number } | undefined;
+  if (!user || user.balance < overageCost) {
+    return { success: false, source: 'blocked', error: 'Credits exhausted and insufficient balance', overageMultiplier };
+  }
+  const deductResult = deductBalance(userId, overageCost, `${description} (overage, ${plan.name} x${overageMultiplier})`);
+  if (!deductResult.success) {
+    return { success: false, source: 'blocked', error: deductResult.error, overageMultiplier };
+  }
+  db.prepare('INSERT INTO subscription_usage_logs (subscription_id, user_id, model, credits_used, source) VALUES (?, ?, ?, ?, ?)').run(subscription.id, userId, 'unknown', 0, 'balance');
+  return { success: true, source: 'balance', newBalance: deductResult.newBalance, overageMultiplier };
 }

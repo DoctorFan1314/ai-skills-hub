@@ -160,9 +160,10 @@ Supports full `tool_use` / `tool_result` conversion between Anthropic and OpenAI
 - **Per-token billing** — 3-tier cache-aware pricing (input, cache read, cache write, output)
 - **Token Plan subscriptions** — 4 tiers with prorated upgrades/downgrades
 - **Tool calling** — Full `tools`/`tool_choice` passthrough for both OpenAI and Anthropic formats
-- **Security** — JWT auth, AES-256-GCM encrypted channel keys, rate limiting, input validation
+- **Security** — JWT auth, AES-256-GCM encrypted channel keys, rate limiting, input validation, disabled user blocking
 - **Middleware auth** — Dashboard routes protected by Next.js middleware
 - **X-Request-Id** — Unique request ID in every response header for tracing
+- **Rate limit headers** — `X-RateLimit-Limit/Remaining/Reset` on all v1 API responses
 - **OpenAPI spec** — `GET /api/v1/openapi` for full API documentation
 - **Real-time stats** — Homepage shows live platform metrics (calls, uptime, latency, models)
 

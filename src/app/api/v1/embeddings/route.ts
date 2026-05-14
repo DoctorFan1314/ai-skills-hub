@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processGatewayRequest } from '@/lib/api-gateway';
+import { processGatewayRequest, setRateLimitHeaders } from '@/lib/api-gateway';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,13 +25,17 @@ export async function POST(request: NextRequest) {
     const result = await processGatewayRequest(body, authHeader, 'embeddings');
 
     if (!result.success) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: { message: result.error, type: 'gateway_error' } },
         { status: result.statusCode || 500 }
       );
+      setRateLimitHeaders(res.headers, result.rateLimit);
+      return res;
     }
 
-    return NextResponse.json(result.data);
+    const res = NextResponse.json(result.data);
+    setRateLimitHeaders(res.headers, result.rateLimit);
+    return res;
   } catch (error) {
     console.error('Embeddings error:', error);
     return NextResponse.json(

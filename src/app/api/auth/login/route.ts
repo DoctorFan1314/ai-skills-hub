@@ -26,6 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    if (!user.enabled) {
+      return NextResponse.json({ error: 'Account is disabled. Please contact an administrator.' }, { status: 403 });
+    }
+
     if (!verifyPassword(password, user.password_hash, user.salt)) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }

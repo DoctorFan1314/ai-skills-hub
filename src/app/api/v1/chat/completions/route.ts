@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processGatewayRequest, estimateTokens } from '@/lib/api-gateway';
+import { processGatewayRequest, estimateTokens, setRateLimitHeaders } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 import { reportChannelSuccess } from '@/lib/channel-manager';
 
@@ -28,10 +28,12 @@ export async function POST(request: NextRequest) {
     if (body.stream) {
       const result = await processGatewayRequest(body, authHeader, 'chat/completions');
       if (!result.success) {
-        return NextResponse.json(
+        const res = NextResponse.json(
           { error: { message: result.error, type: 'gateway_error' } },
           { status: result.statusCode || 500 }
         );
+        setRateLimitHeaders(res.headers, result.rateLimit);
+        return res;
       }
 
       const streamData = result.data as {
@@ -144,27 +146,36 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return new Response(transformStream.readable, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        },
-      });
+      const rateLimitHeaders: Record<string, string> = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      };
+      if (result.rateLimit) {
+        rateLimitHeaders['X-RateLimit-Limit'] = String(result.rateLimit.limit);
+        rateLimitHeaders['X-RateLimit-Remaining'] = String(result.rateLimit.remaining);
+        rateLimitHeaders['X-RateLimit-Reset'] = String(Math.ceil(result.rateLimit.resetAt / 1000));
+      }
+
+      return new Response(transformStream.readable, { headers: rateLimitHeaders });
     }
 
     // Non-streaming
     const result = await processGatewayRequest(body, authHeader, 'chat/completions');
 
     if (!result.success) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: { message: result.error, type: 'gateway_error' } },
         { status: result.statusCode || 500 }
       );
+      setRateLimitHeaders(res.headers, result.rateLimit);
+      return res;
     }
 
-    return NextResponse.json(result.data);
+    const res = NextResponse.json(result.data);
+    setRateLimitHeaders(res.headers, result.rateLimit);
+    return res;
   } catch (error) {
     console.error('Chat completions error:', error);
     return NextResponse.json(

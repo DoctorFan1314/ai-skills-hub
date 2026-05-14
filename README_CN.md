@@ -160,9 +160,10 @@ curl https://your-domain.com/api/v1/messages \
 - **按量计费** — 三级缓存感知定价（输入、缓存读、缓存写、输出）
 - **Token Plan 订阅** — 4 个套餐，按比例升级/降级
 - **工具调用** — 完整透传 `tools`/`tool_choice`，支持 OpenAI 和 Anthropic 格式
-- **安全** — JWT 认证、AES-256-GCM 加密渠道 Key、限流、输入验证
+- **安全** — JWT 认证、AES-256-GCM 加密渠道 Key、限流、输入验证、禁用用户拦截
 - **中间件鉴权** — 控制台路由受 Next.js 中间件保护
 - **X-Request-Id** — 每个响应头包含唯一请求 ID，用于链路追踪
+- **限流响应头** — 所有 v1 API 响应包含 `X-RateLimit-Limit/Remaining/Reset` 头
 - **OpenAPI 规范** — `GET /api/v1/openapi` 返回完整 API 文档
 - **实时统计** — 首页展示真实平台指标（调用量、可用率、延迟、模型数）
 

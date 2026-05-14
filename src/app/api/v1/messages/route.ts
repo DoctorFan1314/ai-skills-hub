@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processGatewayRequest, estimateTokens } from '@/lib/api-gateway';
+import { processGatewayRequest, estimateTokens, setRateLimitHeaders } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 
 export const dynamic = 'force-dynamic';
@@ -130,10 +130,12 @@ export async function POST(request: NextRequest) {
     if (body.stream) {
       const result = await processGatewayRequest(gatewayBody, authHeader, 'chat/completions');
       if (!result.success) {
-        return NextResponse.json(
+        const res = NextResponse.json(
           { type: 'error', error: { type: 'api_error', message: result.error } },
           { status: result.statusCode || 500 }
         );
+        setRateLimitHeaders(res.headers, result.rateLimit);
+        return res;
       }
 
       const streamData = result.data as {
@@ -404,24 +406,31 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return new Response(transformStream.readable, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        },
-      });
+      const streamRateHeaders: Record<string, string> = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      };
+      if (result.rateLimit) {
+        streamRateHeaders['X-RateLimit-Limit'] = String(result.rateLimit.limit);
+        streamRateHeaders['X-RateLimit-Remaining'] = String(result.rateLimit.remaining);
+        streamRateHeaders['X-RateLimit-Reset'] = String(Math.ceil(result.rateLimit.resetAt / 1000));
+      }
+
+      return new Response(transformStream.readable, { headers: streamRateHeaders });
     }
 
     // Non-streaming
     const result = await processGatewayRequest(gatewayBody, authHeader, 'chat/completions');
 
     if (!result.success) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { type: 'error', error: { type: 'api_error', message: result.error } },
         { status: result.statusCode || 500 }
       );
+      setRateLimitHeaders(res.headers, result.rateLimit);
+      return res;
     }
 
     const data = result.data as Record<string, unknown>;
@@ -472,7 +481,9 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(anthropicResponse);
+    const res = NextResponse.json(anthropicResponse);
+    setRateLimitHeaders(res.headers, result.rateLimit);
+    return res;
   } catch (error) {
     console.error('Anthropic messages error:', error);
     return NextResponse.json(

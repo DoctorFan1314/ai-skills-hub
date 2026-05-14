@@ -235,6 +235,10 @@ CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user ON user_subscriptions(use
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON user_subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscription_usage_logs_user ON subscription_usage_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_usage_logs_sub ON subscription_usage_logs(subscription_id);
+CREATE INDEX IF NOT EXISTS idx_model_rates_name ON model_rates(model_name);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_active ON user_subscriptions(user_id, status, current_period_end);
+CREATE INDEX IF NOT EXISTS idx_channels_enabled_priority ON channels(enabled, priority);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key ON usage_logs(api_key_id);
 
 -- Default system settings
 INSERT OR IGNORE INTO system_settings (key, value) VALUES

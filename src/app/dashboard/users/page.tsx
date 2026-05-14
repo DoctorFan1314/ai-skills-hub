@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/contexts/toast-context";
+import { useCurrency } from "@/contexts/currency-context";
 import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound } from "lucide-react";
 
 interface UserItem {
@@ -70,6 +71,7 @@ export default function UsersPage() {
   const { lang } = useI18n();
   const { user: currentUser } = useAuth();
   const { toast: showToast } = useToast();
+  const { formatPrice } = useCurrency();
   const t = LABELS[lang];
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -345,7 +347,7 @@ export default function UsersPage() {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right font-mono">${u.balance.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right font-mono">{formatPrice(u.balance)}</td>
                       <td className="py-3 px-4 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${u.enabled ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
                           {u.enabled ? t.enabled : t.disabled}

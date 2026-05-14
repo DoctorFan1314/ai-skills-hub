@@ -6,6 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.3] — 2026-05-14
+
+### Security Fixes, Race Condition Patches, Rate Limit Headers & Performance
+
+#### Critical Security Fixes
+- **Disabled user blocking** — Login now returns 403 for disabled accounts; `/api/auth/me` and cookie validation check `enabled = 1`
+- **Redeem race condition** — Atomic `UPDATE ... WHERE current_uses < max_uses` prevents double-spend on redeem codes
+- **Credits race condition** — Atomic `UPDATE ... WHERE credits_remaining >= ?` prevents TOCTOU on subscription credit deduction
+
+#### Gateway Improvements
+- **Upstream fetch timeout** — Added 180s `AbortSignal.timeout` to upstream fetch; returns 504 on timeout instead of hanging
+- **Rate limit headers** — All v1 API responses now include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` headers
+
+#### Data Integrity
+- **Plan seed no longer overwrites admin config** — Changed `ON CONFLICT DO UPDATE` to `ON CONFLICT DO NOTHING` for subscription plans; `plan_models` seed uses `INSERT OR IGNORE` instead of `DELETE + INSERT`
+
+#### Performance
+- **New DB indexes** — Added `model_rates(model_name)`, `user_subscriptions(user_id, status, current_period_end)`, `channels(enabled, priority)`, `usage_logs(api_key_id)` for faster queries
+
+#### UI Fixes
+- **Balance display precision** — All balance/price displays now use `formatPrice()` from currency context (consistent USD/CNY formatting)
+- **Billing history auto-refresh** — Billing history component now uses SWR instead of manual `useState` + `useEffect`
+
+#### Middleware
+- **Request body size limit** — API routes now reject requests with `Content-Length > 10MB` (returns 413)
+
+---
+
 ## [v3.3.2] — 2026-05-14
 
 ### Security Hardening, Gateway Failover, Middleware Auth & Feature Upgrades

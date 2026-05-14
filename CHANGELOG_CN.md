@@ -6,6 +6,34 @@
 
 ---
 
+## [v3.3.3] — 2026-05-14
+
+### 安全修复、竞态补丁、限流头与性能优化
+
+#### 关键安全修复
+- **禁用用户拦截** — 登录现在对已禁用账号返回 403；`/api/auth/me` 和 Cookie 验证检查 `enabled = 1`
+- **兑换码竞态** — 原子 `UPDATE ... WHERE current_uses < max_uses` 防止兑换码双重消费
+- **积分竞态** — 原子 `UPDATE ... WHERE credits_remaining >= ?` 防止订阅积分扣除的 TOCTOU 竞态
+
+#### 网关改进
+- **上游请求超时** — 为上游 fetch 添加 180 秒 `AbortSignal.timeout`；超时返回 504 而非挂起
+- **限流响应头** — 所有 v1 API 响应现在包含 `X-RateLimit-Limit`、`X-RateLimit-Remaining`、`X-RateLimit-Reset` 头
+
+#### 数据完整性
+- **套餐种子不再覆盖管理员配置** — 订阅套餐的 `ON CONFLICT DO UPDATE` 改为 `ON CONFLICT DO NOTHING`；`plan_models` 种子改用 `INSERT OR IGNORE` 替代 `DELETE + INSERT`
+
+#### 性能
+- **新增数据库索引** — 添加 `model_rates(model_name)`、`user_subscriptions(user_id, status, current_period_end)`、`channels(enabled, priority)`、`usage_logs(api_key_id)` 加速查询
+
+#### UI 修复
+- **余额显示精度** — 所有余额/价格显示现在使用货币上下文的 `formatPrice()`（统一 USD/CNY 格式）
+- **账单历史自动刷新** — 账单历史组件改用 SWR 替代手动 `useState` + `useEffect`
+
+#### 中间件
+- **请求体大小限制** — API 路由现在拒绝 `Content-Length > 10MB` 的请求（返回 413）
+
+---
+
 ## [v3.3.2] — 2026-05-14
 
 ### 安全加固、网关故障转移、中间件鉴权与功能升级
