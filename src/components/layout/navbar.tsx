@@ -33,7 +33,7 @@ export function Navbar() {
     { href: "/token-plan", label: lang === "zh" ? "Token Plan" : "Token Plan" },
     { href: "/models", label: lang === "zh" ? "模型市场" : "Models" },
     { href: "/docs", label: lang === "zh" ? "文档" : "Docs" },
-    { href: "/resources/skills", label: lang === "zh" ? "资源中心" : "Resources" },
+    { href: "/resources", label: lang === "zh" ? "资源中心" : "Resources" },
   ];
 
   // Close user menu on outside click

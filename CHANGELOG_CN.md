@@ -42,6 +42,11 @@
 - **Schema 安全** — `schema.sql` 使用 `INSERT OR IGNORE` 替代 `DELETE FROM` 以保留现有数据
 - **套餐去重修复** — 给 plan name 添加 UNIQUE 约束；种子代码改用 ON CONFLICT upsert 代替 DELETE+INSERT（外键约束导致 DELETE 静默失败）
 
+#### 导航与 UI 修复
+- **资源中心枢纽** — `/resources` 页面现在作为正式枢纽页，展示所有资源分区（Agent 技能、Prompt 模板、分类浏览、排行榜、标签云、提交模板）
+- **导航栏链接修复** — "资源中心" 导航链接现在指向 `/resources` 枢纽页，而非直接跳转 `/skills`
+- **页脚清理** — 删除页脚中的"新手指南"链接（指南页已删除）；资源分区现列出 Agent 技能、Prompt 模板、分类浏览
+
 ---
 
 ## [v3.3.1] — 2026-05-13

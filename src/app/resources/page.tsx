@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Puzzle, LayoutGrid, TrendingUp, Tags, GraduationCap, Send, ArrowRight } from "lucide-react";
+import { BookOpen, Puzzle, LayoutGrid, TrendingUp, Tags, Send, ArrowRight } from "lucide-react";
 import { useI18n } from "@/contexts/i18n-context";
 
 const SECTIONS = [
@@ -10,7 +10,6 @@ const SECTIONS = [
   { href: "/categories", icon: LayoutGrid, zh: "分类浏览", en: "Categories", zhDesc: "按方向浏览 Prompt 模板", enDesc: "Browse prompts by category" },
   { href: "/trending", icon: TrendingUp, zh: "排行榜", en: "Trending", zhDesc: "热门 Prompt 模板排行", enDesc: "Trending prompt templates" },
   { href: "/tags", icon: Tags, zh: "标签云", en: "Tags", zhDesc: "通过标签发现内容", enDesc: "Discover content through tags" },
-  { href: "/guide", icon: GraduationCap, zh: "新手指南", en: "Guide", zhDesc: "Prompt 工程技巧与入门教程", enDesc: "Prompt engineering tips and tutorials" },
   { href: "/submit", icon: Send, zh: "提交模板", en: "Submit", zhDesc: "分享你的 Prompt 模板", enDesc: "Share your prompt templates" },
 ];
 

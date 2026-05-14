@@ -318,12 +318,12 @@ pm2 start npm --name oortapi -- start
 
 ## 资源中心
 
-原 AI Skills Hub 的功能保留在 `/resources/` 路径下：
+资源中心枢纽页 `/resources/` 提供快捷入口：
 
 - Agent 技能市场
 - Prompt 模板
 - 分类、排行榜、标签云
-- 新手指南
+- 提交模板
 
 ---
 

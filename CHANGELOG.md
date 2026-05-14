@@ -42,6 +42,11 @@ All notable changes to this project will be documented in this file.
 - **Schema safety** — `schema.sql` uses `INSERT OR IGNORE` instead of `DELETE FROM` to preserve existing data
 - **Plan dedup fix** — Added UNIQUE constraint on plan name; seed code uses ON CONFLICT to upsert instead of DELETE+INSERT (foreign key constraint was silently blocking DELETE)
 
+#### Navigation & UI Fixes
+- **Resources center hub** — `/resources` page now serves as a proper hub showing all resource sections (Agent Skills, Prompt Templates, Categories, Trending, Tags, Submit)
+- **Navbar link fix** — "Resources" nav link now points to `/resources` hub instead of directly to `/skills`
+- **Footer cleanup** — Removed "Guide" link from footer (guide page was deleted); resources section now lists Agent Skills, Prompt Templates, Categories
+
 ---
 
 ## [v3.3.1] — 2026-05-13

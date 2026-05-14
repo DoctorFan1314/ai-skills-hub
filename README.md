@@ -318,12 +318,12 @@ pm2 start npm --name oortapi -- start
 
 ## Resource Center
 
-The original AI Skills Hub features are preserved under `/resources/`:
+The resource center hub at `/resources/` provides quick access to:
 
 - Agent Skills marketplace
 - Prompt Templates
 - Categories, Trending, Tags
-- Beginner Guide
+- Submit Templates
 
 ---
 

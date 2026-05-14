@@ -23,7 +23,6 @@ export function Footer() {
       { label: t.footer.agentSkills, href: "/skills", disabled: false },
       { label: t.footer.promptTemplates, href: "/prompts", disabled: false },
       { label: t.footer.categories, href: "/categories", disabled: false },
-      { label: t.footer.guide, href: "/guide", disabled: false },
     ]},
     { id: "community", title: t.footer.community, links: [
       { label: t.footer.github, href: "#", disabled: true },
