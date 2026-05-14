@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomUUID } from 'crypto';
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  // X-Request-Id for all responses
-  const requestId = request.headers.get('x-request-id') || randomUUID();
+  // X-Request-Id for all responses (Web Crypto API — works in Edge runtime)
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   response.headers.set('X-Request-Id', requestId);
 
   // Protect dashboard routes (except login/register)
