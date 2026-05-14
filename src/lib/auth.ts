@@ -129,7 +129,9 @@ export function decrypt(ciphertext: string): string {
   if (!ciphertext.includes(':')) return ciphertext;
 
   const parts = ciphertext.split(':');
-  if (parts.length !== 3) return ciphertext; // Not our format, return as-is
+  if (parts.length !== 3) {
+    throw new Error('Invalid encrypted key format');
+  }
 
   try {
     const key = getEncryptionKey();
@@ -140,7 +142,6 @@ export function decrypt(ciphertext: string): string {
     decipher.setAuthTag(authTag);
     return decipher.update(encrypted) + decipher.final('utf8');
   } catch {
-    // If decryption fails, assume it's a legacy plaintext key
-    return ciphertext;
+    throw new Error('Failed to decrypt channel API key — check ENCRYPTION_KEY');
   }
 }

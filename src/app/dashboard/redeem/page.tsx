@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback } from "react";
+import { useToast } from "@/contexts/toast-context";
 import { Gift, Loader2, Plus, Trash2, Copy, Check } from "lucide-react";
 
 interface RedeemCode {
@@ -59,6 +60,7 @@ const LABELS = {
 
 export default function RedeemPage() {
   const { lang } = useI18n();
+  const { toast: showToast } = useToast();
   const t = LABELS[lang];
   const [codes, setCodes] = useState<RedeemCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,9 +127,9 @@ export default function RedeemPage() {
         setGenResult(data.codes);
         fetchCodes();
       } else {
-        alert(data.error || "Generation failed");
+        showToast(data.error || "Generation failed", "error");
       }
-    } catch { alert("Network error"); }
+    } catch { showToast("Network error", "error"); }
     setGenLoading(false);
   }
 
@@ -141,9 +143,9 @@ export default function RedeemPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Operation failed");
+        showToast(data.error || "Operation failed", "error");
       }
-    } catch { alert("Network error"); }
+    } catch { showToast("Network error", "error"); }
     fetchCodes();
   }
 
@@ -159,9 +161,9 @@ export default function RedeemPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Delete failed");
+        showToast(data.error || "Delete failed", "error");
       }
-    } catch { alert("Network error"); }
+    } catch { showToast("Network error", "error"); }
     setDeleteLoading(false);
     setDeleteId(null);
     fetchCodes();

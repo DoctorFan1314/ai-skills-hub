@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback } from "react";
+import { useToast } from "@/contexts/toast-context";
 import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound } from "lucide-react";
 
 interface UserItem {
@@ -68,6 +69,7 @@ const LABELS = {
 export default function UsersPage() {
   const { lang } = useI18n();
   const { user: currentUser } = useAuth();
+  const { toast: showToast } = useToast();
   const t = LABELS[lang];
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,9 +147,9 @@ export default function UsersPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Operation failed");
+        showToast(data.error || "Operation failed", "error");
       }
-    } catch { alert("Network error"); }
+    } catch { showToast("Network error", "error"); }
     setEditSaving(false);
     setEditUser(null);
     fetchUsers();
@@ -165,9 +167,9 @@ export default function UsersPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Delete failed");
+        showToast(data.error || "Delete failed", "error");
       }
-    } catch { alert("Network error"); }
+    } catch { showToast("Network error", "error"); }
     setDeleteLoading(false);
     setDeleteUser(null);
     fetchUsers();
@@ -187,9 +189,9 @@ export default function UsersPage() {
       if (res.ok && data.newPassword) {
         setResetResult({ email: editUser.email, password: data.newPassword });
       } else {
-        alert(data.error || "Password reset failed");
+        showToast(data.error || "Password reset failed", "error");
       }
-    } catch { alert("Network error"); }
+    } catch { showToast("Network error", "error"); }
     setResetLoading(false);
   }
 
@@ -220,8 +222,8 @@ export default function UsersPage() {
         body: JSON.stringify({ id: editUser.id, giftSubscription: { planId: giftPlanId, credits: giftCredits ? parseInt(giftCredits) : undefined } }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || "Operation failed"); }
-    } catch { alert("Network error"); }
+      if (!res.ok) { showToast(data.error || "Operation failed", "error"); }
+    } catch { showToast("Network error", "error"); }
     setSubActionLoading(false);
     setEditUser(null);
     fetchUsers();
@@ -238,8 +240,8 @@ export default function UsersPage() {
         body: JSON.stringify({ id: editUser.id, cancelSubscription: true }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || "Operation failed"); }
-    } catch { alert("Network error"); }
+      if (!res.ok) { showToast(data.error || "Operation failed", "error"); }
+    } catch { showToast("Network error", "error"); }
     setSubActionLoading(false);
     setEditUser(null);
     fetchUsers();
@@ -256,8 +258,8 @@ export default function UsersPage() {
         body: JSON.stringify({ id: editUser.id, addCredits: parseInt(giftCredits) }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || "Operation failed"); }
-    } catch { alert("Network error"); }
+      if (!res.ok) { showToast(data.error || "Operation failed", "error"); }
+    } catch { showToast("Network error", "error"); }
     setSubActionLoading(false);
     setEditUser(null);
     fetchUsers();

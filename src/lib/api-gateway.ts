@@ -168,9 +168,8 @@ export async function processGatewayRequest(
 
     // Handle streaming response
     if (req.stream) {
-      reportChannelSuccess(channel.id);
-      // For streaming, we return the raw response
-      // Token counting happens in the streaming handler
+      // Don't report success yet — stream may fail mid-way
+      // The route handler will report success/failure when the stream completes
       return {
         success: true,
         data: {
@@ -186,7 +185,15 @@ export async function processGatewayRequest(
     }
 
     // Non-streaming response
-    const data = await upstreamRes.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: any;
+    try {
+      data = await upstreamRes.json();
+    } catch {
+      const errorText = await upstreamRes.text().catch(() => 'Invalid response');
+      reportChannelFailure(channel.id, `Non-JSON response: ${errorText.slice(0, 200)}`);
+      return { success: false, error: 'Upstream returned invalid response', statusCode: 502 };
+    }
     reportChannelSuccess(channel.id);
 
     // Calculate tokens and cost (including cache tokens)

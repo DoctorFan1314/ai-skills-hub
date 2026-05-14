@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
+import { reportChannelSuccess } from '@/lib/channel-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest) {
       function doLogUsage() {
         if (logged) return;
         logged = true;
+
+        // Stream completed successfully — report channel health
+        reportChannelSuccess(streamData.channelId);
 
         if (tokensIn === 0) {
           tokensIn = estimateTokens(JSON.stringify(body.messages));

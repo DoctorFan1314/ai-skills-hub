@@ -16,9 +16,24 @@ export async function PATCH(request: NextRequest) {
     const updates: string[] = [];
     const values: unknown[] = [];
 
-    if (data.username !== undefined) { updates.push('username = ?'); values.push(data.username); }
-    if (data.avatar !== undefined) { updates.push('avatar = ?'); values.push(data.avatar); }
-    if (data.bio !== undefined) { updates.push('bio = ?'); values.push(data.bio); }
+    if (data.username !== undefined) {
+      if (typeof data.username !== 'string' || data.username.trim().length < 2 || data.username.trim().length > 50) {
+        return NextResponse.json({ error: 'Username must be 2-50 characters' }, { status: 400 });
+      }
+      updates.push('username = ?'); values.push(data.username.trim());
+    }
+    if (data.avatar !== undefined) {
+      if (typeof data.avatar !== 'string' || data.avatar.length > 1_000_000) {
+        return NextResponse.json({ error: 'Avatar too large' }, { status: 400 });
+      }
+      updates.push('avatar = ?'); values.push(data.avatar);
+    }
+    if (data.bio !== undefined) {
+      if (typeof data.bio !== 'string' || data.bio.length > 500) {
+        return NextResponse.json({ error: 'Bio must be under 500 characters' }, { status: 400 });
+      }
+      updates.push('bio = ?'); values.push(data.bio);
+    }
     if (data.preferences !== undefined) { updates.push('preferences = ?'); values.push(JSON.stringify(data.preferences)); }
 
     if (updates.length > 0) {
