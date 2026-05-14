@@ -262,9 +262,8 @@ INSERT OR IGNORE INTO model_rates (model_name, display_name, provider, input_rat
   ('gemini-1.5-pro', 'Gemini 1.5 Pro', 'google', 0.00125, 0.005, 0.000625, 0.0015625),
   ('qwen-max', 'Qwen Max', 'alibaba', 0.0016, 0.0064, 0.0008, 0.002);
 
--- Default subscription plans (use REPLACE to update if exists)
-DELETE FROM subscription_plans;
-INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular) VALUES
+-- Default subscription plans (INSERT OR IGNORE avoids wiping existing data on re-init)
+INSERT OR IGNORE INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular) VALUES
   ('spark', 'Lite', '尝鲜入门', 1, 9, 92, 9000000, 0.23, 1.0, 10, 'standard', 0.8, 'community', 0),
   ('flare', 'Standard', '适合进阶用户', 2, 29, 296, 30000000, 0.23, 0.95, 30, 'priority', 0.8, 'email', 0),
   ('pulse', 'Pro', '适合专业开发者', 3, 79, 806, 85000000, 0.23, 0.85, 100, 'ultra', 0.8, 'priority', 1),

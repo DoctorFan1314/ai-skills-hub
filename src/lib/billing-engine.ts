@@ -58,7 +58,11 @@ export function getEffectiveMultiplier(model: string): { multiplier: number; typ
       timeZone: timeSettings.timezone,
     });
     const currentTime = formatter.format(now);
-    const isDay = currentTime >= timeSettings.day_start && currentTime <= timeSettings.day_end;
+    // Handle overnight ranges (e.g. 22:00-06:00): use OR logic when start > end
+    const isOvernight = timeSettings.day_start > timeSettings.day_end;
+    const isDay = isOvernight
+      ? (currentTime >= timeSettings.day_start || currentTime <= timeSettings.day_end)
+      : (currentTime >= timeSettings.day_start && currentTime <= timeSettings.day_end);
 
     return {
       multiplier: isDay ? timeSettings.day_rate : timeSettings.night_rate,

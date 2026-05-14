@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processGatewayRequest } from '@/lib/api-gateway';
+import { processGatewayRequest, estimateTokens } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 
 export const dynamic = 'force-dynamic';
@@ -480,10 +480,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function estimateTokens(text: string): number {
-  const chineseChars = (text.match(/[一-鿿]/g) || []).length;
-  const otherChars = text.length - chineseChars;
-  return Math.ceil(chineseChars / 2 + otherChars / 4);
 }

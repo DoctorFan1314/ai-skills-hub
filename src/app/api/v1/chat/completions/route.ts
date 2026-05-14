@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processGatewayRequest } from '@/lib/api-gateway';
+import { processGatewayRequest, estimateTokens } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 import { reportChannelSuccess } from '@/lib/channel-manager';
 
@@ -172,10 +172,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function estimateTokens(text: string): number {
-  const chineseChars = (text.match(/[一-鿿]/g) || []).length;
-  const otherChars = text.length - chineseChars;
-  return Math.ceil(chineseChars / 2 + otherChars / 4);
 }

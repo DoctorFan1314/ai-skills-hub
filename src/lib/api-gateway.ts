@@ -78,7 +78,7 @@ export function validateUserFromCookie(cookieHeader: string | null): { valid: bo
   return { valid: true, user };
 }
 
-// Process an API request through the gateway
+// Process an API request through the gateway (with failover retry)
 export async function processGatewayRequest(
   req: GatewayRequest,
   authHeader: string | null,
@@ -108,17 +108,46 @@ export async function processGatewayRequest(
     return { success: false, error: 'Insufficient balance. Please recharge.', statusCode: 402 };
   }
 
-  // 4. Select channel
-  const selection = selectChannel(req.model);
-  if (!selection) {
-    return { success: false, error: `No available channel for model: ${req.model}`, statusCode: 503 };
+  // 4. Select channel with failover retry
+  const MAX_RETRIES = 3;
+  let lastError: GatewayResponse | null = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const selection = selectChannel(req.model);
+    if (!selection) {
+      // Only return "no channel" error if first attempt (no prior error to return)
+      if (!lastError) {
+        return { success: false, error: `No available channel for model: ${req.model}`, statusCode: 503 };
+      }
+      break; // No more channels — return last error from a failed attempt
+    }
+
+    const { channel, model: actualModel } = selection;
+    const result = await executeChannelRequest(req, apiKey.id, user.id, channel, actualModel, endpoint);
+
+    if (result.success) return result;
+
+    lastError = result;
+
+    // Don't retry if the error is not a server/upstream issue
+    if (result.statusCode && result.statusCode < 500) return result;
   }
 
-  const { channel, model: actualModel } = selection;
+  return lastError || { success: false, error: 'Gateway error: upstream request failed', statusCode: 502 };
+}
+
+// Execute a request against a single channel
+async function executeChannelRequest(
+  req: GatewayRequest,
+  apiKeyId: number,
+  userId: number,
+  channel: { id: number; base_url: string | null; type: string; api_key_encrypted: string },
+  actualModel: string,
+  endpoint: string,
+): Promise<GatewayResponse> {
   const startTime = Date.now();
 
   try {
-    // 5. Forward request to upstream provider
     const upstreamUrl = buildUpstreamUrl(channel.base_url || '', endpoint, channel.type);
     const upstreamBody = buildUpstreamRequest({ ...req, model: actualModel }, channel.type);
 
@@ -146,19 +175,12 @@ export async function processGatewayRequest(
       reportChannelFailure(channel.id, errorText);
 
       logUsage({
-        userId: user.id,
-        apiKeyId: apiKey.id,
-        channelId: channel.id,
-        model: req.model,
-        tokensIn: 0,
-        tokensOut: 0,
-        cost: 0,
-        latencyMs,
-        success: false,
-        errorMessage: errorText,
+        userId, apiKeyId,
+        channelId: channel.id, model: req.model,
+        tokensIn: 0, tokensOut: 0, cost: 0, latencyMs,
+        success: false, errorMessage: errorText,
       });
 
-      // Sanitize: don't leak upstream provider details to client
       const safeStatus = upstreamRes.status >= 500 ? 502 : upstreamRes.status;
       const safeError = upstreamRes.status >= 500
         ? `Upstream service error (${upstreamRes.status})`
@@ -166,25 +188,17 @@ export async function processGatewayRequest(
       return { success: false, error: safeError, statusCode: safeStatus };
     }
 
-    // Handle streaming response
     if (req.stream) {
-      // Don't report success yet — stream may fail mid-way
-      // The route handler will report success/failure when the stream completes
       return {
         success: true,
         data: {
-          stream: true,
-          response: upstreamRes,
-          channelId: channel.id,
-          userId: user.id,
-          apiKeyId: apiKey.id,
-          model: req.model,
-          startTime,
+          stream: true, response: upstreamRes,
+          channelId: channel.id, userId, apiKeyId,
+          model: req.model, startTime,
         },
       };
     }
 
-    // Non-streaming response
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     try {
@@ -196,38 +210,26 @@ export async function processGatewayRequest(
     }
     reportChannelSuccess(channel.id);
 
-    // Calculate tokens and cost (including cache tokens)
     const tokensIn = data.usage?.prompt_tokens || data.usage?.input_tokens || estimateTokens(JSON.stringify(req.messages || req.prompt || ''));
     const tokensOut = data.usage?.completion_tokens || data.usage?.output_tokens || estimateTokens(JSON.stringify(data.choices?.[0]?.message?.content || ''));
-    // OpenAI: prompt_tokens_details.cached_tokens; Anthropic: usage.cache_read_input_tokens
     const tokensInCache = data.usage?.prompt_tokens_details?.cached_tokens || data.usage?.cache_read_input_tokens || 0;
     const tokensCacheCreation = data.usage?.cache_creation_input_tokens || 0;
     const { multiplier } = getEffectiveMultiplier(req.model);
     const baseCost = calculateCost(req.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
     const cost = baseCost * multiplier;
 
-    // Deduct from credits or balance (subscription-aware)
-    const deductResult = deductCreditsOrBalance(user.id, req.model, cost, `API call: ${req.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
+    const deductResult = deductCreditsOrBalance(userId, req.model, cost, `API call: ${req.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
     if (!deductResult.success) {
       console.error('Failed to deduct:', deductResult.error);
     }
 
-    // Log usage
     logUsage({
-      userId: user.id,
-      apiKeyId: apiKey.id,
-      channelId: channel.id,
-      model: req.model,
-      tokensIn,
-      tokensOut,
-      tokensInCache,
-      tokensCacheCreation,
-      cost,
+      userId, apiKeyId,
+      channelId: channel.id, model: req.model,
+      tokensIn, tokensOut, tokensInCache, tokensCacheCreation, cost,
       creditsUsed: deductResult.source === 'credits' ? (tokensIn + tokensOut) : 0,
       deductionSource: deductResult.source,
-      latencyMs,
-      success: true,
-      multiplier,
+      latencyMs, success: true, multiplier,
     });
 
     return { success: true, data };
@@ -236,16 +238,10 @@ export async function processGatewayRequest(
     reportChannelFailure(channel.id, String(error));
 
     logUsage({
-      userId: user.id,
-      apiKeyId: apiKey.id,
-      channelId: channel.id,
-      model: req.model,
-      tokensIn: 0,
-      tokensOut: 0,
-      cost: 0,
-      latencyMs,
-      success: false,
-      errorMessage: String(error),
+      userId, apiKeyId,
+      channelId: channel.id, model: req.model,
+      tokensIn: 0, tokensOut: 0, cost: 0, latencyMs,
+      success: false, errorMessage: String(error),
     });
 
     return { success: false, error: 'Gateway error: upstream request failed', statusCode: 502 };
@@ -336,7 +332,7 @@ function buildUpstreamRequest(req: GatewayRequest, providerType: string): unknow
 }
 
 // Simple token estimation (4 chars ~= 1 token for English, 2 chars ~= 1 for Chinese)
-function estimateTokens(text: string): number {
+export function estimateTokens(text: string): number {
   const chineseChars = (text.match(/[一-鿿]/g) || []).length;
   const otherChars = text.length - chineseChars;
   return Math.ceil(chineseChars / 2 + otherChars / 4);

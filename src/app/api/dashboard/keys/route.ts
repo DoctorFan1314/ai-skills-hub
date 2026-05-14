@@ -34,9 +34,10 @@ export async function POST(request: NextRequest) {
     const { name, rate_limit, permissions } = await request.json();
 
     const keyValue = generateApiKey();
+    const safeRateLimit = Math.min(Math.max(Math.floor(rate_limit || 60), 1), 10000);
     const result = db.prepare(
       'INSERT INTO api_keys (user_id, key_value, name, permissions, rate_limit) VALUES (?, ?, ?, ?, ?)'
-    ).run(auth.user.id, keyValue, name || 'Default', JSON.stringify(permissions || { models: ['*'] }), rate_limit || 60);
+    ).run(auth.user.id, keyValue, name || 'Default', JSON.stringify(permissions || { models: ['*'] }), safeRateLimit);
 
     const key = db.prepare(
       'SELECT id, name, key_value, permissions, rate_limit, enabled, created_at FROM api_keys WHERE id = ?'
@@ -66,7 +67,7 @@ export async function PATCH(request: NextRequest) {
     const values: unknown[] = [];
     if (name !== undefined) { updates.push('name = ?'); values.push(name); }
     if (enabled !== undefined) { updates.push('enabled = ?'); values.push(enabled ? 1 : 0); }
-    if (rate_limit !== undefined) { updates.push('rate_limit = ?'); values.push(rate_limit); }
+    if (rate_limit !== undefined) { updates.push('rate_limit = ?'); values.push(Math.min(Math.max(Math.floor(rate_limit), 1), 10000)); }
     if (permissions !== undefined) { updates.push('permissions = ?'); values.push(JSON.stringify(permissions)); }
 
     if (updates.length > 0) {

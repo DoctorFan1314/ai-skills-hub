@@ -36,10 +36,19 @@ export function checkRateLimit(keyId: number, limit: number): RateLimitResult {
     rateLimitStore.set(key, entry);
   }
 
+  if (entry.count >= limit) {
+    return {
+      allowed: false,
+      remaining: 0,
+      limit,
+      resetAt: entry.resetAt,
+    };
+  }
+
   entry.count++;
 
   return {
-    allowed: entry.count <= limit,
+    allowed: true,
     remaining: Math.max(0, limit - entry.count),
     limit,
     resetAt: entry.resetAt,
@@ -57,10 +66,19 @@ export function checkIpRateLimit(ip: string, limit: number, windowMs: number = 6
     rateLimitStore.set(key, entry);
   }
 
+  if (entry.count >= limit) {
+    return {
+      allowed: false,
+      remaining: 0,
+      limit,
+      resetAt: entry.resetAt,
+    };
+  }
+
   entry.count++;
 
   return {
-    allowed: entry.count <= limit,
+    allowed: true,
     remaining: Math.max(0, limit - entry.count),
     limit,
     resetAt: entry.resetAt,

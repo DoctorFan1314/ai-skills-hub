@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Redeem error:', error);
-    return NextResponse.json({ error: String(error).replace('Error: ', '') }, { status: 400 });
+    const message = error instanceof Error && error.message.startsWith('Code ') ? error.message : 'Redemption failed';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
