@@ -23,7 +23,7 @@ interface Plan {
 interface PlanModel { id: number; plan_id: number; model_name: string; enabled: number; }
 
 export default function AdminPlansPage() {
-  return <AuthGuard><AdminPlansContent /></AuthGuard>;
+  return <AdminPlansContent />;
 }
 
 function AdminPlansContent() {
