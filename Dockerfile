@@ -31,8 +31,6 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/src/lib/schema.sql ./src/lib/schema.sql
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh
 
 # Create data directory for SQLite
 RUN mkdir -p data && chown -R nextjs:nodejs data
@@ -43,4 +41,25 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["./docker-entrypoint.sh"]
+CMD ["sh", "-c", "\
+  if [ -z \"$JWT_SECRET\" ]; then \
+    if [ -f data/.jwt_secret ]; then \
+      export JWT_SECRET=$(cat data/.jwt_secret); \
+    else \
+      JWT_SECRET=$(head -c 32 /dev/urandom | base64 | tr -d '/+=' | head -c 32); \
+      export JWT_SECRET; \
+      echo \"$JWT_SECRET\" > data/.jwt_secret; \
+    fi; \
+    echo 'JWT_SECRET auto-generated'; \
+  fi; \
+  if [ -z \"$ENCRYPTION_KEY\" ]; then \
+    if [ -f data/.encryption_key ]; then \
+      export ENCRYPTION_KEY=$(cat data/.encryption_key); \
+    else \
+      ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64 | tr -d '/+=' | head -c 32); \
+      export ENCRYPTION_KEY; \
+      echo \"$ENCRYPTION_KEY\" > data/.encryption_key; \
+    fi; \
+    echo 'ENCRYPTION_KEY auto-generated'; \
+  fi; \
+  exec node server.js"]
