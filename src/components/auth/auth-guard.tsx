@@ -21,7 +21,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [loaded, user, router]);
 
-  if (!loaded) {
+  if (!loaded || !user) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-20">
         <div className="animate-pulse space-y-6">
@@ -32,8 +32,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  if (!user) return null;
 
   return (
     <ErrorBoundary fallback={

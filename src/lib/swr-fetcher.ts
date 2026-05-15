@@ -11,6 +11,7 @@ export const dashboardSWRConfig = {
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   dedupingInterval: 5_000,
+  keepPreviousData: true,
 };
 
 /** SWR config for less critical data (60s polling) */

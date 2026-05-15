@@ -37,14 +37,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return "dark";
   });
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMountRef = useRef(true);
 
-  // Sync resolvedTheme when theme changes (not on mount - already initialized)
+  // Apply theme when it changes
+  // On mount, isInitial=true so no transition animation plays
   useEffect(() => {
     const resolved = resolveTheme(theme);
     setResolvedTheme(resolved);
-    // Only apply if different from what theme-init script already set
     if (typeof window !== "undefined") {
-      applyTheme(resolved, false, transitionTimeoutRef);
+      const isInitial = isInitialMountRef.current;
+      isInitialMountRef.current = false;
+      applyTheme(resolved, isInitial, transitionTimeoutRef);
     }
   }, [theme]);
 
@@ -64,9 +67,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem(STORAGE_KEYS.theme, newTheme);
-    const resolved = resolveTheme(newTheme);
-    setResolvedTheme(resolved);
-    applyTheme(resolved, false, transitionTimeoutRef);
+    // resolvedTheme and DOM updates are handled by the useEffect above
   }, []);
 
   const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme, setTheme]);

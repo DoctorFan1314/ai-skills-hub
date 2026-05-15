@@ -28,19 +28,6 @@ export function UsageChart({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const data = stats?.daily_usage || [];
   const t = LABELS[lang];
 
-  if (data.length === 0) {
-    return (
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="text-lg">{t.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">{t.noData}</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   if (!stats) {
     return (
       <div className="grid md:grid-cols-2 gap-4">
@@ -55,6 +42,19 @@ export function UsageChart({ lang = "zh" }: { lang?: "zh" | "en" }) {
           </Card>
         ))}
       </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-lg">{t.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">{t.noData}</div>
+        </CardContent>
+      </Card>
     );
   }
 

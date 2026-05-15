@@ -84,7 +84,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/60 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/60 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/30">
@@ -156,7 +156,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             {!loaded ? (
-              <div className="h-8 w-8 rounded-full bg-secondary animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-secondary/50" />
             ) : user ? (
               <div className="relative" ref={userMenuRef}>
                 <button

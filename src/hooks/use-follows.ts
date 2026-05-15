@@ -10,14 +10,12 @@ export function useFollows() {
   followingRef.current = following;
   const userRef = useRef(user);
   userRef.current = user;
-  const skipPersistRef = useRef(true);
+  const loadedEmailRef = useRef<string | null>(null);
 
   useEffect(() => {
-    skipPersistRef.current = true;
     if (!user) {
+      loadedEmailRef.current = null;
       setFollowing([]);
-      // Delay resetting skipPersistRef so the persist effect sees it
-      requestAnimationFrame(() => { skipPersistRef.current = false; });
       return;
     }
     try {
@@ -25,14 +23,14 @@ export function useFollows() {
       if (raw) setFollowing(JSON.parse(raw));
       else setFollowing([]);
     } catch { setFollowing([]); }
-    requestAnimationFrame(() => { skipPersistRef.current = false; });
-  }, [user]);
+    loadedEmailRef.current = user.email;
+  }, [user?.email]);
 
   // Persist follows to localStorage whenever they change
+  // Only persist when loaded email matches current user
   useEffect(() => {
-    if (skipPersistRef.current) return;
     const u = userRef.current;
-    if (!u) return;
+    if (!u || loadedEmailRef.current !== u.email) return;
     try {
       localStorage.setItem(STORAGE_KEYS.follows(u.email), JSON.stringify(following));
     } catch { /* ignore */ }
@@ -44,19 +42,16 @@ export function useFollows() {
     const followKey = STORAGE_KEYS.follows(user.email);
     const handler = (e: StorageEvent) => {
       if (e.key === followKey) {
-        skipPersistRef.current = true;
         try {
           setFollowing(e.newValue !== null ? JSON.parse(e.newValue) : []);
         } catch {
           setFollowing([]);
         }
-        // Allow persist to resume after this sync update flushes
-        setTimeout(() => { skipPersistRef.current = false; }, 0);
       }
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [user]);
+  }, [user?.email]);
 
   const isFollowing = useCallback((author: string) => followingRef.current.includes(author), []);
 

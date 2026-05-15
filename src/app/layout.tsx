@@ -67,14 +67,12 @@ export default function RootLayout({
       lang="zh-CN" /* Default; the lang-init script updates this at runtime based on user preference */
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased dark`}
+      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <head>
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
+        <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('oortapi-theme')||'dark';var d=t==='system'?matchMedia('(prefers-color-scheme:dark)').matches:t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('oortapi-theme')||'dark';var d=t==='system'?matchMedia('(prefers-color-scheme:dark)').matches:t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){document.documentElement.classList.add('dark');}})()`,
           }}
         />
         <Script

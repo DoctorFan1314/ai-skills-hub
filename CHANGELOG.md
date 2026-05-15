@@ -6,6 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.4.4] — 2026-05-15
+
+### Fixes — Site-wide Flickering & UX Overhaul (16 items)
+- **Theme FOUC** — Removed hardcoded `dark` class from `<html>`, using synchronous inline script to prevent light-mode flash
+- **Double applyTheme** — Fixed theme toggle causing two DOM mutations + overlapping transitions
+- **Initial mount transition** — Fixed ThemeProvider playing transition animation on first load
+- **UsageChart loading logic** — Fixed "No data" shown before skeleton during load (check order inverted)
+- **AuthGuard blank flash** — Fixed skeleton → null → redirect triple-state jump for unauthenticated users
+- **use-collections race condition** — Fixed skipPersistRef race causing localStorage cross-contamination on user switch
+- **use-follows race condition** — Same fix as above
+- **Hooks depending on user object ref** — Fixed use-notifications/use-collections/use-follows depending on full user object causing cascading re-renders
+- **Navbar skeleton** — Removed animate-pulse from skeleton, using static placeholder to reduce visual noise
+- **Dashboard SWR staggered refresh** — Added `keepPreviousData: true` to prevent skeleton flash on tab switch
+- **Pagination skeleton flash** — Usage/Billing pages now keep stale data while revalidating, no more full-table skeleton
+- **glass-card skeleton** — Skeletons no longer use backdrop-filter, reducing GPU compositor thrashing
+- **Navbar backdrop-blur** — Reduced blur-xl to blur-md, lowering GPU cost on scroll
+- **ScrollToTop throttle** — Added rAF throttle + hysteresis threshold (400/300px) to prevent button flickering near threshold
+- **Search blur timeout** — Stored blur timeout in ref, clear on focus to prevent dropdown flicker
+- **reduced-motion** — Added global catch-all to cover all inline animations (`animate-[fadeIn_...]`)
+
+### Fixes — Business Logic
+- **Total tokens double-counting** — Fixed total tokens including cache_hit twice (tokens_in already contains tokens_in_cache)
+- **Credit rate calculation** — Fixed credits breakdown total not multiplied by credit_rate; always recalculates with current rate
+- **System default currency not applied** — CurrencyProvider now reads system default currency from server
+- **Settings page currency sync** — Admin currency changes now sync to localStorage immediately, other pages pick up in real-time
+
+---
+
 ## [v3.3.4.3] — 2026-05-15
 
 ### New Features

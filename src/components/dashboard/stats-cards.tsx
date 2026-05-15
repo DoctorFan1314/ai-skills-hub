@@ -67,7 +67,7 @@ export function StatsCards({ lang = "zh" }: { lang?: "zh" | "en" }) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="glass-card animate-pulse">
+          <Card key={i} className="bg-muted/30 animate-pulse">
             <CardContent className="p-4">
               <div className="h-3 bg-muted rounded w-16 mb-2" />
               <div className="h-7 bg-muted rounded w-20" />

@@ -6,6 +6,34 @@
 
 ---
 
+## [v3.3.4.4] — 2026-05-15
+
+### 修复 — 全站闪烁与体验优化（16 项）
+- **主题 FOUC** — 移除 `<html>` 硬编码 `dark` 类，改用同步内联脚本避免亮色模式闪烁
+- **双重 applyTheme** — 修复主题切换时两次 DOM 突变 + transition 重叠导致的过渡闪烁
+- **首次 mount transition** — 修复 ThemeProvider 初始化时错误播放 transition 动画
+- **UsageChart 加载逻辑** — 修复加载时先显示 "No data" 再显示图表（检查顺序倒置）
+- **AuthGuard 空白闪烁** — 修复未认证时 skeleton → null → redirect 三态跳转
+- **use-collections 竞态** — 修复 skipPersistRef 竞态条件导致切换用户时 localStorage 数据交叉污染
+- **use-follows 竞态** — 同上
+- **hooks 依赖 user 引用** — 修复 use-notifications/use-collections/use-follows 依赖整个 user 对象引用导致级联 re-render
+- **Navbar 骨架屏** — 骨架屏去掉 animate-pulse，用静态占位符减少视觉干扰
+- **Dashboard SWR 交错刷新** — 添加 `keepPreviousData: true` 避免切换标签页时 skeleton 闪烁
+- **翻页骨架屏** — Usage/Billing 翨页时保留旧数据，不再整表消失显示骨架屏
+- **glass-card 骨架屏** — 骨架屏不用 backdrop-filter，减少 GPU 合成抖动
+- **Navbar backdrop-blur** — 降低 blur-xl 为 blur-md，减少滚动时 GPU 开销
+- **ScrollToTop 节流** — 添加 rAF 节流 + 迟滞阈值（400/300px），防止按钮在阈值附近闪烁
+- **Search blur timeout** — 用 ref 追踪 blur timeout，focus 时清除旧 timeout，防止下拉闪烁
+- **reduced-motion** — 添加全局 catch-all 覆盖所有内联动画（包括 `animate-[fadeIn_...]`）
+
+### 修复 — 业务逻辑
+- **总 tokens 统计错误** — 修复总 tokens 重复计算缓存命中（tokens_in 已含 tokens_in_cache）
+- **Credit 倍率计算** — 修复额度明细总计未乘 credit_rate，始终用当前倍率重新计算
+- **系统默认货币不生效** — CurrencyProvider 现在从服务器读取系统默认货币设置
+- **设置页面货币同步** — 管理员修改默认货币后立即同步到 localStorage，其他页面实时生效
+
+---
+
 ## [v3.3.4.3] — 2026-05-15
 
 ### 新功能

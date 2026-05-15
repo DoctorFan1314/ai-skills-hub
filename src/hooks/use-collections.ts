@@ -18,14 +18,13 @@ export function useCollections() {
   const { user } = useAuth();
   const [collections, setCollections] = useState<UserCollection[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const skipPersistRef = useRef(true);
+  const loadedEmailRef = useRef<string | null>(null);
 
   useEffect(() => {
-    skipPersistRef.current = true;
     if (!user) {
+      loadedEmailRef.current = null;
       setCollections([]);
       setLoaded(true);
-      skipPersistRef.current = false;
       return;
     }
     try {
@@ -37,18 +36,18 @@ export function useCollections() {
         }
       }
     } catch { /* ignore */ }
+    loadedEmailRef.current = user.email;
     setLoaded(true);
-    // After initial load, allow persistence
-    skipPersistRef.current = false;
-  }, [user]);
+  }, [user?.email]);
 
   // Persist collections to localStorage whenever they change
+  // Only persist when the loaded email matches current user (prevents stale data cross-contamination)
   useEffect(() => {
-    if (skipPersistRef.current || !user) return;
+    if (!user || loadedEmailRef.current !== user.email) return;
     try {
       localStorage.setItem(STORAGE_KEYS.collections(user.email), JSON.stringify(collections));
     } catch { /* ignore */ }
-  }, [collections, user]);
+  }, [collections, user?.email]);
 
   const createCollection = useCallback((name: string, description: string, isPublic: boolean = true, options?: { coverImage?: string; color?: string }) => {
     if (!user) return null;

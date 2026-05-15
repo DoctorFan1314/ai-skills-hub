@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
       // Usage stats
       const stats = db.prepare(
-        `SELECT COUNT(*) as total_calls, SUM(tokens_in + tokens_out + tokens_in_cache + tokens_cache_creation) as total_tokens, SUM(cost) as total_cost, SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as success_calls
+        `SELECT COUNT(*) as total_calls, SUM(tokens_in + tokens_out) as total_tokens, SUM(cost) as total_cost, SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as success_calls
          FROM usage_logs WHERE user_id = ?`
       ).get(userId) as { total_calls: number; total_tokens: number; total_cost: number; success_calls: number };
 

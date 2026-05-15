@@ -196,7 +196,7 @@ export default function UsagePage() {
         const logsData = d.data || [];
         setLogs(logsData);
         setTotal(d.total || 0);
-        const totalTokens = logsData.reduce((s: number, l: UsageLog) => s + l.tokens_in + l.tokens_out + l.tokens_in_cache + l.tokens_cache_creation, 0);
+        const totalTokens = logsData.reduce((s: number, l: UsageLog) => s + l.tokens_in + l.tokens_out, 0);
         const totalCost = logsData.reduce((s: number, l: UsageLog) => s + l.cost, 0);
         setSummary({ total_calls: logsData.length, total_tokens: totalTokens, total_cost: totalCost });
         setLoading(false);
@@ -234,7 +234,7 @@ export default function UsagePage() {
 
     if (isCredits) {
       // Subscription user — show credits breakdown
-      const creditsUsed = log.credits_used || Math.ceil(totalTokens * creditRate);
+      const creditsUsed = Math.ceil(totalTokens * creditRate);
       return (
         <div className="text-xs space-y-3 font-mono">
           <p className="font-semibold text-sm">{lang === "zh" ? "额度明细" : "Credits Breakdown"}</p>
@@ -427,7 +427,7 @@ export default function UsagePage() {
           <CardTitle className="text-lg">{t.title}</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading && logs.length === 0 ? (
             <div className="h-48 animate-pulse bg-muted rounded-lg" />
           ) : logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">{t.noLogs}</div>
@@ -462,7 +462,7 @@ export default function UsagePage() {
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_out.toLocaleString()}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_in_cache > 0 ? log.tokens_in_cache.toLocaleString() : "0"}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_cache_creation > 0 ? log.tokens_cache_creation.toLocaleString() : "0"}</td>
-                      <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out + log.tokens_in_cache + log.tokens_cache_creation).toLocaleString()}</td>
+                      <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out).toLocaleString()}</td>
                       <td className="py-2 px-3 text-center">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-mono">
                           {(log.multiplier ?? 1.0).toFixed(2)}x

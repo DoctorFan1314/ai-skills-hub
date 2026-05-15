@@ -50,7 +50,11 @@ export default function SettingsPage() {
         credentials: "include",
         body: JSON.stringify({ timezone, currency: systemCurrency, exchange_rate: exchangeRate }),
       });
-      if (res.ok) showToast(t.saved, "success");
+      if (res.ok) {
+        showToast(t.saved, "success");
+        // Update localStorage so CurrencyProvider picks up the change immediately
+        try { localStorage.setItem("oortapi-currency", systemCurrency); } catch { /* ignore */ }
+      }
     } catch { /* ignore */ }
     setSystemSaving(false);
   };

@@ -30,7 +30,7 @@ const LABELS = {
 
 export function BillingHistory({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useSWR<{ records: BillingRecord[]; total: number; has_more: boolean }>(
+  const { data, isValidating } = useSWR<{ records: BillingRecord[]; total: number; has_more: boolean }>(
     `/api/dashboard/billing?limit=20&offset=${(page - 1) * 20}`,
     dashboardSWRConfig,
   );
@@ -39,7 +39,7 @@ export function BillingHistory({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const { formatPrice } = useCurrency();
   const t = LABELS[lang];
 
-  if (isLoading) return <div className="h-48 animate-pulse bg-muted rounded-lg" />;
+  if (!data && isValidating) return <div className="h-48 animate-pulse bg-muted rounded-lg" />;
 
   return (
     <Card className="glass-card">

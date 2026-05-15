@@ -62,7 +62,7 @@ export function useNotifications() {
         setNotifications(parsed);
       }
     } catch { /* ignore */ }
-  }, [user]);
+  }, [user?.email]);
 
   // Load preferences from localStorage (user-scoped) — only on user change
   useEffect(() => {

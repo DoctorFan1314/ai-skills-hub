@@ -107,6 +107,7 @@ export default function SearchClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const urlDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Load models on mount
   useEffect(() => {
@@ -330,8 +331,8 @@ export default function SearchClient() {
             type="text"
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => { setTimeout(() => setInputFocused(false), 200); }}
+            onFocus={() => { clearTimeout(blurTimeoutRef.current); setInputFocused(true); }}
+            onBlur={() => { blurTimeoutRef.current = setTimeout(() => setInputFocused(false), 200); }}
             onKeyDown={handleKeyDown}
             placeholder={t.search.placeholder}
             aria-label={t.search.placeholder}
