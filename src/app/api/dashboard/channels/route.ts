@@ -128,6 +128,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Handle fetch-models action: fetch available models from upstream
+    if (body.action === 'fetch-models') {
+      let baseUrl: string;
+      let apiKey: string;
+
+      if (body.id) {
+        const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(body.id) as DBChannel | undefined;
+        if (!channel) return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+        baseUrl = channel.base_url || 'https://api.openai.com';
+        apiKey = decrypt(channel.api_key_encrypted);
+      } else if (body.base_url && body.api_key) {
+        baseUrl = body.base_url;
+        apiKey = body.api_key;
+      } else {
+        return NextResponse.json({ error: 'id or base_url + api_key is required' }, { status: 400 });
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(`${baseUrl.replace(/\/$/, '')}/v1/models`, {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          return NextResponse.json({ error: `HTTP ${res.status}: ${text.slice(0, 200)}` }, { status: 502 });
+        }
+
+        const json = await res.json() as { data?: { id: string }[] };
+        const models = (json.data || []).map(m => m.id).filter(Boolean).sort();
+        return NextResponse.json({ models });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        return NextResponse.json({ error: msg }, { status: 502 });
+      }
+    }
+
     // Handle sync-models action: sync channel models to model_rates table
     if (body.action === 'sync-models') {
       const { id } = body;

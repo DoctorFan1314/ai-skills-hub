@@ -95,6 +95,13 @@ const LABELS = {
     syncing: "同步中...",
     syncSuccess: "同步成功",
     syncNoModels: "渠道未配置模型，请先编辑添加模型",
+    fetchModels: "获取模型",
+    fetching: "获取中...",
+    fetchModelsTitle: "选择模型",
+    fetchModelsEmpty: "未获取到模型",
+    fetchModelsError: "获取失败",
+    selectAll: "全选",
+    selectedCount: "已选 {count} 个",
     channelModels: "渠道模型",
     successRate: "成功率",
     avgLatency: "平均延迟",
@@ -139,6 +146,13 @@ const LABELS = {
     syncing: "Syncing...",
     syncSuccess: "Synced successfully",
     syncNoModels: "Channel has no models configured. Please edit and add models first.",
+    fetchModels: "Fetch Models",
+    fetching: "Fetching...",
+    fetchModelsTitle: "Select Models",
+    fetchModelsEmpty: "No models fetched",
+    fetchModelsError: "Failed to fetch",
+    selectAll: "Select All",
+    selectedCount: "{count} selected",
     channelModels: "Channel models",
     successRate: "Success",
     avgLatency: "Avg Latency",
@@ -244,12 +258,78 @@ function ChannelFormFields({
   setForm,
   t,
   lang,
+  channelId,
+  showToast,
 }: {
   form: ChannelForm;
   setForm: React.Dispatch<React.SetStateAction<ChannelForm>>;
   t: (typeof LABELS)["zh"];
   lang: "zh" | "en";
+  channelId?: number | null;
+  showToast?: (msg: string, type?: "success" | "error") => void;
 }) {
+  const [fetching, setFetching] = useState(false);
+  const [showFetchDialog, setShowFetchDialog] = useState(false);
+  const [fetchedModels, setFetchedModels] = useState<string[]>([]);
+  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+
+  const handleFetchModels = async () => {
+    setFetching(true);
+    try {
+      const body: Record<string, unknown> = { action: "fetch-models" };
+      if (channelId) {
+        body.id = channelId;
+      } else {
+        body.base_url = form.base_url;
+        body.api_key = form.api_key_encrypted;
+      }
+      const res = await fetch("/api/dashboard/channels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      const existing = new Set(
+        form.models.split(",").map((m) => m.trim()).filter(Boolean)
+      );
+      setFetchedModels(data.models || []);
+      setSelectedModels(existing);
+      setShowFetchDialog(true);
+    } catch (err) {
+      showToast?.(
+        err instanceof Error ? err.message : t.fetchModelsError,
+        "error"
+      );
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleConfirmModels = () => {
+    setForm((f) => ({ ...f, models: Array.from(selectedModels).join(", ") }));
+    setShowFetchDialog(false);
+  };
+
+  const toggleModel = (model: string) => {
+    setSelectedModels((prev) => {
+      const next = new Set(prev);
+      if (next.has(model)) next.delete(model);
+      else next.add(model);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedModels.size === fetchedModels.length) {
+      setSelectedModels(new Set());
+    } else {
+      setSelectedModels(new Set(fetchedModels));
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
@@ -328,18 +408,96 @@ function ChannelFormFields({
           {lang === "zh" ? "逗号分隔，留空支持全部" : "comma separated, empty = all"}
           )
         </label>
-        <Input
-          value={form.models}
-          onChange={(e) => setForm((f) => ({ ...f, models: e.target.value }))}
-          placeholder="gpt-4o, claude-3-5-sonnet"
-          className="h-9 mt-1"
-        />
+        <div className="flex gap-2 mt-1">
+          <Input
+            value={form.models}
+            onChange={(e) => setForm((f) => ({ ...f, models: e.target.value }))}
+            placeholder="gpt-4o, claude-3-5-sonnet"
+            className="h-9 flex-1"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0"
+            disabled={fetching || !form.base_url || !form.api_key_encrypted}
+            onClick={handleFetchModels}
+            type="button"
+          >
+            {fetching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span className="ml-1 hidden sm:inline">
+              {fetching ? t.fetching : t.fetchModels}
+            </span>
+          </Button>
+        </div>
       </div>
       <MappingEditor
         mapping={form.model_mapping}
         onChange={(m) => setForm((f) => ({ ...f, model_mapping: m }))}
         t={t}
       />
+
+      {/* Fetch Models Dialog */}
+      <Dialog open={showFetchDialog} onOpenChange={setShowFetchDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.fetchModelsTitle}</DialogTitle>
+          </DialogHeader>
+          {fetchedModels.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">
+              {t.fetchModelsEmpty}
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center justify-between py-2 border-b">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedModels.size === fetchedModels.length}
+                    onChange={toggleAll}
+                    className="rounded"
+                  />
+                  {t.selectAll}
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  {t.selectedCount.replace("{count}", String(selectedModels.size))}
+                </span>
+              </div>
+              <div className="max-h-80 overflow-y-auto space-y-1 py-2">
+                {fetchedModels.map((model) => (
+                  <label
+                    key={model}
+                    className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-accent cursor-pointer text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedModels.has(model)}
+                      onChange={() => toggleModel(model)}
+                      className="rounded"
+                    />
+                    {model}
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowFetchDialog(false)}
+              type="button"
+            >
+              {t.cancel}
+            </Button>
+            <Button onClick={handleConfirmModels} type="button">
+              {t.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -589,6 +747,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                 setForm={setForm}
                 t={t}
                 lang={lang}
+                showToast={showToast}
               />
               <div className="flex gap-2 mt-4">
                 <Button size="sm" onClick={createChannel}>
@@ -620,6 +779,8 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                         setForm={setEditForm}
                         t={t}
                         lang={lang}
+                        channelId={editingId}
+                        showToast={showToast}
                       />
                       <div className="flex gap-2 mt-4">
                         <Button size="sm" onClick={saveEdit}>

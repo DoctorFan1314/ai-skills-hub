@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.4.5] — 2026-05-15
+
+### New Features
+- **Fetch models from upstream** — Channel management now has a "Fetch Models" button that calls the upstream `/v1/models` endpoint, displays available models in a dialog with checkboxes, and lets you select which models to add. Works in both create and edit mode.
+
+---
+
 ## [v3.3.4.4] — 2026-05-15
 
 ### Fixes — Site-wide Flickering & UX Overhaul (16 items)

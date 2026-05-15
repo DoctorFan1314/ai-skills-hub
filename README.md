@@ -275,6 +275,7 @@ Admins can configure upstream AI provider channels:
 - **Priority system** — Higher priority channels are preferred
 - **Connection testing** — Verify upstream connectivity with latency measurement
 - **Model sync** — Copy channel models to the model marketplace with one click
+- **Fetch models** — Fetch available models from upstream `/v1/models` and select which to add via dialog
 - **Rate limit detection** — Upstream 429 responses are detected and marked as `rate_limited`
 - **Health monitoring** — 24h success rate, average latency, and call count per channel
 - **Encrypted API keys** — AES-256-GCM encryption at rest for all channel API keys
