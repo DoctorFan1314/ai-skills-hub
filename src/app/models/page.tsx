@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrency } from "@/contexts/currency-context";
-import { Pencil, Save, X, RefreshCw, Search, Cpu, Check, Zap, ArrowUpDown } from "lucide-react";
+import { Pencil, Save, X, RefreshCw, Search, Cpu, Check, Zap, ArrowUpDown, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 interface ChannelModel {
   model_name: string;
@@ -22,6 +23,7 @@ interface ChannelModel {
   credit_rate: number;
   rate_id: number | null;
   display_name: string | null;
+  tags: string[];
 }
 
 type Currency = "USD" | "CNY";
@@ -115,6 +117,7 @@ export default function ModelsPage() {
   const [editForm, setEditForm] = useState({ input_rate: 0, output_rate: 0, cache_rate: 0, cache_creation_rate: 0, credit_rate: 1.0, display_name: "" });
   const [search, setSearch] = useState("");
   const [providerFilter, setProviderFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [syncing, setSyncing] = useState(false);
 
@@ -191,7 +194,8 @@ export default function ModelsPage() {
         m.provider.toLowerCase().includes(q) ||
         m.channel_name.toLowerCase().includes(q);
       const matchesProvider = providerFilter === "all" || m.provider === providerFilter;
-      return matchesSearch && matchesProvider;
+      const matchesTag = tagFilter === "all" || (m.tags && m.tags.includes(tagFilter));
+      return matchesSearch && matchesProvider && matchesTag;
     });
 
     // Apply sorting
@@ -205,9 +209,16 @@ export default function ModelsPage() {
       case "output_desc": sorted.sort((a, b) => b.output_rate - a.output_rate); break;
     }
     return sorted;
-  }, [models, search, providerFilter, sortBy]);
+  }, [models, search, providerFilter, tagFilter, sortBy]);
 
   const providers = useMemo(() => [...new Set(models.map(m => m.provider))].sort(), [models]);
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    for (const m of models) {
+      if (m.tags) m.tags.forEach((t: string) => tagSet.add(t));
+    }
+    return [...tagSet].sort();
+  }, [models]);
 
   const fmtPrice = (rate: number) => {
     if (rate <= 0) return "-";
@@ -304,6 +315,34 @@ export default function ModelsPage() {
                 );
               })}
             </div>
+            {/* Tag filter */}
+            {allTags.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                <button
+                  onClick={() => setTagFilter("all")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                    tagFilter === "all"
+                      ? "bg-primary/10 text-primary border-primary/30"
+                      : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-foreground/20"
+                  }`}
+                >
+                  {t.all}
+                </button>
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setTagFilter(tag)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                      tagFilter === tag
+                        ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                        : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-foreground/20"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Sort dropdown */}
             <div className="relative">
               <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -421,11 +460,18 @@ export default function ModelsPage() {
                     ) : (
                       /* View mode */
                       <>
-                        {/* Top bar: provider + status */}
+                        {/* Top bar: provider + status + tags */}
                         <div className="px-5 pt-4 pb-3 flex items-center justify-between">
-                          <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-semibold border ${c.bg} ${c.text} ${c.border}`}>
-                            {m.provider}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-semibold border ${c.bg} ${c.text} ${c.border}`}>
+                              {m.provider}
+                            </span>
+                            {m.tags && m.tags.length > 0 && m.tags.map((tag: string) => (
+                              <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                           <span className={`flex items-center gap-1 text-[10px] font-medium ${m.enabled ? "text-emerald-400" : "text-red-400"}`}>
                             {m.enabled ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                             {m.enabled ? t.available : t.unavailable}
@@ -469,15 +515,20 @@ export default function ModelsPage() {
                             <Zap className="h-3 w-3" />
                             {m.channel_name}
                           </div>
-                          {isAdmin && (
-                            <button
-                              onClick={() => startEdit(m)}
-                              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary transition-all"
-                              title={t.edit}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <Link href={`/models/${encodeURIComponent(m.model_name)}`} className="text-muted-foreground hover:text-primary transition-colors" title={lang === "zh" ? "查看详情" : "View details"}>
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </Link>
+                            {isAdmin && (
+                              <button
+                                onClick={() => startEdit(m)}
+                                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary transition-all"
+                                title={t.edit}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </>
                     )}

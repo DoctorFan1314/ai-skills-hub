@@ -15,6 +15,45 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+
+    // User detail endpoint
+    if (action === 'detail') {
+      const userId = parseInt(searchParams.get('id') || '0', 10);
+      if (!userId) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+      const user = db.prepare('SELECT id, email, username, balance, role, enabled, avatar, created_at, updated_at FROM users WHERE id = ?').get(userId) as Omit<DBUser, 'password_hash' | 'salt' | 'bio' | 'preferences'> | undefined;
+      if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+      // Usage stats
+      const stats = db.prepare(
+        `SELECT COUNT(*) as total_calls, SUM(tokens_in + tokens_out + tokens_in_cache + tokens_cache_creation) as total_tokens, SUM(cost) as total_cost, SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as success_calls
+         FROM usage_logs WHERE user_id = ?`
+      ).get(userId) as { total_calls: number; total_tokens: number; total_cost: number; success_calls: number };
+
+      // Top models
+      const topModels = db.prepare(
+        `SELECT model, COUNT(*) as calls, SUM(tokens_in + tokens_out) as tokens FROM usage_logs WHERE user_id = ? GROUP BY model ORDER BY calls DESC LIMIT 5`
+      ).all(userId) as { model: string; calls: number; tokens: number }[];
+
+      // 7-day trend
+      const trend = db.prepare(
+        `SELECT date(created_at) as day, COUNT(*) as calls, SUM(cost) as cost FROM usage_logs WHERE user_id = ? AND created_at >= datetime('now', '-7 days') GROUP BY date(created_at) ORDER BY day`
+      ).all(userId) as { day: string; calls: number; cost: number }[];
+
+      // API keys
+      const keys = db.prepare(
+        'SELECT id, name, enabled, total_calls, last_used_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC'
+      ).all(userId) as { id: number; name: string; enabled: number; total_calls: number; last_used_at: string | null }[];
+
+      // Subscription
+      const subscription = db.prepare(
+        `SELECT us.*, sp.display_name as plan_display_name, sp.name as plan_name FROM user_subscriptions us JOIN subscription_plans sp ON us.plan_id = sp.id WHERE us.user_id = ? AND us.status = 'active' ORDER BY us.created_at DESC LIMIT 1`
+      ).get(userId) as Record<string, unknown> | undefined;
+
+      return NextResponse.json({ user, stats, topModels, trend, keys, subscription: subscription || null });
+    }
+
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const search = searchParams.get('search') || '';
@@ -72,7 +111,36 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, role, enabled, addBalance: addAmt, deductBalance: deductAmt, resetPassword, giftSubscription, cancelSubscription, addCredits } = body;
+    const { id, ids, role, enabled, addBalance: addAmt, deductBalance: deductAmt, resetPassword, giftSubscription, cancelSubscription, addCredits } = body;
+
+    // Batch operations
+    if (Array.isArray(ids) && ids.length > 0) {
+      const validIds = ids.filter((i: unknown) => Number.isInteger(i) && i !== auth.user!.id);
+      if (validIds.length === 0) return NextResponse.json({ error: 'No valid IDs' }, { status: 400 });
+      const placeholders = validIds.map(() => '?').join(',');
+
+      if (enabled !== undefined) {
+        db.prepare(`UPDATE users SET enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN (${placeholders})`).run(enabled ? 1 : 0, ...validIds);
+        logAdminAction(auth.user.id, 'batch_update_users', 'user', undefined, `${validIds.length} users, enabled=${enabled}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+        return NextResponse.json({ success: true, updated: validIds.length });
+      }
+
+      if (addAmt !== undefined) {
+        const amt = Number(addAmt);
+        if (typeof amt !== 'number' || isNaN(amt) || amt <= 0 || amt > 1_000_000) {
+          return NextResponse.json({ error: 'addBalance must be a positive number within limit' }, { status: 400 });
+        }
+        let success = 0;
+        for (const uid of validIds) {
+          const result = addBalance(uid, amt, 'gift', `Admin batch credited by ${auth.user.email}`);
+          if (result.success) success++;
+        }
+        logAdminAction(auth.user.id, 'batch_grant_balance', 'user', undefined, `${success}/${validIds.length} users, +$${amt}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+        return NextResponse.json({ success: true, updated: success, total: validIds.length });
+      }
+
+      return NextResponse.json({ error: 'Batch operation requires enabled or addBalance' }, { status: 400 });
+    }
 
     if (!id) {
       return NextResponse.json({ error: 'User id is required' }, { status: 400 });

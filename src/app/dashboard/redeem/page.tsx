@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/contexts/toast-context";
-import { Gift, Loader2, Plus, Trash2, Copy, Check } from "lucide-react";
+import { Gift, Loader2, Plus, Trash2, Copy, Check, Power, PowerOff } from "lucide-react";
 
 interface RedeemCode {
   id: number;
@@ -44,6 +44,8 @@ const LABELS = {
     copyAll: "复制全部", copied: "已复制!", batchResult: "批量生成结果",
     codeType: "兑换类型", balanceType: "余额充值", subType: "Token Plan 套餐",
     selectPlan: "选择套餐", duration: "时长（月）", credits: "Credits",
+    selected: "已选择", batchDelete: "批量删除", batchEnable: "批量启用", batchDisable: "批量禁用",
+    batchDeleteConfirm: "确定要删除选中的兑换码吗？此操作不可撤销。",
   },
   en: {
     title: "Redeem Codes", generate: "Generate Codes", amount: "Amount ($)", count: "Count", maxUses: "Max Uses",
@@ -55,6 +57,8 @@ const LABELS = {
     copyAll: "Copy All", copied: "Copied!", batchResult: "Batch Result",
     codeType: "Code Type", balanceType: "Balance Top-up", subType: "Token Plan Subscription",
     selectPlan: "Select Plan", duration: "Duration (months)", credits: "Credits",
+    selected: "Selected", batchDelete: "Batch Delete", batchEnable: "Batch Enable", batchDisable: "Batch Disable",
+    batchDeleteConfirm: "Delete all selected codes? This cannot be undone.",
   },
 };
 
@@ -84,6 +88,11 @@ export default function RedeemPage() {
   // Delete dialog
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Batch selection
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
 
   const fetchCodes = useCallback(async () => {
     setLoading(true);
@@ -183,6 +192,62 @@ export default function RedeemPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function toggleSelect(id: number) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === codes.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(codes.map(c => c.id)));
+    }
+  }
+
+  async function handleBatchAction(action: "enable" | "disable" | "delete") {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBatchLoading(true);
+    try {
+      if (action === "delete") {
+        const res = await fetch("/api/dashboard/redeem", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ids }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || "Batch delete failed", "error");
+        } else {
+          showToast(`${ids.length} codes deleted`, "success");
+        }
+      } else {
+        const res = await fetch("/api/dashboard/redeem", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ids, enabled: action === "enable" }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || "Batch update failed", "error");
+        } else {
+          showToast(`${ids.length} codes ${action === "enable" ? "enabled" : "disabled"}`, "success");
+        }
+      }
+    } catch { showToast("Network error", "error"); }
+    setSelectedIds(new Set());
+    setBatchLoading(false);
+    setBatchDeleteOpen(false);
+    fetchCodes();
+  }
+
   function getStatus(code: RedeemCode) {
     if (!code.enabled) return { label: t.inactive, cls: "bg-gray-500/10 text-gray-400 border-gray-500/20" };
     if (code.expires_at && new Date(code.expires_at) < new Date()) return { label: t.expired, cls: "bg-red-500/10 text-red-400 border-red-500/20" };
@@ -201,6 +266,22 @@ export default function RedeemPage() {
 
       <Card className="glass-card">
         <CardContent className="p-0">
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 bg-primary/5">
+              <span className="text-sm text-muted-foreground">{t.selected}: <strong className="text-foreground">{selectedIds.size}</strong></span>
+              <div className="flex gap-1.5 ml-auto">
+                <Button variant="outline" size="sm" onClick={() => handleBatchAction("enable")} disabled={batchLoading}>
+                  <Power className="h-3.5 w-3.5 mr-1" />{t.batchEnable}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleBatchAction("disable")} disabled={batchLoading}>
+                  <PowerOff className="h-3.5 w-3.5 mr-1" />{t.batchDisable}
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => setBatchDeleteOpen(true)} disabled={batchLoading}>
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />{t.batchDelete}
+                </Button>
+              </div>
+            </div>
+          )}
           {loading ? (
             <div className="h-48 animate-pulse bg-muted rounded-lg m-6" />
           ) : codes.length === 0 ? (
@@ -210,6 +291,9 @@ export default function RedeemPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
+                    <th className="text-left py-3 px-2 w-10">
+                      <input type="checkbox" checked={codes.length > 0 && selectedIds.size === codes.length} onChange={toggleSelectAll} className="rounded border-input" />
+                    </th>
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.code}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.codeType}</th>
                     <th className="text-right py-3 px-4 text-muted-foreground font-medium">{t.amount}</th>
@@ -224,6 +308,9 @@ export default function RedeemPage() {
                     const st = getStatus(c);
                     return (
                       <tr key={c.id} className="border-b border-border/20 hover:bg-muted/30">
+                        <td className="py-3 px-2">
+                          <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-input" />
+                        </td>
                         <td className="py-3 px-4 font-mono text-xs">{c.code}</td>
                         <td className="py-3 px-4 text-center">
                           {c.code_type === 'subscription' ? (
@@ -376,6 +463,22 @@ export default function RedeemPage() {
             <Button variant="outline" onClick={() => setDeleteId(null)}>{t.cancel}</Button>
             <Button onClick={handleDelete} disabled={deleteLoading} className="bg-red-600 text-white hover:bg-red-700">
               {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.delete}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Delete Dialog */}
+      <Dialog open={batchDeleteOpen} onOpenChange={(open) => { if (!open) setBatchDeleteOpen(false); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t.batchDelete}</DialogTitle>
+            <DialogDescription>{t.batchDeleteConfirm}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => setBatchDeleteOpen(false)}>{t.cancel}</Button>
+            <Button onClick={() => handleBatchAction("delete")} disabled={batchLoading} className="bg-red-600 text-white hover:bg-red-700">
+              {batchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.batchDelete}
             </Button>
           </div>
         </DialogContent>

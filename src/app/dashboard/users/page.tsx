@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useToast } from "@/contexts/toast-context";
 import { useCurrency } from "@/contexts/currency-context";
-import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound } from "lucide-react";
+import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound, Eye, Power, PowerOff, DollarSign } from "lucide-react";
 
 interface UserItem {
   id: number;
@@ -52,6 +53,8 @@ const LABELS = {
     balanceTopup: "用户充值", balanceDeduct: "用户扣费",
     resetPassword: "重置密码", resetPasswordConfirm: "确认重置密码",
     resetPasswordSuccess: "密码重置成功，请将新密码告知用户：", copyPassword: "复制密码", copied: "已复制",
+    selected: "已选择", batchEnable: "批量启用", batchDisable: "批量禁用", batchGrant: "批量发放余额",
+    grantAmount: "发放金额 ($)", grantConfirm: "确认为选中用户发放余额？",
   },
   en: {
     title: "User Management", search: "Search email or username", all: "All", admin: "Admin", user: "User",
@@ -64,6 +67,8 @@ const LABELS = {
     balanceTopup: "Top Up Balance", balanceDeduct: "Deduct Balance",
     resetPassword: "Reset Password", resetPasswordConfirm: "Confirm Password Reset",
     resetPasswordSuccess: "Password reset successfully. Please share this new password with the user:", copyPassword: "Copy", copied: "Copied",
+    selected: "Selected", batchEnable: "Batch Enable", batchDisable: "Batch Disable", batchGrant: "Batch Grant Balance",
+    grantAmount: "Grant Amount ($)", grantConfirm: "Grant balance to selected users?",
   },
 };
 
@@ -105,6 +110,12 @@ export default function UsersPage() {
   const [giftCredits, setGiftCredits] = useState("");
   const [subActionLoading, setSubActionLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ type: "cancel" | "gift" | "credits"; label: string } | null>(null);
+
+  // Batch selection
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchGrantOpen, setBatchGrantOpen] = useState(false);
+  const [batchGrantAmount, setBatchGrantAmount] = useState("");
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -294,6 +305,69 @@ export default function UsersPage() {
     fetchUsers();
   }
 
+  function toggleSelect(id: number) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === users.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(users.map(u => u.id)));
+    }
+  }
+
+  async function handleBatchAction(action: "enable" | "disable" | "grant") {
+    const ids = Array.from(selectedIds).filter(id => id !== currentUser?.id);
+    if (ids.length === 0) return;
+    setBatchLoading(true);
+    try {
+      if (action === "grant") {
+        const amt = parseFloat(batchGrantAmount);
+        if (!amt || amt <= 0) {
+          showToast(lang === "zh" ? "请输入有效金额" : "Enter a valid amount", "error");
+          setBatchLoading(false);
+          return;
+        }
+        const res = await fetch("/api/dashboard/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ids, addBalance: amt }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`${data.updated || ids.length} users granted $${amt}`, "success");
+        } else {
+          showToast(data.error || "Operation failed", "error");
+        }
+      } else {
+        const res = await fetch("/api/dashboard/users", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ids, enabled: action === "enable" }),
+        });
+        if (res.ok) {
+          showToast(`${ids.length} users ${action === "enable" ? "enabled" : "disabled"}`, "success");
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || "Operation failed", "error");
+        }
+      }
+    } catch { showToast("Network error", "error"); }
+    setSelectedIds(new Set());
+    setBatchLoading(false);
+    setBatchGrantOpen(false);
+    setBatchGrantAmount("");
+    fetchUsers();
+  }
+
   const roleFilters = [
     { key: "all" as const, label: t.all },
     { key: "admin" as const, label: t.admin },
@@ -335,6 +409,22 @@ export default function UsersPage() {
 
       <Card className="glass-card">
         <CardContent className="p-0">
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 bg-primary/5">
+              <span className="text-sm text-muted-foreground">{t.selected}: <strong className="text-foreground">{selectedIds.size}</strong></span>
+              <div className="flex gap-1.5 ml-auto">
+                <Button variant="outline" size="sm" onClick={() => handleBatchAction("enable")} disabled={batchLoading}>
+                  <Power className="h-3.5 w-3.5 mr-1" />{t.batchEnable}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleBatchAction("disable")} disabled={batchLoading}>
+                  <PowerOff className="h-3.5 w-3.5 mr-1" />{t.batchDisable}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setBatchGrantOpen(true)} disabled={batchLoading}>
+                  <DollarSign className="h-3.5 w-3.5 mr-1" />{t.batchGrant}
+                </Button>
+              </div>
+            </div>
+          )}
           {loading ? (
             <div className="h-48 animate-pulse bg-muted rounded-lg m-6" />
           ) : users.length === 0 ? (
@@ -344,6 +434,9 @@ export default function UsersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
+                    <th className="text-left py-3 px-2 w-10">
+                      <input type="checkbox" checked={users.length > 0 && selectedIds.size === users.filter(u => u.id !== currentUser?.id).length} onChange={toggleSelectAll} className="rounded border-input" />
+                    </th>
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.email}</th>
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.username}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.role}</th>
@@ -357,6 +450,11 @@ export default function UsersPage() {
                 <tbody>
                   {users.map((u) => (
                     <tr key={u.id} className="border-b border-border/20 hover:bg-muted/30">
+                      <td className="py-3 px-2">
+                        {u.id !== currentUser?.id && (
+                          <input type="checkbox" checked={selectedIds.has(u.id)} onChange={() => toggleSelect(u.id)} className="rounded border-input" />
+                        )}
+                      </td>
                       <td className="py-3 px-4 font-mono text-xs">{u.email}</td>
                       <td className="py-3 px-4">{u.username}</td>
                       <td className="py-3 px-4 text-center">
@@ -383,6 +481,9 @@ export default function UsersPage() {
                       <td className="py-3 px-4 text-right text-xs text-muted-foreground">{new Date(u.created_at + "Z").toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1">
+                          <Link href={`/dashboard/users/${u.id}`} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={lang === "zh" ? "查看详情" : "View details"} aria-label={lang === "zh" ? "查看详情" : "View details"}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
                           <button onClick={() => openEdit(u)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={t.edit} aria-label={t.edit}>
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -542,6 +643,28 @@ export default function UsersPage() {
             >
               {subActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.confirm}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Grant Balance Dialog */}
+      <Dialog open={batchGrantOpen} onOpenChange={(open) => { if (!open) { setBatchGrantOpen(false); setBatchGrantAmount(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t.batchGrant}</DialogTitle>
+            <DialogDescription>{t.grantConfirm}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-sm text-foreground mb-1.5 block">{t.grantAmount}</label>
+              <Input type="number" min="0.01" step="0.01" value={batchGrantAmount} onChange={e => setBatchGrantAmount(e.target.value)} className="bg-secondary border-border" />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setBatchGrantOpen(false); setBatchGrantAmount(""); }}>{t.cancel}</Button>
+              <Button onClick={() => handleBatchAction("grant")} disabled={batchLoading || !batchGrantAmount}>
+                {batchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.confirm}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

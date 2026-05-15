@@ -100,7 +100,18 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id, enabled } = await request.json();
+    const { id, ids, enabled } = await request.json();
+
+    // Batch toggle
+    if (Array.isArray(ids) && ids.length > 0) {
+      const validIds = ids.filter((i: unknown) => Number.isInteger(i));
+      if (validIds.length === 0) return NextResponse.json({ error: 'No valid IDs' }, { status: 400 });
+      const placeholders = validIds.map(() => '?').join(',');
+      db.prepare(`UPDATE redeem_codes SET enabled = ? WHERE id IN (${placeholders})`).run(enabled ? 1 : 0, ...validIds);
+      logAdminAction(auth.user.id, 'batch_toggle_redeem', 'redeem', undefined, `${validIds.length} codes, enabled=${enabled}`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+      return NextResponse.json({ success: true, updated: validIds.length });
+    }
+
     if (!id) return NextResponse.json({ error: 'Code id is required' }, { status: 400 });
 
     db.prepare('UPDATE redeem_codes SET enabled = ? WHERE id = ?').run(enabled ? 1 : 0, id);
@@ -118,7 +129,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id } = await request.json();
+    const { id, ids } = await request.json();
+
+    // Batch delete
+    if (Array.isArray(ids) && ids.length > 0) {
+      const validIds = ids.filter((i: unknown) => Number.isInteger(i));
+      if (validIds.length === 0) return NextResponse.json({ error: 'No valid IDs' }, { status: 400 });
+      const placeholders = validIds.map(() => '?').join(',');
+      db.prepare(`DELETE FROM redeem_codes WHERE id IN (${placeholders})`).run(...validIds);
+      logAdminAction(auth.user.id, 'batch_delete_redeem', 'redeem', undefined, `${validIds.length} codes`, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
+      return NextResponse.json({ success: true, deleted: validIds.length });
+    }
+
     if (!id) return NextResponse.json({ error: 'Code id is required' }, { status: 400 });
 
     db.prepare('DELETE FROM redeem_codes WHERE id = ?').run(id);

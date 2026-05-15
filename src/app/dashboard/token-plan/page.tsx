@@ -8,7 +8,7 @@ import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { SubscriptionCard } from "@/components/shared/subscription-card";
-import { Sparkles, XCircle, CheckCircle, AlertTriangle, Copy, CheckCheck, Key, Globe } from "lucide-react";
+import { Sparkles, XCircle, CheckCircle, AlertTriangle, Copy, CheckCheck, Key, Globe, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface Subscription {
@@ -67,14 +67,20 @@ function TokenPlanContent() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showKey, setShowKey] = useState<number | null>(null);
   const [cancelTarget, setCancelTarget] = useState<number | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [plans, setPlans] = useState<{ id: number; name: string; display_name: string; monthly_credits: number; monthly_price: number; tier: number }[]>([]);
+  const [upgradePlanId, setUpgradePlanId] = useState<number>(0);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/dashboard/subscription", { credentials: "include" }).then(r => r.json()),
       fetch("/api/dashboard/keys", { credentials: "include" }).then(r => r.json()),
-    ]).then(([subData, keyData]) => {
+      fetch("/api/plans").then(r => r.json()),
+    ]).then(([subData, keyData, planData]) => {
       setSubscriptions(subData.subscriptions || []);
       setApiKeys(keyData.keys || []);
+      setPlans(planData.plans || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -122,6 +128,31 @@ function TokenPlanContent() {
     setCopied(key); setTimeout(() => setCopied(null), 2000);
   }
 
+  async function handleChangePlan() {
+    if (!activeSub || !upgradePlanId || upgradePlanId === activeSub.plan_id) return;
+    setUpgradeLoading(true);
+    try {
+      const selectedPlan = plans.find(p => p.id === upgradePlanId);
+      const isUpgrade = (selectedPlan?.tier || 0) > (plans.find(p => p.id === activeSub.plan_id)?.tier || 0);
+      const res = await fetch("/api/dashboard/subscription", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ subscription_id: activeSub.id, action: isUpgrade ? "upgrade" : "downgrade", plan_id: upgradePlanId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Refresh subscriptions
+        const subRes = await fetch("/api/dashboard/subscription", { credentials: "include" });
+        const subData = await subRes.json();
+        setSubscriptions(subData.subscriptions || []);
+        setUpgradeOpen(false);
+      } else {
+        alert(data.error || "Plan change failed");
+      }
+    } catch {} finally { setUpgradeLoading(false); }
+  }
+
   function maskKey(key: string): string {
     if (key.length <= 12) return key;
     return key.slice(0, 9) + "****" + key.slice(-4);
@@ -146,6 +177,9 @@ function TokenPlanContent() {
       copy: "复制", copied: "已复制", show: "显示", hide: "隐藏",
       basicModels: "基础模型", advancedModels: "高级模型", flagshipModels: "旗舰模型", allModels: "全部模型",
       pastSubs: "历史订阅",
+      changePlan: "更换套餐", upgrade: "升级", downgrade: "降级",
+      selectNewPlan: "选择新套餐", changePlanConfirm: "确认更换套餐？剩余天数的额度将按比例折算到新套餐。",
+      proratedCredits: "折算额度", changing: "更换中...",
     },
     en: {
       title: "Plan Usage", noSub: "No Subscription", noSubDesc: "Browse plans and choose your Token Plan",
@@ -158,6 +192,9 @@ function TokenPlanContent() {
       copy: "Copy", copied: "Copied", show: "Show", hide: "Hide",
       basicModels: "Basic Models", advancedModels: "Advanced Models", flagshipModels: "Flagship Models", allModels: "All Models",
       pastSubs: "Past Subscriptions",
+      changePlan: "Change Plan", upgrade: "Upgrade", downgrade: "Downgrade",
+      selectNewPlan: "Select New Plan", changePlanConfirm: "Confirm plan change? Remaining credits will be prorated to the new plan.",
+      proratedCredits: "Prorated Credits", changing: "Changing...",
     },
   };
   const text = t[lang];
@@ -287,9 +324,14 @@ function TokenPlanContent() {
           {/* Actions */}
           <div className="flex items-center gap-3">
             {activeSub.status === "active" && (
-              <Button variant="outline" size="sm" className="text-red-400 hover:text-red-300" onClick={() => handleCancel(activeSub.id)} disabled={actionLoading === activeSub.id}>
-                <XCircle className="h-3.5 w-3.5 mr-1.5" />{text.cancel}
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => { setUpgradeOpen(true); setUpgradePlanId(0); }}>
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />{text.changePlan}
+                </Button>
+                <Button variant="outline" size="sm" className="text-red-400 hover:text-red-300" onClick={() => handleCancel(activeSub.id)} disabled={actionLoading === activeSub.id}>
+                  <XCircle className="h-3.5 w-3.5 mr-1.5" />{text.cancel}
+                </Button>
+              </>
             )}
             <Link href="/token-plan"><Button variant="outline" size="sm">{text.browsePlans}</Button></Link>
           </div>
@@ -324,6 +366,55 @@ function TokenPlanContent() {
           <div className="flex gap-2 justify-end pt-2">
             <Button variant="outline" onClick={() => setCancelTarget(null)}>{lang === "zh" ? "取消" : "Cancel"}</Button>
             <Button onClick={confirmCancel} disabled={actionLoading !== null} className="bg-red-600 text-white hover:bg-red-700">{lang === "zh" ? "确认取消" : "Confirm Cancel"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Plan Dialog */}
+      <Dialog open={upgradeOpen} onOpenChange={(open) => { if (!open) setUpgradeOpen(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{text.changePlan}</DialogTitle>
+            <DialogDescription>{text.changePlanConfirm}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm text-foreground mb-1.5 block">{text.selectNewPlan}</label>
+              <select
+                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:border-primary focus:outline-none"
+                value={upgradePlanId}
+                onChange={e => setUpgradePlanId(+e.target.value)}
+              >
+                <option value={0}>{text.selectNewPlan}</option>
+                {plans.filter(p => p.id !== activeSub?.plan_id).map(p => (
+                  <option key={p.id} value={p.id}>{p.display_name} — {p.monthly_credits.toLocaleString()} credits / ${p.monthly_price}/mo</option>
+                ))}
+              </select>
+            </div>
+            {upgradePlanId > 0 && activeSub && (() => {
+              const currentPlan = plans.find(p => p.id === activeSub.plan_id);
+              const newPlan = plans.find(p => p.id === upgradePlanId);
+              const isUpgrade = (newPlan?.tier || 0) > (currentPlan?.tier || 0);
+              return (
+                <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-muted-foreground">{currentPlan?.display_name}</span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="font-medium">{newPlan?.display_name}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {isUpgrade ? text.upgrade : text.downgrade} • {text.proratedCredits}: {activeSub.credits_remaining.toLocaleString()} → {newPlan?.monthly_credits.toLocaleString()} + prorated
+                  </div>
+                </div>
+              );
+            })()}
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setUpgradeOpen(false)}>{text.cancel}</Button>
+              <Button onClick={handleChangePlan} disabled={upgradeLoading || !upgradePlanId || upgradePlanId === activeSub?.plan_id}>
+                {upgradeLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                {upgradeLoading ? text.changing : text.changePlan}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

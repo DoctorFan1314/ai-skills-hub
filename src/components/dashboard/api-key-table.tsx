@@ -64,6 +64,7 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const [newKeyName, setNewKeyName] = useState("");
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [newKeyFull, setNewKeyFull] = useState<string | null>(null);
   const { toast: showToast } = useToast();
   const t = LABELS[lang];
 
@@ -77,9 +78,14 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
         body: JSON.stringify({ name: newKeyName || "Default" }),
       });
       if (res.ok) {
+        const data = await res.json();
         setNewKeyName("");
         mutate();
-        showToast(t.keyCreated, "success");
+        if (data.full_key) {
+          setNewKeyFull(data.full_key);
+        } else {
+          showToast(t.keyCreated, "success");
+        }
       }
     } finally {
       setCreating(false);
@@ -204,6 +210,29 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
           <div className="flex gap-2 justify-end pt-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>{lang === "zh" ? "取消" : "Cancel"}</Button>
             <Button onClick={confirmDelete} className="bg-red-600 text-white hover:bg-red-700">{lang === "zh" ? "确认删除" : "Delete"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Show full key after creation */}
+      <Dialog open={newKeyFull !== null} onOpenChange={(open) => { if (!open) setNewKeyFull(null); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{lang === "zh" ? "API Key 创建成功" : "API Key Created"}</DialogTitle>
+            <DialogDescription>
+              {lang === "zh"
+                ? "请立即复制保存此 Key，它只会显示一次！"
+                : "Copy and save this key now — it will only be shown once!"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <code className="flex-1 text-sm font-mono break-all">{newKeyFull}</code>
+            <Button size="sm" variant="outline" onClick={() => { if (newKeyFull) { navigator.clipboard.writeText(newKeyFull); showToast(t.copied, "success"); } }}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setNewKeyFull(null)}>{lang === "zh" ? "我已保存" : "I've saved it"}</Button>
           </div>
         </DialogContent>
       </Dialog>

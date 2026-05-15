@@ -1,6 +1,6 @@
 import db from './db';
 import type { DBApiKey, DBUser } from './db';
-import { verifyToken, getTokenFromCookie, decrypt } from './auth';
+import { verifyToken, getTokenFromCookie, decrypt, hashApiKey } from './auth';
 import { checkRateLimit, type RateLimitResult } from './rate-limiter';
 import { deductBalance, deductCreditsOrBalance, calculateCost, logUsage, getEffectiveMultiplier, getActiveSubscription } from './billing-engine';
 import { selectChannel, reportChannelFailure, reportChannelSuccess } from './channel-manager';
@@ -65,7 +65,21 @@ export function validateApiKey(authHeader: string | null): { valid: boolean; api
     return { valid: false, error: 'Empty API key' };
   }
 
-  const apiKey = db.prepare('SELECT * FROM api_keys WHERE key_value = ? AND enabled = 1').get(keyValue) as DBApiKey | undefined;
+  // Try hash-based lookup first
+  const keyHash = hashApiKey(keyValue);
+  let apiKey = db.prepare('SELECT * FROM api_keys WHERE key_hash = ? AND enabled = 1').get(keyHash) as DBApiKey | undefined;
+
+  // Fallback: plaintext match for legacy keys (lazy migration)
+  if (!apiKey) {
+    apiKey = db.prepare('SELECT * FROM api_keys WHERE key_value = ? AND enabled = 1').get(keyValue) as DBApiKey | undefined;
+    if (apiKey) {
+      // Migrate: store hash, mask the plaintext value
+      try {
+        db.prepare('UPDATE api_keys SET key_hash = ?, key_value = ? WHERE id = ?').run(keyHash, keyValue.slice(0, 10) + '****', apiKey.id);
+      } catch { /* key_hash column may not exist yet */ }
+    }
+  }
+
   if (!apiKey) {
     return { valid: false, error: 'Invalid or disabled API key' };
   }

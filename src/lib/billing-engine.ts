@@ -138,14 +138,17 @@ export function logUsage(data: {
   errorMessage?: string;
   cached?: boolean;
   multiplier?: number;
+  isStream?: boolean;
+  requestSizeBytes?: number;
 }) {
   db.prepare(
-    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, credits_used, deduction_source, latency_ms, success, error_message, cached, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO usage_logs (user_id, api_key_id, channel_id, model, tokens_in, tokens_out, tokens_in_cache, tokens_cache_creation, cost, credits_used, deduction_source, latency_ms, success, error_message, cached, multiplier, is_stream, request_size_bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     data.userId, data.apiKeyId ?? null, data.channelId ?? null, data.model,
     data.tokensIn, data.tokensOut, data.tokensInCache ?? 0, data.tokensCacheCreation ?? 0,
     data.cost, data.creditsUsed ?? 0, data.deductionSource ?? 'balance', data.latencyMs ?? null,
-    data.success ? 1 : 0, data.errorMessage ?? null, data.cached ? 1 : 0, data.multiplier ?? 1.0
+    data.success ? 1 : 0, data.errorMessage ?? null, data.cached ? 1 : 0, data.multiplier ?? 1.0,
+    data.isStream ? 1 : 0, data.requestSizeBytes ?? 0
   );
 }
 
@@ -398,4 +401,32 @@ export function dispatchWebhook(event: string, payload: Record<string, unknown>)
       }).catch(() => { /* silently ignore delivery failures */ });
     }
   } catch { /* ignore */ }
+}
+
+// --- Subscription Expiry Check ---
+
+export function checkExpiringSubscriptions() {
+  try {
+    // Find subscriptions expiring in 3 days
+    const expiring = db.prepare(
+      `SELECT us.*, u.email, sp.display_name as plan_display_name
+       FROM user_subscriptions us
+       JOIN users u ON us.user_id = u.id
+       JOIN subscription_plans sp ON us.plan_id = sp.id
+       WHERE us.status = 'active' AND us.auto_renew = 0
+       AND us.current_period_end BETWEEN datetime('now') AND datetime('now', '+3 days')`
+    ).all() as (Record<string, unknown> & { email: string; plan_display_name: string })[];
+
+    for (const sub of expiring) {
+      dispatchWebhook('subscription.expiring', {
+        user_id: sub.user_id,
+        email: sub.email,
+        plan: sub.plan_display_name,
+        expires_at: sub.current_period_end,
+        credits_remaining: sub.credits_remaining,
+      });
+    }
+
+    return expiring.length;
+  } catch { return 0; }
 }

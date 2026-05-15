@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { validateUserFromCookie } from '@/lib/api-gateway';
 import type { DBApiKey } from '@/lib/db';
-import { generateApiKey } from '@/lib/auth';
+import { generateApiKey, hashApiKey } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,16 +34,19 @@ export async function POST(request: NextRequest) {
     const { name, rate_limit, permissions } = await request.json();
 
     const keyValue = generateApiKey();
+    const keyHash = hashApiKey(keyValue);
+    const maskedValue = keyValue.slice(0, 10) + '****';
     const safeRateLimit = Math.min(Math.max(Math.floor(rate_limit || 60), 1), 10000);
     const result = db.prepare(
-      'INSERT INTO api_keys (user_id, key_value, name, permissions, rate_limit) VALUES (?, ?, ?, ?, ?)'
-    ).run(auth.user.id, keyValue, name || 'Default', JSON.stringify(permissions || { models: ['*'] }), safeRateLimit);
+      'INSERT INTO api_keys (user_id, key_value, key_hash, name, permissions, rate_limit) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(auth.user.id, maskedValue, keyHash, name || 'Default', JSON.stringify(permissions || { models: ['*'] }), safeRateLimit);
 
     const key = db.prepare(
       'SELECT id, name, key_value, permissions, rate_limit, enabled, created_at FROM api_keys WHERE id = ?'
     ).get(result.lastInsertRowid);
 
-    return NextResponse.json({ key });
+    // Return full key only on creation (never shown again)
+    return NextResponse.json({ key, full_key: keyValue });
   } catch (error) {
     console.error('API key create error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -6,6 +6,42 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.4.2] — 2026-05-14
+
+### Critical Fixes
+- **Channel latency stats bug** — Fixed SQL query referencing wrong column `api_key_id` → `channel_id` in latency statistics
+- **Login brute-force protection** — Added IP-based rate limiting (5 attempts/60s window, 15min lockout on exceeded)
+- **API Key hash storage** — API keys now stored as SHA-256 hashes instead of plaintext; legacy keys auto-migrated on first use
+
+### New Features — Developer Experience
+- **Usage log filters** — Added model search, status filter, and date range picker to call logs page
+- **CSV export** — Usage logs can now be exported as CSV with `?format=csv` endpoint and download button in UI
+- **Model detail pages** — Each model now has a dedicated page showing pricing, 7-day stats, and available channels (`/models/[model]`)
+- **Model tags** — Models support categorization tags (e.g., `vision`, `reasoning`); filterable on models page
+- **OpenAPI spec unification** — Single unified OpenAPI spec at `/api/v1/openapi` and `/api/docs/openapi.json`
+
+### New Features — Platform Capabilities
+- **Audit log UI** — Full audit trail page at `/dashboard/admin/audit` with filtering by action, target type, date range
+- **Webhook management** — CRUD webhook management at `/dashboard/admin/webhooks` with event config and test delivery
+- **Channel health dashboard** — Channels page now shows 24h success rate, avg latency, and status overview cards
+- **Channel health history** — New `channel_health_log` table tracking status changes over time with 7-day trends
+- **User activity stats** — User detail page at `/dashboard/users/[id]` showing total calls, tokens, cost, top models, 7-day trend
+- **Plan analytics** — Admin plans page now shows per-plan subscriber count, monthly revenue, and credit usage rate
+- **Config export/import** — Settings page supports exporting full config (settings + channels + models + plans) as JSON and importing back
+- **Redeem code batch operations** — Select multiple codes with checkboxes for batch enable/disable/delete
+- **User batch operations** — Select multiple users for batch enable/disable and bulk balance grants
+- **Real-time usage logs** — Call logs page now polls every 30s with live indicator, pause button, and new row highlighting
+- **Plan upgrade/downgrade** — Users can switch plans with prorated credits carried over to the new plan
+- **Subscription expiry reminder** — Dashboard shows warning banner when subscription expires within 3 days (auto-renew off)
+
+### Database Migrations
+- `model_rates.tags` — Added TEXT column for model categorization tags
+- `usage_logs.is_stream` — Added INTEGER column tracking streaming requests
+- `usage_logs.request_size_bytes` — Added INTEGER column tracking request payload size
+- `channel_health_log` — New table for channel health history tracking
+
+---
+
 ## [v3.3.4.1] — 2026-05-14
 
 ### Critical Fixes

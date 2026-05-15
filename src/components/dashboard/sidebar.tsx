@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
-import { LayoutDashboard, Key, BarChart3, Wallet, Radio, Settings, Shield, Users, Gift, Percent, Sparkles, ListChecks, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Key, BarChart3, Wallet, Radio, Settings, Shield, Users, Gift, Percent, Sparkles, ListChecks, ChevronDown, FileText, Webhook } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "overview" as const },
@@ -19,6 +19,8 @@ const NAV_ITEMS = [
   { href: "/dashboard/admin/plans", icon: ListChecks, labelKey: "planManage" as const, adminOnly: true },
   { href: "/dashboard/users", icon: Users, labelKey: "users" as const, adminOnly: true },
   { href: "/dashboard/redeem", icon: Gift, labelKey: "redeem" as const, adminOnly: true },
+  { href: "/dashboard/admin/audit", icon: FileText, labelKey: "audit" as const, adminOnly: true },
+  { href: "/dashboard/admin/webhooks", icon: Webhook, labelKey: "webhooks" as const, adminOnly: true },
   { href: "/dashboard/settings", icon: Settings, labelKey: "settings" as const },
 ];
 
@@ -33,6 +35,8 @@ const LABELS: Record<string, { zh: string; en: string }> = {
   planManage: { zh: "套餐管理", en: "Plan Management" },
   users: { zh: "用户管理", en: "Users" },
   redeem: { zh: "兑换码", en: "Redeem Codes" },
+  audit: { zh: "审计日志", en: "Audit Logs" },
+  webhooks: { zh: "Webhook", en: "Webhooks" },
   settings: { zh: "设置", en: "Settings" },
 };
 

@@ -43,10 +43,10 @@ export function selectChannel(requestedModel: string): ChannelSelection | null {
   const channelIds = available.map(ch => ch.id);
   const placeholders = channelIds.map(() => '?').join(',');
   const latencyStats = db.prepare(
-    `SELECT api_key_id as channel_id, AVG(latency_ms) as avg_latency, COUNT(*) as request_count
+    `SELECT channel_id, AVG(latency_ms) as avg_latency, COUNT(*) as request_count
      FROM usage_logs
-     WHERE api_key_id IN (${placeholders}) AND created_at > datetime('now', '-1 hour')
-     GROUP BY api_key_id`
+     WHERE channel_id IN (${placeholders}) AND created_at > datetime('now', '-1 hour')
+     GROUP BY channel_id`
   ).all(...channelIds) as { channel_id: number; avg_latency: number; request_count: number }[];
 
   const statsMap = new Map(latencyStats.map(s => [s.channel_id, s]));
@@ -88,12 +88,29 @@ export function reportChannelFailure(channelId: number, errorMessage: string) {
   db.prepare(
     'UPDATE channels SET fail_count = fail_count + 1, last_fail_at = CURRENT_TIMESTAMP, status = CASE WHEN fail_count + 1 >= ? THEN ? ELSE status END WHERE id = ?'
   ).run(FAIL_THRESHOLD, status, channelId);
+
+  // Log health change
+  const ch = db.prepare('SELECT fail_count FROM channels WHERE id = ?').get(channelId) as { fail_count: number } | undefined;
+  if (ch) {
+    try {
+      db.prepare(
+        'INSERT INTO channel_health_log (channel_id, status, fail_count, details) VALUES (?, ?, ?, ?)'
+      ).run(channelId, status, ch.fail_count, errorMessage.slice(0, 500));
+    } catch { /* table may not exist yet */ }
+  }
 }
 
 export function reportChannelSuccess(channelId: number) {
   db.prepare(
     'UPDATE channels SET fail_count = 0, status = ? WHERE id = ?'
   ).run('online', channelId);
+
+  // Log health recovery
+  try {
+    db.prepare(
+      'INSERT INTO channel_health_log (channel_id, status, fail_count) VALUES (?, ?, 0)'
+    ).run(channelId, 'online');
+  } catch { /* table may not exist yet */ }
 }
 
 export function getChannels(): DBChannel[] {

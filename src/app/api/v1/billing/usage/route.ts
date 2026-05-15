@@ -27,6 +27,38 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50')), 100);
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'));
+    const model = searchParams.get('model');
+    const status = searchParams.get('status'); // 'success' or 'failed'
+    const from = searchParams.get('from'); // ISO date string
+    const to = searchParams.get('to'); // ISO date string
+    const format = searchParams.get('format'); // 'csv' or default JSON
+
+    const conditions: string[] = ['u.user_id = ?'];
+    const params: unknown[] = [userId];
+
+    if (model) {
+      conditions.push('u.model LIKE ?');
+      params.push(`%${model}%`);
+    }
+    if (status === 'success') {
+      conditions.push('u.success = 1');
+    } else if (status === 'failed') {
+      conditions.push('u.success = 0');
+    }
+    if (from) {
+      conditions.push('u.created_at >= ?');
+      params.push(from);
+    }
+    if (to) {
+      conditions.push('u.created_at <= ?');
+      params.push(to);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // For CSV export, allow larger limit
+    const effectiveLimit = format === 'csv' ? Math.min(parseInt(searchParams.get('limit') || '10000'), 10000) : limit;
+    const effectiveOffset = format === 'csv' ? 0 : offset;
 
     const logs = db.prepare(
       `SELECT u.id, u.model, u.tokens_in, u.tokens_out, u.tokens_in_cache, u.tokens_cache_creation,
@@ -36,10 +68,30 @@ export async function GET(request: NextRequest) {
        FROM usage_logs u
        LEFT JOIN channels c ON u.channel_id = c.id
        LEFT JOIN model_rates m ON u.model = m.model_name
-       WHERE u.user_id = ? ORDER BY u.created_at DESC LIMIT ? OFFSET ?`
-    ).all(userId, limit, offset);
+       WHERE ${whereClause} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`
+    ).all(...params, effectiveLimit, effectiveOffset);
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM usage_logs WHERE user_id = ?').get(userId) as { count: number };
+    const total = db.prepare(`SELECT COUNT(*) as count FROM usage_logs WHERE ${whereClause}`).get(...params) as { count: number };
+
+    // CSV export
+    if (format === 'csv') {
+      const headers = ['id', 'model', 'tokens_in', 'tokens_out', 'tokens_in_cache', 'tokens_cache_creation', 'cost', 'credits_used', 'deduction_source', 'latency_ms', 'success', 'cached', 'created_at', 'channel_name', 'multiplier'];
+      const rows = (logs as Record<string, unknown>[]).map(row =>
+        headers.map(h => {
+          const v = row[h];
+          if (v === null || v === undefined) return '';
+          const s = String(v);
+          return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+        }).join(',')
+      );
+      const csv = [headers.join(','), ...rows].join('\n');
+      return new NextResponse(csv, {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="usage-${new Date().toISOString().slice(0, 10)}.csv"`,
+        },
+      });
+    }
 
     return NextResponse.json({
       object: 'list',

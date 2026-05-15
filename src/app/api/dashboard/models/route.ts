@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         credit_rate: number;
         rate_id: number | null;
         display_name: string | null;
+        tags: string[];
       }>();
 
       for (const ch of channels) {
@@ -42,8 +43,8 @@ export async function GET(request: NextRequest) {
           if (modelName === '*') continue;
           if (!modelMap.has(modelName)) {
             const rate = db.prepare(
-              'SELECT id, display_name, input_rate, output_rate, cache_rate, cache_creation_rate, credit_rate, enabled FROM model_rates WHERE model_name = ?'
-            ).get(modelName) as Pick<DBModelRate, 'id' | 'display_name' | 'input_rate' | 'output_rate' | 'cache_rate' | 'cache_creation_rate' | 'credit_rate' | 'enabled'> | undefined;
+              'SELECT id, display_name, input_rate, output_rate, cache_rate, cache_creation_rate, credit_rate, enabled, tags FROM model_rates WHERE model_name = ?'
+            ).get(modelName) as Pick<DBModelRate, 'id' | 'display_name' | 'input_rate' | 'output_rate' | 'cache_rate' | 'cache_creation_rate' | 'credit_rate' | 'enabled' | 'tags'> | undefined;
 
             modelMap.set(modelName, {
               model_name: modelName,
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
               credit_rate: rate?.credit_rate ?? 1.0,
               rate_id: rate?.id ?? null,
               display_name: rate?.display_name ?? null,
+              tags: rate?.tags ? JSON.parse(rate.tags) : [],
             });
           }
         }
@@ -103,7 +105,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const { id, display_name, input_rate, output_rate, cache_rate, cache_creation_rate, credit_rate, enabled } = body;
+    const { id, display_name, input_rate, output_rate, cache_rate, cache_creation_rate, credit_rate, enabled, tags } = body;
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
     const updates: string[] = [];
@@ -115,6 +117,7 @@ export async function PATCH(request: NextRequest) {
     if (cache_creation_rate !== undefined) { updates.push('cache_creation_rate = ?'); values.push(cache_creation_rate); }
     if (credit_rate !== undefined) { updates.push('credit_rate = ?'); values.push(credit_rate); }
     if (enabled !== undefined) { updates.push('enabled = ?'); values.push(enabled ? 1 : 0); }
+    if (tags !== undefined) { updates.push('tags = ?'); values.push(JSON.stringify(tags)); }
 
     if (updates.length > 0) {
       values.push(id);

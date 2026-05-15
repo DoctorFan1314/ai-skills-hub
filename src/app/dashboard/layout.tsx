@@ -20,6 +20,8 @@ const ROUTE_LABELS: Record<string, { zh: string; en: string }> = {
   models: { zh: "模型市场", en: "Models" },
   admin: { zh: "管理", en: "Admin" },
   plans: { zh: "套餐管理", en: "Plans" },
+  audit: { zh: "审计日志", en: "Audit Logs" },
+  webhooks: { zh: "Webhook", en: "Webhooks" },
   "token-plan": { zh: "我的订阅", en: "My Subscription" },
 };
 

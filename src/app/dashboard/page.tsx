@@ -6,7 +6,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { ModelAnalytics } from "@/components/dashboard/model-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code, Key, CreditCard, ArrowRight, Sparkles, Copy, Check } from "lucide-react";
+import { Code, Key, CreditCard, ArrowRight, Sparkles, Copy, Check, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
@@ -56,11 +56,20 @@ export default function DashboardPage() {
   const [baseUrl, setBaseUrl] = useState("https://your-domain.com");
   const [codeCopied, setCodeCopied] = useState(false);
   const { data: keysData } = useSWR<{ keys: { id: number }[] }>("/api/dashboard/keys", dashboardSWRConfig);
-  const { data: subData } = useSWR<{ subscriptions: { id: number }[] }>("/api/dashboard/subscription", dashboardSWRConfig);
+  const { data: subData } = useSWR<{ subscriptions: { id: number; status: string; current_period_end: string; plan_display_name: string; auto_renew: number }[] }>("/api/dashboard/subscription", dashboardSWRConfig);
 
   const hasKeys = (keysData?.keys?.length || 0) > 0;
   const hasSub = (subData?.subscriptions?.length || 0) > 0;
   const isNewUser = !hasKeys && !hasSub;
+
+  // Check for expiring subscription (within 3 days, not auto-renew)
+  const expiringSub = subData?.subscriptions?.find(s => {
+    if (s.status !== 'active' || s.auto_renew) return false;
+    const endDate = new Date(s.current_period_end);
+    const now = new Date();
+    const daysLeft = (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return daysLeft > 0 && daysLeft <= 3;
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -73,6 +82,29 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-bold">
         {lang === "zh" ? "控制台" : "Dashboard"}
       </h1>
+
+      {/* Subscription expiry warning */}
+      {expiringSub && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-amber-400">
+              {lang === "zh"
+                ? `您的 ${expiringSub.plan_display_name} 套餐将于 ${new Date(expiringSub.current_period_end).toLocaleDateString()} 到期`
+                : `Your ${expiringSub.plan_display_name} plan expires on ${new Date(expiringSub.current_period_end).toLocaleDateString()}`
+              }
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {lang === "zh" ? "自动续费已关闭，请及时续费以避免服务中断" : "Auto-renew is off. Renew now to avoid service interruption"}
+            </p>
+          </div>
+          <Link href="/dashboard/token-plan">
+            <Button size="sm" variant="outline" className="shrink-0 border-amber-500/30 text-amber-400 hover:bg-amber-500/10">
+              {lang === "zh" ? "续费" : "Renew"}
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Onboarding for new users */}
       {isNewUser && (

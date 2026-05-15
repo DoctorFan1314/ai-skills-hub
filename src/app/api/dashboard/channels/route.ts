@@ -54,6 +54,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ health });
     }
 
+    if (action === 'health-history') {
+      const channelId = request.nextUrl.searchParams.get('channel_id');
+      const days = parseInt(request.nextUrl.searchParams.get('days') || '7', 10);
+
+      if (channelId) {
+        const history = db.prepare(
+          `SELECT * FROM channel_health_log WHERE channel_id = ? AND created_at >= datetime('now', '-${days} days') ORDER BY created_at DESC LIMIT 100`
+        ).all(parseInt(channelId, 10));
+        return NextResponse.json({ history });
+      }
+
+      // All channels, latest entry each
+      const history = db.prepare(
+        `SELECT chl.*, c.name as channel_name FROM channel_health_log chl
+         JOIN channels c ON chl.channel_id = c.id
+         WHERE chl.created_at >= datetime('now', '-${days} days')
+         ORDER BY chl.created_at DESC LIMIT 200`
+      ).all();
+      return NextResponse.json({ history });
+    }
+
     const channels = db.prepare('SELECT * FROM channels ORDER BY priority DESC, created_at DESC').all();
     // Return masked API keys for security
     const masked = (channels as DBChannel[]).map(ch => ({

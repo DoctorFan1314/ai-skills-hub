@@ -8,11 +8,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit: 10 attempts per IP per minute
+    // Rate limit: 5 attempts per IP per minute
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const rateLimit = checkIpRateLimit(`login:${ip}`, 10, 60_000);
+    const rateLimit = checkIpRateLimit(`login:${ip}`, 5, 60_000);
     if (!rateLimit.allowed) {
-      return NextResponse.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 });
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      const res = NextResponse.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 });
+      res.headers.set('Retry-After', String(Math.max(retryAfter, 60)));
+      return res;
     }
 
     const { email, password } = await request.json();

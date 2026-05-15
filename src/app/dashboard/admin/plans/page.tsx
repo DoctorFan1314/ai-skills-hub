@@ -10,7 +10,7 @@ import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { Plus, Pencil, Trash2, Save, Loader2, Link as LinkIcon, Unlink } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, Loader2, Link as LinkIcon, Unlink, Users, DollarSign, TrendingUp } from "lucide-react";
 
 interface Plan {
   id: number; name: string; display_name: string; tagline: string | null; tier: number;
@@ -21,6 +21,10 @@ interface Plan {
   created_at: string; updated_at: string;
 }
 interface PlanModel { id: number; plan_id: number; model_name: string; enabled: number; }
+interface PlanStat {
+  plan_id: number; plan_name: string; active_subs: number;
+  monthly_revenue: number; credits_used: number; credits_usage_rate: number;
+}
 
 export default function AdminPlansPage() {
   return <AdminPlansContent />;
@@ -42,18 +46,28 @@ function AdminPlansContent() {
   const [modelLoading, setModelLoading] = useState(false);
   const [displayCurrency, setDisplayCurrency] = useState<string>("CNY");
   const [exchangeRate, setExchangeRate] = useState(7.3);
+  const [planStats, setPlanStats] = useState<PlanStat[]>([]);
+  const [totalSubs, setTotalSubs] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   const fetchPlans = useCallback(async () => {
     try {
-      const [planRes, settingsRes] = await Promise.all([
+      const [planRes, settingsRes, statsRes] = await Promise.all([
         fetch("/api/dashboard/admin/plans", { credentials: "include" }),
         fetch("/api/dashboard/settings", { credentials: "include" }),
+        fetch("/api/dashboard/admin/plans?action=stats", { credentials: "include" }),
       ]);
       if (planRes.ok) { const d = await planRes.json(); setPlans(d.plans || []); }
       if (settingsRes.ok) {
         const d = await settingsRes.json();
         const rate = d.settings?.find((s: { key: string }) => s.key === "exchange_rate");
         if (rate) setExchangeRate(parseFloat(rate.value) || 7.3);
+      }
+      if (statsRes.ok) {
+        const d = await statsRes.json();
+        setPlanStats(d.stats || []);
+        setTotalSubs(d.total_subs || 0);
+        setTotalRevenue(d.total_monthly_revenue || 0);
       }
     } catch {} finally { setLoading(false); }
   }, []);
@@ -120,6 +134,39 @@ function AdminPlansContent() {
         </div>
       </div>
 
+      {/* Stats overview */}
+      {!loading && planStats.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <Card className="glass-card">
+            <CardContent className="p-3 flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-500" />
+              <div>
+                <p className="text-[10px] text-muted-foreground">{lang === "zh" ? "活跃订阅" : "Active Subs"}</p>
+                <p className="text-lg font-bold font-mono">{totalSubs}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="p-3 flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-green-500" />
+              <div>
+                <p className="text-[10px] text-muted-foreground">{lang === "zh" ? "月收入" : "Monthly Revenue"}</p>
+                <p className="text-lg font-bold font-mono">{fmtDisplay(totalRevenue, "CNY")}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="p-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-amber-500" />
+              <div>
+                <p className="text-[10px] text-muted-foreground">{lang === "zh" ? "套餐数" : "Plans"}</p>
+                <p className="text-lg font-bold font-mono">{plans.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {loading ? <div className="space-y-3">{[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}</div> : plans.length === 0 ? (
         <Card><CardContent className="p-10 text-center"><p className="text-muted-foreground">{lang === "zh" ? "暂无套餐" : "No plans"}</p></CardContent></Card>
       ) : (
@@ -148,6 +195,23 @@ function AdminPlansContent() {
                     {plan.currency !== displayCurrency && <p className="text-[10px] text-muted-foreground">({fmtOriginal(plan.yearly_price, plan.currency)})</p>}
                   </div>
                   <div className="text-center"><p className="text-[10px] text-muted-foreground">Credits</p><p className="font-medium text-foreground">{plan.monthly_credits.toLocaleString()}</p></div>
+                  {planStats.find(s => s.plan_id === plan.id) && (
+                    <>
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">{lang === "zh" ? "订阅数" : "Subs"}</p>
+                        <p className="font-medium text-foreground">{planStats.find(s => s.plan_id === plan.id)?.active_subs || 0}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">{lang === "zh" ? "使用率" : "Usage"}</p>
+                        <div className="flex items-center gap-1">
+                          <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${planStats.find(s => s.plan_id === plan.id)?.credits_usage_rate || 0}%` }} />
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{planStats.find(s => s.plan_id === plan.id)?.credits_usage_rate || 0}%</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => { setModelDialogPlan(plan); setNewModel(""); fetchPlanModels(plan.id); }}><LinkIcon className="h-3.5 w-3.5 mr-1" />{lang === "zh" ? "模型" : "Models"}</Button>

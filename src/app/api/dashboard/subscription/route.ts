@@ -79,6 +79,42 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: true, auto_renew: newAutoRenew === 1 });
     }
 
+    if (action === 'upgrade' || action === 'downgrade') {
+      const { plan_id } = body;
+      if (!plan_id) return NextResponse.json({ error: 'plan_id is required' }, { status: 400 });
+      if (plan_id === sub.plan_id) return NextResponse.json({ error: 'Already on this plan' }, { status: 400 });
+
+      const newPlan = db.prepare('SELECT * FROM subscription_plans WHERE id = ?').get(plan_id) as DBSubscriptionPlan | undefined;
+      if (!newPlan) return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+
+      // Calculate prorated credits from remaining days
+      const now = new Date();
+      const periodEnd = new Date(sub.current_period_end);
+      const periodStart = new Date(sub.current_period_start);
+      const totalDays = Math.max(1, (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+      const remainingDays = Math.max(0, (periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const proratedCredits = Math.round((sub.credits_remaining / totalDays) * remainingDays);
+
+      // Cancel old subscription
+      db.prepare("UPDATE user_subscriptions SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(sub.id);
+
+      // Create new subscription with prorated credits
+      const newCredits = newPlan.monthly_credits + proratedCredits;
+      const newPeriodEnd = new Date(now);
+      newPeriodEnd.setMonth(newPeriodEnd.getMonth() + 1);
+
+      db.prepare(
+        "INSERT INTO user_subscriptions (user_id, plan_id, billing_cycle, status, credits_remaining, credits_total, current_period_start, current_period_end, is_first_purchase, auto_renew) VALUES (?, ?, 'monthly', 'active', ?, ?, datetime('now'), ?, 0, ?)"
+      ).run(auth.user.id, plan_id, newCredits, newPlan.monthly_credits, newPeriodEnd.toISOString(), sub.auto_renew);
+
+      return NextResponse.json({
+        success: true,
+        message: `Plan ${action === 'upgrade' ? 'upgraded' : 'downgraded'} successfully`,
+        prorated_credits: proratedCredits,
+        new_plan: newPlan.display_name,
+      });
+    }
+
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Failed to update subscription:', error);

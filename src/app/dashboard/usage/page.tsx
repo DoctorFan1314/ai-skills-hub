@@ -3,8 +3,8 @@
 import { useI18n } from "@/contexts/i18n-context";
 import { useCurrency } from "@/contexts/currency-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Fragment, useMemo, useState } from "react";
-import { Activity, Coins, DollarSign, X } from "lucide-react";
+import { Fragment, useMemo, useState, useRef, useEffect } from "react";
+import { Activity, Coins, DollarSign, X, Search, Download, Pause, Play } from "lucide-react";
 import useSWR from "swr";
 import { dashboardSWRConfig } from "@/lib/swr-fetcher";
 
@@ -69,6 +69,14 @@ const LABELS = {
     showing: "显示",
     prev: "上一页",
     next: "下一页",
+    filterModel: "按模型筛选",
+    filterStatus: "状态",
+    all: "全部",
+    dateFrom: "开始日期",
+    dateTo: "结束日期",
+    clearFilters: "清除筛选",
+    exportCSV: "导出 CSV",
+    live: "实时", pause: "暂停", resume: "恢复",
   },
   en: {
     title: "Call Logs",
@@ -107,6 +115,14 @@ const LABELS = {
     showing: "Showing",
     prev: "Previous",
     next: "Next",
+    filterModel: "Filter by model",
+    filterStatus: "Status",
+    all: "All",
+    dateFrom: "From",
+    dateTo: "To",
+    clearFilters: "Clear filters",
+    exportCSV: "Export CSV",
+    live: "Live", pause: "Pause", resume: "Resume",
   },
 };
 
@@ -120,12 +136,44 @@ export default function UsagePage() {
   const { currency, exchangeRate, formatPrice, symbol } = useCurrency();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
+  const [filterModel, setFilterModel] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+  const [liveMode, setLiveMode] = useState(true);
+  const prevIdsRef = useRef<Set<number>>(new Set());
+  const [newIds, setNewIds] = useState<Set<number>>(new Set());
   const t = LABELS[lang];
 
+  const filterParams = [
+    `limit=50&offset=${(page - 1) * 50}`,
+    filterModel ? `model=${encodeURIComponent(filterModel)}` : '',
+    filterStatus ? `status=${filterStatus}` : '',
+    filterFrom ? `from=${filterFrom}` : '',
+    filterTo ? `to=${filterTo}` : '',
+  ].filter(Boolean).join('&');
+
   const { data, isLoading } = useSWR<{ data: UsageLog[]; total: number; has_more: boolean }>(
-    `/api/v1/billing/usage?limit=50&offset=${(page - 1) * 50}`,
-    dashboardSWRConfig,
+    `/api/v1/billing/usage?${filterParams}`,
+    { ...dashboardSWRConfig, refreshInterval: liveMode && page === 1 ? 30_000 : 0 },
   );
+
+  // Track new rows for highlighting
+  useEffect(() => {
+    if (!data?.data || page !== 1) return;
+    const currentIds = new Set(data.data.map(l => l.id));
+    if (prevIdsRef.current.size > 0) {
+      const newlyAdded = new Set<number>();
+      for (const id of currentIds) {
+        if (!prevIdsRef.current.has(id)) newlyAdded.add(id);
+      }
+      if (newlyAdded.size > 0) {
+        setNewIds(newlyAdded);
+        setTimeout(() => setNewIds(new Set()), 3000);
+      }
+    }
+    prevIdsRef.current = currentIds;
+  }, [data, page]);
 
   const logs = data?.data || [];
   const hasMore = data?.has_more || false;
@@ -256,7 +304,25 @@ export default function UsagePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{t.title}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{t.title}</h1>
+        {page === 1 && (
+          <button
+            onClick={() => setLiveMode(!liveMode)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              liveMode
+                ? "bg-green-500/10 text-green-500 border-green-500/30"
+                : "bg-muted text-muted-foreground border-border"
+            }`}
+          >
+            {liveMode ? (
+              <><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>{t.pause}</>
+            ) : (
+              <><Play className="h-3 w-3" />{t.resume}</>
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -295,6 +361,56 @@ export default function UsagePage() {
         </Card>
       </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-end gap-3 p-3 bg-muted/30 rounded-lg">
+        <div className="flex-1 min-w-[150px]">
+          <label className="text-xs text-muted-foreground block mb-1">{t.filterModel}</label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+            <input value={filterModel} onChange={e => { setFilterModel(e.target.value); setPage(1); }}
+              placeholder="gpt-4o" className="w-full pl-8 pr-3 py-1.5 bg-background rounded-lg text-sm border border-border/50 focus:border-primary focus:outline-none" />
+          </div>
+        </div>
+        <div className="w-32">
+          <label className="text-xs text-muted-foreground block mb-1">{t.filterStatus}</label>
+          <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
+            className="w-full h-8 px-2 rounded-md border border-input bg-background text-sm focus:border-primary focus:outline-none">
+            <option value="">{t.all}</option>
+            <option value="success">{t.success}</option>
+            <option value="failed">{t.failed}</option>
+          </select>
+        </div>
+        <div className="w-36">
+          <label className="text-xs text-muted-foreground block mb-1">{t.dateFrom}</label>
+          <input type="date" value={filterFrom} onChange={e => { setFilterFrom(e.target.value); setPage(1); }}
+            className="w-full h-8 px-2 rounded-md border border-input bg-background text-sm focus:border-primary focus:outline-none" />
+        </div>
+        <div className="w-36">
+          <label className="text-xs text-muted-foreground block mb-1">{t.dateTo}</label>
+          <input type="date" value={filterTo} onChange={e => { setFilterTo(e.target.value); setPage(1); }}
+            className="w-full h-8 px-2 rounded-md border border-input bg-background text-sm focus:border-primary focus:outline-none" />
+        </div>
+        {(filterModel || filterStatus || filterFrom || filterTo) && (
+          <button onClick={() => { setFilterModel(""); setFilterStatus(""); setFilterFrom(""); setFilterTo(""); setPage(1); }}
+            className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground border border-border/50 rounded-md hover:bg-muted transition-colors">
+            {t.clearFilters}
+          </button>
+        )}
+        <button onClick={() => {
+          const params = [
+            'format=csv',
+            filterModel ? `model=${encodeURIComponent(filterModel)}` : '',
+            filterStatus ? `status=${filterStatus}` : '',
+            filterFrom ? `from=${filterFrom}` : '',
+            filterTo ? `to=${filterTo}` : '',
+          ].filter(Boolean).join('&');
+          window.open(`/api/v1/billing/usage?${params}`, '_blank');
+        }}
+          className="h-8 px-3 text-xs border border-border/50 rounded-md hover:bg-muted transition-colors flex items-center gap-1.5 ml-auto">
+          <Download className="h-3.5 w-3.5" />{t.exportCSV}
+        </button>
+      </div>
+
       <Card className="glass-card">
         <CardHeader>
           <CardTitle className="text-lg">{t.title}</CardTitle>
@@ -327,7 +443,7 @@ export default function UsagePage() {
                 <tbody>
                   {logs.map((log) => (
                     <Fragment key={log.id}>
-                    <tr className="border-b border-border/20 hover:bg-muted/30">
+                    <tr className={`border-b border-border/20 hover:bg-muted/30 transition-colors ${newIds.has(log.id) ? "bg-green-500/5" : ""}`}>
                       <td className="py-2 px-3">
                         <div className="font-mono text-xs">{log.model}</div>
                         <div className="text-xs text-muted-foreground md:hidden">{log.channel_name || t.noChannel}</div>

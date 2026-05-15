@@ -36,6 +36,24 @@ function getDb(): Database.Database {
     'ALTER TABLE model_rates ADD COLUMN alias_for TEXT',
     'ALTER TABLE model_rates ADD COLUMN deprecated INTEGER DEFAULT 0',
     'ALTER TABLE model_rates ADD COLUMN deprecated_message TEXT',
+    'ALTER TABLE model_rates ADD COLUMN tags TEXT DEFAULT \'[]\'',
+    'ALTER TABLE usage_logs ADD COLUMN is_stream INTEGER DEFAULT 0',
+    'ALTER TABLE usage_logs ADD COLUMN request_size_bytes INTEGER DEFAULT 0',
+    `CREATE TABLE IF NOT EXISTS channel_health_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel_id INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      fail_count INTEGER DEFAULT 0,
+      avg_latency_ms REAL,
+      success_rate REAL,
+      details TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (channel_id) REFERENCES channels(id)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_channel_health_log_channel ON channel_health_log(channel_id, created_at)',
+    // API Key hash storage
+    'ALTER TABLE api_keys ADD COLUMN key_hash TEXT',
+    'CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)',
     // Performance indexes (IF NOT EXISTS — safe to re-run)
     'CREATE INDEX IF NOT EXISTS idx_model_rates_name ON model_rates(model_name)',
     'CREATE INDEX IF NOT EXISTS idx_user_subscriptions_active ON user_subscriptions(user_id, status, current_period_end)',
@@ -184,6 +202,7 @@ export interface DBModelRate {
   cache_creation_rate: number;
   credit_rate: number;
   enabled: number;
+  tags: string;
   created_at: string;
 }
 
@@ -204,6 +223,8 @@ export interface DBUsageLog {
   success: number;
   error_message: string | null;
   cached: number;
+  is_stream: number;
+  request_size_bytes: number;
   created_at: string;
 }
 

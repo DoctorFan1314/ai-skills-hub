@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useToast } from "@/contexts/toast-context";
-import { Loader2, Settings } from "lucide-react";
+import { Loader2, Settings, Download, Upload } from "lucide-react";
 
 const LABELS = {
   zh: { title: "账户设置", username: "用户名", email: "邮箱", save: "保存修改", saved: "已保存", bio: "个人简介", apiEndpoint: "API 端点", copyEndpoint: "复制", changePassword: "修改密码", currentPassword: "当前密码", newPassword: "新密码", confirmPassword: "确认新密码", passwordChanged: "密码修改成功", passwordMismatch: "两次输入的密码不一致", wrongPassword: "当前密码不正确", passwordMinLength: "新密码至少 8 位", changePwBtn: "修改密码", systemSettings: "系统设置", timezone: "时区", currency: "默认货币", exchangeRate: "汇率", saveSystem: "保存系统设置" },
@@ -207,6 +207,56 @@ export default function SettingsPage() {
               {systemSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
               {lang === "zh" ? "保存系统设置" : "Save System Settings"}
             </Button>
+            <div className="flex gap-2 pt-2 border-t border-border/30">
+              <Button variant="outline" size="sm" onClick={async () => {
+                try {
+                  const res = await fetch("/api/dashboard/settings?action=export", { credentials: "include" });
+                  if (res.ok) {
+                    const data = await res.json();
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `oortapi-config-${new Date().toISOString().slice(0, 10)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast(lang === "zh" ? "配置已导出" : "Config exported", "success");
+                  }
+                } catch { showToast(lang === "zh" ? "导出失败" : "Export failed", "error"); }
+              }}>
+                <Download className="h-4 w-4 mr-1" />
+                {lang === "zh" ? "导出配置" : "Export Config"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = ".json";
+                input.onchange = async (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (!file) return;
+                  try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
+                    const res = await fetch("/api/dashboard/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ action: "import", data }),
+                    });
+                    if (res.ok) {
+                      const result = await res.json();
+                      showToast(lang === "zh" ? `导入成功: ${result.imported?.settings || 0} 项设置, ${result.imported?.model_rates || 0} 个模型` : `Imported: ${result.imported?.settings || 0} settings, ${result.imported?.model_rates || 0} models`, "success");
+                    } else {
+                      showToast(lang === "zh" ? "导入失败" : "Import failed", "error");
+                    }
+                  } catch { showToast(lang === "zh" ? "导入失败: 文件格式错误" : "Import failed: invalid file", "error"); }
+                };
+                input.click();
+              }}>
+                <Upload className="h-4 w-4 mr-1" />
+                {lang === "zh" ? "导入配置" : "Import Config"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
