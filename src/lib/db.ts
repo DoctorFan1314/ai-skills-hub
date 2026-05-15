@@ -18,7 +18,11 @@ function getDb(): Database.Database {
   _db.pragma('journal_mode = WAL');
   _db.pragma('foreign_keys = ON');
 
-  // Run migrations FIRST so existing databases have new columns before schema INSERTs
+  // Initialize schema FIRST (CREATE TABLE IF NOT EXISTS)
+  const schema = readFileSync(join(process.cwd(), 'src', 'lib', 'schema.sql'), 'utf-8');
+  _db.exec(schema);
+
+  // Run migrations AFTER schema so tables exist for ALTER TABLE
   const migrations = [
     'ALTER TABLE usage_logs ADD COLUMN tokens_in_cache INTEGER DEFAULT 0',
     'ALTER TABLE usage_logs ADD COLUMN tokens_cache_creation INTEGER DEFAULT 0',
@@ -81,10 +85,6 @@ function getDb(): Database.Database {
       }
     }
   }
-
-  // Initialize schema (CREATE TABLE IF NOT EXISTS + INSERTs now work with all columns)
-  const schema = readFileSync(join(process.cwd(), 'src', 'lib', 'schema.sql'), 'utf-8');
-  _db.exec(schema);
 
   // Seed/update default subscription plans on every startup
   try {
