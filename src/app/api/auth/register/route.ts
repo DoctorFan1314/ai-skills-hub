@@ -58,9 +58,13 @@ export async function POST(request: NextRequest) {
     const defaultBalanceSetting = db.prepare('SELECT value FROM system_settings WHERE key = ?').get('default_balance') as { value: string } | undefined;
     const defaultBalance = defaultBalanceSetting ? parseFloat(defaultBalanceSetting.value) : 10.0;
 
+    // First registered user becomes admin
+    const adminCount = (db.prepare('SELECT COUNT(*) as count FROM users WHERE role = ?').get('admin') as { count: number }).count;
+    const role = adminCount === 0 ? 'admin' : 'user';
+
     const result = db.prepare(
       'INSERT INTO users (email, username, password_hash, salt, balance, role) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(email, username, passwordHash, salt, defaultBalance, 'user');
+    ).run(email, username, passwordHash, salt, defaultBalance, role);
 
     const userId = result.lastInsertRowid as number;
 
