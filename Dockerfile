@@ -30,6 +30,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/src/lib/schema.sql ./src/lib/schema.sql
 
 # Create data directory for SQLite
 RUN mkdir -p data && chown -R nextjs:nodejs data
