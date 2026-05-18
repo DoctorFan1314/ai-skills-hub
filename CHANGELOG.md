@@ -6,6 +6,31 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.4.13] — 2026-05-18
+
+### Beautification
+- **Dashboard layout** — Replaced outer `<div>` with semantic `<main>` tag
+- **Playground messages** — Removed `font-mono` for readable AI response rendering
+- **Channels health** — Changed illegible `text-[10px]` to `text-xs`
+- **Billing cards** — Added actionable "View Plans" / "Subscribe" / "Contact Us" links
+
+### Functionality
+- **Channel health** — Added loading skeleton and error state with retry button
+- **Models API** — DELETE now returns 404 for non-existent model rates
+- **Backup route** — Replaced `require('fs')` with ESM import
+- **Usage logs** — Filtered empty state shows "No matching records" hint
+- **Playground** — `max_tokens` default 4096, max 131072; localStorage limited to 2MB
+
+### UX
+- **Webhook test** — Fixed catch block incorrectly showing "success" message
+- **Webhook delete** — Replaced raw Dialog with shared ConfirmDialog
+- **Register page** — Removed unfinished "More sign-in options coming soon" hint
+- **Settings page** — Removed duplicate "API Endpoint" title
+- **Playground** — Each message now has an individual copy button
+- **Channels** — Health data load failure now shows error toast instead of silent failure
+
+---
+
 ## [v3.3.4.12] — 2026-05-18
 
 ### Beautification & UX Polish
