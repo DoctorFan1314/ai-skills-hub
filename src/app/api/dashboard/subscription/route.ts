@@ -63,11 +63,42 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'cancel') {
-      db.prepare(
-        "UPDATE user_subscriptions SET status = 'cancelled', auto_renew = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
-      ).run(subscription_id);
+      // Calculate prorated refund based on remaining days
+      const plan = db.prepare('SELECT * FROM subscription_plans WHERE id = ?').get(sub.plan_id) as DBSubscriptionPlan | undefined;
+      let refundAmount = 0;
+      if (plan) {
+        const now = new Date();
+        const periodEnd = new Date(sub.current_period_end);
+        const periodStart = new Date(sub.current_period_start);
+        const totalDays = Math.max(1, (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+        const remainingDays = Math.max(0, (periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const remainingRatio = remainingDays / totalDays;
 
-      return NextResponse.json({ success: true, message: 'Subscription cancelled. It will remain active until the end of the current billing period.' });
+        const currentPrice = sub.billing_cycle === 'yearly' ? plan.yearly_price : plan.monthly_price;
+        const exchangeRateSetting = db.prepare("SELECT value FROM system_settings WHERE key = 'exchange_rate'").get() as { value: string } | undefined;
+        const rate = parseFloat(exchangeRateSetting?.value || '7.3');
+        const priceInUSD = plan.currency === 'CNY' ? currentPrice / rate : currentPrice;
+        refundAmount = Math.round(priceInUSD * remainingRatio * 100) / 100;
+      }
+
+      const userId = auth.user!.id;
+      // Refund and cancel in a transaction
+      const txn = db.transaction(() => {
+        if (refundAmount > 0) {
+          db.prepare('UPDATE users SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(refundAmount, userId);
+          const updated = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number };
+          db.prepare('INSERT INTO billing_records (user_id, amount, type, description, balance_after) VALUES (?, ?, ?, ?, ?)').run(
+            userId, refundAmount, 'refund', `Subscription cancellation refund (${sub.billing_cycle})`, updated.balance
+          );
+        }
+        db.prepare("UPDATE user_subscriptions SET status = 'cancelled', auto_renew = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(subscription_id);
+      });
+      txn();
+
+      return NextResponse.json({
+        success: true,
+        refund: refundAmount,
+      });
     }
 
     if (action === 'toggle_auto_renew') {

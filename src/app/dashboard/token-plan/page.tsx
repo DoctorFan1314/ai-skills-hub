@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/contexts/i18n-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/contexts/toast-context";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { SubscriptionCard } from "@/components/shared/subscription-card";
 import { Sparkles, XCircle, CheckCircle, AlertTriangle, Copy, CheckCheck, Key, Globe, Loader2, ChevronDown } from "lucide-react";
@@ -61,6 +62,7 @@ export default function TokenPlanDashboard() {
 function TokenPlanContent() {
   const { lang } = useI18n();
   const { user } = useAuth();
+  const { toast: showToast } = useToast();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +104,11 @@ function TokenPlanContent() {
       if (res.ok) {
         const data = await res.json();
         setSubscriptions(prev => prev.map(s => s.id === cancelTarget ? { ...s, status: "cancelled" as const, auto_renew: 0 } : s));
+        if (data.refund > 0) {
+          showToast(lang === "zh" ? "订阅已取消，剩余金额已退还到余额" : "Cancelled. Remaining balance refunded.", "success");
+        } else {
+          showToast(lang === "zh" ? "订阅已取消" : "Subscription cancelled", "success");
+        }
       }
     } catch {} finally { setActionLoading(null); setCancelTarget(null); }
   }
@@ -285,7 +292,7 @@ function TokenPlanContent() {
                 {apiKeys.slice(0, 3).map((k) => (
                   <div key={k.id} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border">
                     <span className="text-xs text-muted-foreground shrink-0 w-16 truncate">{k.name}</span>
-                    <code className="flex-1 text-sm font-mono text-foreground truncate">
+                    <code className={`flex-1 text-sm font-mono text-foreground ${showKey === k.id ? "break-all" : "truncate"}`}>
                       {showKey === k.id ? k.key_value : maskKey(k.key_value)}
                     </code>
                     <button onClick={() => setShowKey(showKey === k.id ? null : k.id)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">
