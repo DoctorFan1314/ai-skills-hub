@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
-import { Wallet, Plus, Gift, Loader2 } from "lucide-react";
+import { Wallet, Plus, Gift, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 const LABELS = {
@@ -27,6 +27,7 @@ export default function BillingPage() {
   const [redeemCode, setRedeemCode] = useState("");
   const [redeemLoading, setRedeemLoading] = useState(false);
   const [redeemError, setRedeemError] = useState("");
+  const [refreshingBalance, setRefreshingBalance] = useState(false);
 
   async function handleRedeem() {
     setRedeemError("");
@@ -54,6 +55,12 @@ export default function BillingPage() {
     setRedeemLoading(false);
   }
 
+  async function handleRefreshBalance() {
+    setRefreshingBalance(true);
+    await refreshUser();
+    setRefreshingBalance(false);
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{t.title}</h1>
@@ -62,7 +69,21 @@ export default function BillingPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-muted-foreground mb-1">{t.balance}</div>
+              <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                {t.balance}
+                <button
+                  onClick={handleRefreshBalance}
+                  disabled={refreshingBalance}
+                  className="p-1 rounded-md hover:bg-muted transition-colors"
+                  aria-label={lang === "zh" ? "刷新余额" : "Refresh balance"}
+                >
+                  {refreshingBalance ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
               <div className="text-4xl font-bold font-mono">{formatPrice(user?.balance || 0)}</div>
             </div>
             <div className="flex gap-2">

@@ -20,6 +20,7 @@ interface ApiKey {
   created_at: string;
   last_used_at: string | null;
   total_calls: number;
+  expires_at: string | null;
 }
 
 const LABELS = {
@@ -38,6 +39,7 @@ const LABELS = {
     keyCreated: "API Key 创建成功",
     confirmDelete: "确定删除此 Key？",
     noKeys: "暂无 API Key，点击上方按钮创建",
+    searchKeys: "搜索 Key...",
     rateLimit: "速率限制",
     rpm: "次/分钟",
     save: "保存",
@@ -49,6 +51,10 @@ const LABELS = {
     avgLatency: "平均延迟",
     errorRate: "错误率",
     noData: "暂无数据",
+    expires: "过期时间",
+    expiresIn: "剩余 {days} 天",
+    expired: "已过期",
+    neverExpires: "永不过期",
   },
   en: {
     title: "API Keys Management",
@@ -76,6 +82,11 @@ const LABELS = {
     avgLatency: "Avg Latency",
     errorRate: "Error Rate",
     noData: "No data",
+    searchKeys: "Search keys...",
+    expires: "Expires",
+    expiresIn: "{days} days left",
+    expired: "Expired",
+    neverExpires: "Never expires",
   },
 };
 
@@ -84,6 +95,7 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const keys = data?.keys || [];
   const [showKey, setShowKey] = useState<Record<number, boolean>>({});
   const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyExpires, setNewKeyExpires] = useState("");
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [newKeyFull, setNewKeyFull] = useState<string | null>(null);
@@ -92,6 +104,7 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
   const [expandedKeyId, setExpandedKeyId] = useState<number | null>(null);
   const [keyStats, setKeyStats] = useState<Record<number, { calls_7d: number; cost_7d: number; tokens_7d: number; avg_latency: number | null; error_rate: number }>>({});
   const { toast: showToast } = useToast();
+  const [keySearch, setKeySearch] = useState("");
   const t = LABELS[lang];
 
   const createKey = async () => {
@@ -101,11 +114,12 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ name: newKeyName || "Default" }),
+        body: JSON.stringify({ name: newKeyName || "Default", expires_at: newKeyExpires || null }),
       });
       if (res.ok) {
         const data = await res.json();
         setNewKeyName("");
+        setNewKeyExpires("");
         mutate();
         if (data.full_key) {
           setNewKeyFull(data.full_key);
@@ -191,6 +205,10 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
     return date.toLocaleDateString();
   };
 
+  const filteredKeys = keySearch
+    ? keys.filter(k => k.name.toLowerCase().includes(keySearch.toLowerCase()) || k.key_value.toLowerCase().includes(keySearch.toLowerCase()))
+    : keys;
+
   if (isLoading) {
     return <div className="h-48 animate-pulse bg-muted rounded-lg" />;
   }
@@ -206,6 +224,11 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
             onChange={e => setNewKeyName(e.target.value)}
             className="w-40 h-9"
           />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>{t.expires}:</span>
+            <input type="date" value={newKeyExpires} onChange={e => setNewKeyExpires(e.target.value)}
+              className="h-9 px-2 rounded-md border border-input bg-background text-sm" />
+          </div>
           <Button size="sm" onClick={createKey} disabled={creating}>
             <Plus className="h-4 w-4 mr-1" />
             {t.create}
@@ -213,13 +236,23 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
         </div>
       </CardHeader>
       <CardContent>
-        {keys.length === 0 ? (
+        {filteredKeys.length === 0 && keys.length > 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">{lang === "zh" ? "无匹配的 Key" : "No matching keys"}</div>
+        ) : keys.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-sm">{t.noKeys}</div>
         ) : (
           <div className="space-y-3">
-            {keys.map((k) => (
+            {keys.length > 5 && (
+              <input value={keySearch} onChange={e => setKeySearch(e.target.value)}
+                placeholder={t.searchKeys}
+                className="w-full h-8 px-3 rounded-md border border-input bg-background text-sm" />
+            )}
+            {filteredKeys.map((k) => {
+              const isExpired = k.expires_at ? new Date(k.expires_at + 'T23:59:59') < new Date() : false;
+              const calcDaysLeft = k.expires_at ? Math.ceil((new Date(k.expires_at + 'T23:59:59').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+              return (
               <Fragment key={k.id}>
-              <div className="flex items-center gap-4 p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
+              <div className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${isExpired ? "border-red-500/30 bg-red-500/5" : "border-border/50 hover:bg-muted/50"}`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-sm">{k.name}</span>
@@ -230,6 +263,9 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
                     <span className={`text-xs px-2 py-0.5 rounded-full ${k.enabled ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
                       {k.enabled ? t.enabled : t.disabled}
                     </span>
+                    {isExpired && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-500">{t.expired}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <code className="text-xs font-mono text-muted-foreground">
@@ -241,6 +277,16 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
                     <button onClick={() => copyKey(k.key_value)} className="text-muted-foreground hover:text-foreground" aria-label="Copy key">
                       <Copy className="h-3 w-3" />
                     </button>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {k.expires_at ? (
+                      <span className={isExpired ? "text-red-500" : ""}>
+                        {t.expires}: {new Date(k.expires_at).toLocaleDateString()}
+                        {isExpired ? ` (${t.expired})` : calcDaysLeft !== null ? ` (${t.expiresIn.replace('{days}', String(calcDaysLeft))})` : ""}
+                      </span>
+                    ) : (
+                      <span>{t.expires}: {t.neverExpires}</span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right text-xs text-muted-foreground shrink-0">
@@ -307,7 +353,8 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
                 </div>
               )}
               </Fragment>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
@@ -315,7 +362,7 @@ export function ApiKeyTable({ lang = "zh" }: { lang?: "zh" | "en" }) {
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t.title}</DialogTitle>
+            <DialogTitle>{t.confirmDelete}: {deleteTarget ? `"${keys.find(k => k.id === deleteTarget)?.name}"` : ""}</DialogTitle>
             <DialogDescription>{t.confirmDelete}</DialogDescription>
           </DialogHeader>
           <div className="flex gap-2 justify-end pt-2">

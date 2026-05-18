@@ -16,6 +16,51 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
+    const format = searchParams.get('format');
+
+    // CSV export
+    if (format === 'csv') {
+      const search = searchParams.get('search') || '';
+      const role = searchParams.get('role') || '';
+
+      let where = 'WHERE 1=1';
+      const params: unknown[] = [];
+
+      if (search) {
+        where += ' AND (email LIKE ? OR username LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`);
+      }
+      if (role && (role === 'admin' || role === 'user')) {
+        where += ' AND role = ?';
+        params.push(role);
+      }
+
+      const users = db.prepare(
+        `SELECT id, email, username, balance, role, enabled, created_at FROM users ${where} ORDER BY created_at DESC`
+      ).all(...params) as { id: number; email: string; username: string; balance: number; role: string; enabled: number; created_at: string }[];
+
+      const headers = ['id', 'email', 'username', 'balance', 'role', 'enabled', 'created_at'];
+      const rows = [headers.join(',')];
+
+      for (const u of users) {
+        rows.push([
+          u.id,
+          `"${u.email.replace(/"/g, '""')}"`,
+          `"${u.username.replace(/"/g, '""')}"`,
+          u.balance,
+          u.role,
+          u.enabled,
+          u.created_at,
+        ].join(','));
+      }
+
+      return new NextResponse(rows.join('\n'), {
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="users.csv"',
+        },
+      });
+    }
 
     // User detail endpoint
     if (action === 'detail') {

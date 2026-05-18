@@ -71,8 +71,13 @@ function getDb(): Database.Database {
       events TEXT NOT NULL DEFAULT '[]',
       enabled INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_triggered_at DATETIME,
+      last_status_code INTEGER
     )`,
+    'ALTER TABLE webhooks ADD COLUMN last_triggered_at DATETIME',
+    'ALTER TABLE webhooks ADD COLUMN last_status_code INTEGER',
+    'ALTER TABLE api_keys ADD COLUMN expires_at TEXT',
   ];
   for (const sql of migrations) {
     try {
@@ -171,6 +176,7 @@ export interface DBApiKey {
   created_at: string;
   last_used_at: string | null;
   total_calls: number;
+  expires_at: string | null;
 }
 
 export interface DBChannel {

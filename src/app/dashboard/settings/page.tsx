@@ -29,6 +29,10 @@ export default function SettingsPage() {
   const [currentSpend, setCurrentSpend] = useState(0);
   const [budgetSaving, setBudgetSaving] = useState(false);
 
+  const budgetLimit = monthlyBudget ? parseFloat(monthlyBudget) : 0;
+  const budgetPercent = budgetLimit > 0 ? (currentSpend / budgetLimit) * 100 : 0;
+  const budgetStatus = budgetLimit > 0 ? (budgetPercent >= 100 ? "exceeded" : budgetPercent >= 80 ? "near" : "ok") : "none";
+
   useEffect(() => {
     fetch("/api/dashboard/settings", { credentials: "include" })
       .then(r => r.json())
@@ -53,6 +57,13 @@ export default function SettingsPage() {
       })
       .catch(() => {});
   }, [user]);
+
+  // Budget alert on load
+  useEffect(() => {
+    if (budgetLimit > 0 && budgetPercent >= 100) {
+      showToast("Budget exceeded!", "error");
+    }
+  }, [budgetLimit, budgetPercent]);
 
   const handleSaveSystem = async () => {
     setSystemSaving(true);
@@ -86,10 +97,6 @@ export default function SettingsPage() {
     } catch { /* ignore */ }
     setBudgetSaving(false);
   };
-
-  const budgetLimit = monthlyBudget ? parseFloat(monthlyBudget) : 0;
-  const budgetPercent = budgetLimit > 0 ? (currentSpend / budgetLimit) * 100 : 0;
-  const budgetStatus = budgetLimit > 0 ? (budgetPercent >= 100 ? "exceeded" : budgetPercent >= 80 ? "near" : "ok") : "none";
 
   const endpoint = typeof window !== "undefined" ? `${window.location.origin}/api/v1` : "";
 

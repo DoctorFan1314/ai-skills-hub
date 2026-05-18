@@ -28,11 +28,12 @@ export async function GET(request: NextRequest) {
           channel_id,
           COUNT(*) as total_calls,
           SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as success_calls,
-          AVG(CASE WHEN success = 1 THEN latency_ms ELSE NULL END) as avg_latency
+          AVG(CASE WHEN success = 1 THEN latency_ms ELSE NULL END) as avg_latency,
+          SUM(cost) as total_cost
         FROM usage_logs
         WHERE channel_id IS NOT NULL AND created_at >= datetime('now', '-1 day')
         GROUP BY channel_id
-      `).all() as { channel_id: number; total_calls: number; success_calls: number; avg_latency: number | null }[];
+      `).all() as { channel_id: number; total_calls: number; success_calls: number; avg_latency: number | null; total_cost: number | null }[];
 
       const channels = db.prepare('SELECT id, name, status, fail_count, last_fail_at FROM channels').all() as Pick<DBChannel, 'id' | 'name' | 'status' | 'fail_count' | 'last_fail_at'>[];
 
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
           total_calls_24h: s?.total_calls ?? 0,
           success_rate_24h: s ? (s.success_calls / s.total_calls * 100) : null,
           avg_latency_24h: s?.avg_latency ? Math.round(s.avg_latency) : null,
+          total_cost_24h: s?.total_cost ?? 0,
         };
       });
 

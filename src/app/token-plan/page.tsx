@@ -172,6 +172,69 @@ export default function TokenPlanPage() {
         )}
       </section>
 
+      {/* Comparison Table */}
+      {plans.length > 0 && (
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-6xl px-4 py-10">
+            <h2 className="text-sm font-semibold text-foreground text-center mb-6">
+              {lang === "zh" ? "套餐对比" : "Compare Plans"}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full glass-card text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left p-3 text-muted-foreground font-medium whitespace-nowrap">
+                      {lang === "zh" ? "功能" : "Feature"}
+                    </th>
+                    {plans.map((plan) => (
+                      <th key={plan.id} className="p-3 text-center font-semibold whitespace-nowrap">
+                        {plan.display_name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "每月 Credits" : "Monthly Credits"}</td>
+                    {plans.map((p) => <td key={p.id} className="p-3 text-center whitespace-nowrap">{p.monthly_credits.toLocaleString()}</td>)}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "最大并发" : "Max Concurrency"}</td>
+                    {plans.map((p) => <td key={p.id} className="p-3 text-center whitespace-nowrap">{p.max_concurrency}</td>)}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "路由优先级" : "Route Priority"}</td>
+                    {plans.map((p) => <td key={p.id} className="p-3 text-center whitespace-nowrap">{p.route_priority}</td>)}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "支持等级" : "Support Level"}</td>
+                    {plans.map((p) => <td key={p.id} className="p-3 text-center whitespace-nowrap">{p.support_level}</td>)}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "非高峰折扣" : "Off-Peak Discount"}</td>
+                    {plans.map((p) => <td key={p.id} className="p-3 text-center whitespace-nowrap">{(p.off_peak_discount * 100).toFixed(0)}%</td>)}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "月付价格" : "Monthly Price"}</td>
+                    {plans.map((p) => {
+                      const price = displayCurrency === "CNY" ? p.monthly_price * exchangeRate : p.monthly_price;
+                      return <td key={p.id} className="p-3 text-center whitespace-nowrap">{displayCurrency === "CNY" ? "¥" : "$"}{price.toFixed(2)}</td>;
+                    })}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{lang === "zh" ? "年付价格" : "Yearly Price"}</td>
+                    {plans.map((p) => {
+                      const price = displayCurrency === "CNY" ? p.yearly_price * exchangeRate : p.yearly_price;
+                      return <td key={p.id} className="p-3 text-center whitespace-nowrap">{displayCurrency === "CNY" ? "¥" : "$"}{price.toFixed(2)}</td>;
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Tools */}
       <section className="border-t border-border bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-8 text-center">

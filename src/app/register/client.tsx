@@ -121,7 +121,9 @@ export default function RegisterClient() {
             {error && <p role="alert" className="text-sm text-red-400 text-center">{error}</p>}
             <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium h-11">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.auth.registerNow}</Button>
           </form>
-          {/* OAuth buttons removed — not yet available */}
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            {lang === "zh" ? "更多登录方式即将上线" : "More sign-in options coming soon"}
+          </p>
           <p className="text-center text-sm text-muted-foreground mt-6">
             {t.auth.hasAccount} <Link href="/login" className="text-primary hover:underline">{t.auth.loginNow}</Link>
           </p>

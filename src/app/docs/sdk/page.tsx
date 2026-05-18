@@ -1,13 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useI18n } from "@/contexts/i18n-context";
 import { CodeBlock } from "@/components/docs/code-block";
 import { BaseUrlDisplay } from "@/components/docs/base-url-display";
 import { Code2, FlaskConical } from "lucide-react";
 
-const OAI_BASE = `http://localhost:3000/api/v1`;
+export default function SdkPage() {
+  const [origin, setOrigin] = useState("");
+  useEffect(() => { setOrigin(window.location.origin); }, []);
 
-const openaiPython = `import openai
+  const OAI_BASE = origin ? `${origin}/api/v1` : "https://your-domain.com/api/v1";
+  const ANTH_BASE = origin ? `${origin}/api` : "https://your-domain.com/api";
+  const { t, lang } = useI18n();
+  const L = t.apiDocs;
+
+  const openaiPython = `import openai
 
 client = openai.OpenAI(
     api_key="sk-oortapi-your-key",
@@ -22,7 +30,7 @@ response = client.chat.completions.create(
 )
 print(response.choices[0].message.content)`;
 
-const openaiNodejs = `import OpenAI from "openai";
+  const openaiNodejs = `import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: "sk-oortapi-your-key",
@@ -35,9 +43,7 @@ const response = await client.chat.completions.create({
 });
 console.log(response.choices[0].message.content);`;
 
-const ANTH_BASE = `http://localhost:3000/api`;
-
-const anthropicPython = `import anthropic
+  const anthropicPython = `import anthropic
 
 client = anthropic.Anthropic(
     api_key="sk-oortapi-your-key",
@@ -53,7 +59,7 @@ response = client.messages.create(
 )
 print(response.content[0].text)`;
 
-const anthropicNodejs = `import Anthropic from "@anthropic-ai/sdk";
+  const anthropicNodejs = `import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({
   apiKey: "sk-oortapi-your-key",
@@ -67,7 +73,7 @@ const response = await client.messages.create({
 });
 console.log(response.content[0].text);`;
 
-const curlChat = `curl ${OAI_BASE}/chat/completions \\
+  const curlChat = `curl ${OAI_BASE}/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer sk-oortapi-your-key" \\
   -d '{
@@ -75,7 +81,7 @@ const curlChat = `curl ${OAI_BASE}/chat/completions \\
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`;
 
-const curlAnthropic = `curl ${ANTH_BASE}/messages \\
+  const curlAnthropic = `curl ${ANTH_BASE}/messages \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: sk-oortapi-your-key" \\
   -H "anthropic-version: 2023-06-01" \\
@@ -85,7 +91,7 @@ const curlAnthropic = `curl ${ANTH_BASE}/messages \\
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`;
 
-const curlStream = `curl ${OAI_BASE}/chat/completions \\
+  const curlStream = `curl ${OAI_BASE}/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer sk-oortapi-your-key" \\
   -d '{
@@ -94,28 +100,20 @@ const curlStream = `curl ${OAI_BASE}/chat/completions \\
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`;
 
-const curlBalance = `curl ${OAI_BASE}/billing/balance \\
+  const curlBalance = `curl ${OAI_BASE}/billing/balance \\
   -H "Authorization: Bearer sk-oortapi-your-key"`;
 
-const frameworkRow =
-  "flex items-center gap-3 px-5 py-3 border-b border-border/20 last:border-b-0";
-
-export default function SdkPage() {
-  const { t } = useI18n();
-  const L = t.apiDocs;
+  const frameworkRow = "flex items-center gap-3 px-5 py-3 border-b border-border/20 last:border-b-0";
 
   return (
     <div className="space-y-10">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight mb-2">{L.navSdk}</h1>
         <p className="text-muted-foreground">{L.sdkDesc}</p>
       </div>
 
-      {/* Base URL */}
       <BaseUrlDisplay />
 
-      {/* OpenAI SDK */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Code2 className="h-5 w-5 text-sky-400" />
@@ -123,17 +121,16 @@ export default function SdkPage() {
         </h2>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.openaiPython}</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.python}</h3>
             <CodeBlock code={openaiPython} />
           </div>
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.openaiNodejs}</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.nodejs}</h3>
             <CodeBlock code={openaiNodejs} />
           </div>
         </div>
       </section>
 
-      {/* Anthropic SDK */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Code2 className="h-5 w-5 text-amber-400" />
@@ -141,51 +138,49 @@ export default function SdkPage() {
         </h2>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.anthropicPython}</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.python}</h3>
             <CodeBlock code={anthropicPython} />
           </div>
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.anthropicNodejs}</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">{L.nodejs}</h3>
             <CodeBlock code={anthropicNodejs} />
           </div>
         </div>
       </section>
 
-      {/* Framework Integration */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <FlaskConical className="h-5 w-5 text-violet-400" />
-          {L.frameworkIntegration}
+          {lang === "zh" ? "框架集成" : "Framework Integration"}
         </h2>
         <div className="rounded-xl border border-border/50 overflow-hidden">
           <div className="grid grid-cols-3 gap-4 px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/20 bg-muted/10">
-            <span>{L.frameworkIntegration}</span>
+            <span>{lang === "zh" ? "框架" : "Framework"}</span>
             <span>Base URL</span>
-            <span>{L.sdkSupport}</span>
+            <span>{lang === "zh" ? "SDK" : "SDK"}</span>
           </div>
           <div className={frameworkRow}>
-            <span className="text-sm font-medium">{L.langchain}</span>
+            <span className="text-sm font-medium">LangChain</span>
             <code className="text-xs font-mono text-muted-foreground">{OAI_BASE}</code>
             <span className="text-xs text-muted-foreground">OpenAI Chat Model</span>
           </div>
           <div className={frameworkRow}>
-            <span className="text-sm font-medium">{L.vercelAiSdk}</span>
+            <span className="text-sm font-medium">Vercel AI SDK</span>
             <code className="text-xs font-mono text-muted-foreground">{OAI_BASE}</code>
             <span className="text-xs text-muted-foreground">openai provider</span>
           </div>
           <div className={frameworkRow}>
-            <span className="text-sm font-medium">{L.llamaindex}</span>
+            <span className="text-sm font-medium">LlamaIndex</span>
             <code className="text-xs font-mono text-muted-foreground">{OAI_BASE}</code>
             <span className="text-xs text-muted-foreground">OpenAI LLM</span>
           </div>
         </div>
       </section>
 
-      {/* cURL Examples */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Code2 className="h-5 w-5 text-primary" />
-          {L.curlExamples}
+          {lang === "zh" ? "cURL 示例" : "cURL Examples"}
         </h2>
         <div className="space-y-4">
           <div>

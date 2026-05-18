@@ -17,6 +17,8 @@ import {
   MinusCircle,
   Loader2,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   Dialog,
@@ -306,6 +308,7 @@ function ChannelFormFields({
 }) {
   const [fetching, setFetching] = useState(false);
   const [showFetchDialog, setShowFetchDialog] = useState(false);
+  const [showKey, setShowKey] = useState(false);
   const [fetchedModels, setFetchedModels] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
 
@@ -394,14 +397,24 @@ function ChannelFormFields({
       </div>
       <div>
         <label className="text-xs text-muted-foreground">{t.apiKey}</label>
-        <Input
-          type="password"
-          value={form.api_key_encrypted}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, api_key_encrypted: e.target.value }))
-          }
-          className="h-9 mt-1"
-        />
+        <div className="relative mt-1">
+          <Input
+            type={showKey ? "text" : "password"}
+            value={form.api_key_encrypted}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, api_key_encrypted: e.target.value }))
+            }
+            className="h-9 pr-8"
+          />
+          <button
+            type="button"
+            onClick={() => setShowKey(!showKey)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label={showKey ? "Hide key" : "Show key"}
+          >
+            {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
@@ -565,6 +578,7 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
     total_calls_24h: number;
     success_rate_24h: number | null;
     avg_latency_24h: number | null;
+    total_cost_24h: number;
   }>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -996,6 +1010,9 @@ export function ChannelCard({ lang = "zh" }: { lang?: "zh" | "en" }) {
                               )}
                               {healthData[ch.id].avg_latency_24h !== null && (
                                 <>{" · "}{t.avgLatency}: {healthData[ch.id].avg_latency_24h}ms</>
+                              )}
+                              {healthData[ch.id].total_cost_24h > 0 && (
+                                <>{" · "}{lang === "zh" ? "费用" : "Cost"}: ${healthData[ch.id].total_cost_24h.toFixed(2)}</>
                               )}
                             </>
                           )}

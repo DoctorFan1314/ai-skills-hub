@@ -19,6 +19,8 @@ interface WebhookItem {
   enabled: number;
   created_at: string;
   updated_at: string;
+  last_triggered_at: string | null;
+  last_status_code: number | null;
 }
 
 const AVAILABLE_EVENTS = [
@@ -57,6 +59,9 @@ const LABELS = {
     created: "Webhook 创建成功",
     updated: "Webhook 更新成功",
     deleted: "Webhook 已删除",
+    lastTriggered: "最后触发",
+    lastStatus: "状态码",
+    never: "从未",
   },
   en: {
     title: "Webhook Management",
@@ -82,6 +87,9 @@ const LABELS = {
     created: "Webhook created",
     updated: "Webhook updated",
     deleted: "Webhook deleted",
+    lastTriggered: "Last Triggered",
+    lastStatus: "Status",
+    never: "Never",
   },
 };
 
@@ -226,6 +234,16 @@ export default function WebhooksPage() {
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {t.secret}: <code className="font-mono">{wh.secret.slice(0, 8)}...{wh.secret.slice(-4)}</code>
+                      </div>
+                      <div className="text-xs mt-1">
+                        {wh.last_triggered_at ? (
+                          <span className={wh.last_status_code && wh.last_status_code >= 200 && wh.last_status_code < 300 ? "text-green-500" : "text-red-500"}>
+                            {t.lastTriggered}: {new Date(wh.last_triggered_at + "Z").toLocaleString()} | {t.lastStatus}: {wh.last_status_code ?? "-"}
+                            {wh.last_status_code && (wh.last_status_code >= 200 && wh.last_status_code < 300 ? " ✓" : " ✗")}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">{t.lastTriggered}: {t.never}</span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right text-xs text-muted-foreground shrink-0">

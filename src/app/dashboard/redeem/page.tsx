@@ -46,6 +46,7 @@ const LABELS = {
     selectPlan: "选择套餐", duration: "时长（月）", credits: "Credits",
     selected: "已选择", batchDelete: "批量删除", batchEnable: "批量启用", batchDisable: "批量禁用",
     batchDeleteConfirm: "确定要删除选中的兑换码吗？此操作不可撤销。",
+    searchCodes: "搜索兑换码...", copyCode: "复制",
   },
   en: {
     title: "Redeem Codes", generate: "Generate Codes", amount: "Amount ($)", count: "Count", maxUses: "Max Uses",
@@ -59,6 +60,7 @@ const LABELS = {
     selectPlan: "Select Plan", duration: "Duration (months)", credits: "Credits",
     selected: "Selected", batchDelete: "Batch Delete", batchEnable: "Batch Enable", batchDisable: "Batch Disable",
     batchDeleteConfirm: "Delete all selected codes? This cannot be undone.",
+    searchCodes: "Search codes...", copyCode: "Copy",
   },
 };
 
@@ -70,6 +72,11 @@ export default function RedeemPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCodes = searchQuery
+    ? codes.filter(c => c.code.toLowerCase().includes(searchQuery.toLowerCase()))
+    : codes;
 
   // Generate dialog
   const [genOpen, setGenOpen] = useState(false);
@@ -202,10 +209,10 @@ export default function RedeemPage() {
   }
 
   function toggleSelectAll() {
-    if (selectedIds.size === codes.length) {
+    if (selectedIds.size === filteredCodes.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(codes.map(c => c.id)));
+      setSelectedIds(new Set(filteredCodes.map(c => c.id)));
     }
   }
 
@@ -282,6 +289,16 @@ export default function RedeemPage() {
               </div>
             </div>
           )}
+          {codes.length > 5 && (
+            <div className="px-4 py-2 border-b border-border/50">
+              <Input
+                placeholder={t.searchCodes}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-xs h-8 text-sm"
+              />
+            </div>
+          )}
           {loading ? (
             <div className="h-48 animate-pulse bg-muted rounded-lg m-6" />
           ) : codes.length === 0 ? (
@@ -292,7 +309,7 @@ export default function RedeemPage() {
                 <thead>
                   <tr className="border-b border-border/50">
                     <th className="text-left py-3 px-2 w-10">
-                      <input type="checkbox" checked={codes.length > 0 && selectedIds.size === codes.length} onChange={toggleSelectAll} className="rounded border-input" />
+                      <input type="checkbox" checked={filteredCodes.length > 0 && selectedIds.size === filteredCodes.length} onChange={toggleSelectAll} className="rounded border-input" />
                     </th>
                     <th className="text-left py-3 px-4 text-muted-foreground font-medium">{t.code}</th>
                     <th className="text-center py-3 px-4 text-muted-foreground font-medium">{t.codeType}</th>
@@ -304,7 +321,7 @@ export default function RedeemPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {codes.map((c) => {
+                  {filteredCodes.map((c) => {
                     const st = getStatus(c);
                     return (
                       <tr key={c.id} className="border-b border-border/20 hover:bg-muted/30">
@@ -341,6 +358,9 @@ export default function RedeemPage() {
                           <div className="flex justify-end gap-1">
                             <button onClick={() => handleToggle(c.id, c.enabled)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-xs" title={c.enabled ? t.disable : t.enable}>
                               {c.enabled ? t.disable : t.enable}
+                            </button>
+                            <button onClick={() => { navigator.clipboard.writeText(c.code); showToast(t.copied, "success"); }} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={t.copyCode} aria-label={t.copyCode}>
+                              <Copy className="h-3.5 w-3.5" />
                             </button>
                             <button onClick={() => setDeleteId(c.id)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors" title={t.delete} aria-label={t.delete}>
                               <Trash2 className="h-3.5 w-3.5" />

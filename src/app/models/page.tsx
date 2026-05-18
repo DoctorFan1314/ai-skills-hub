@@ -120,6 +120,7 @@ export default function ModelsPage() {
   const [tagFilter, setTagFilter] = useState("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [syncing, setSyncing] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(20);
 
   const fetchModels = () => {
     fetch("/api/dashboard/models?source=channels", { credentials: "include" })
@@ -388,8 +389,9 @@ export default function ModelsPage() {
             <p className="text-muted-foreground">{t.noModels}</p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filtered.map((m) => {
+            {filtered.slice(0, visibleCount).map((m) => {
               const c = pc(m.provider);
               const isEditing = editingModel === m.model_name && isAdmin;
               return (
@@ -537,6 +539,17 @@ export default function ModelsPage() {
               );
             })}
           </div>
+          {visibleCount < filtered.length && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 20)}
+                className="text-sm text-primary hover:underline focus:outline-none"
+              >
+                {lang === "zh" ? "加载更多" : "Load More"} ({filtered.length - visibleCount})
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { ModelAnalytics } from "@/components/dashboard/model-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code, Key, CreditCard, ArrowRight, Sparkles, Copy, Check, AlertTriangle } from "lucide-react";
+import { Code, Key, CreditCard, ArrowRight, Sparkles, Copy, Check, AlertTriangle, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
@@ -55,8 +55,20 @@ export default function DashboardPage() {
   const t = LABELS[lang];
   const [baseUrl, setBaseUrl] = useState("https://your-domain.com");
   const [codeCopied, setCodeCopied] = useState(false);
-  const { data: keysData } = useSWR<{ keys: { id: number }[] }>("/api/dashboard/keys", dashboardSWRConfig);
-  const { data: subData } = useSWR<{ subscriptions: { id: number; status: string; current_period_end: string; plan_display_name: string; auto_renew: number }[] }>("/api/dashboard/subscription", dashboardSWRConfig);
+  const { data: keysData, error: keysError, mutate: mutateKeys } = useSWR<{ keys: { id: number }[] }>("/api/dashboard/keys", dashboardSWRConfig);
+  const { data: subData, error: subError, mutate: mutateSub } = useSWR<{ subscriptions: { id: number; status: string; current_period_end: string; plan_display_name: string; auto_renew: number }[] }>("/api/dashboard/subscription", dashboardSWRConfig);
+
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  useEffect(() => {
+    if (keysData || subData) setLastUpdated(new Date());
+  }, [keysData, subData]);
+
+  const hasError = !!(keysError || subError);
+
+  function handleRefresh() {
+    mutateKeys();
+    mutateSub();
+  }
 
   const hasKeys = (keysData?.keys?.length || 0) > 0;
   const hasSub = (subData?.subscriptions?.length || 0) > 0;
@@ -79,9 +91,41 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">
-        {lang === "zh" ? "控制台" : "Dashboard"}
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">
+          {lang === "zh" ? "控制台" : "Dashboard"}
+        </h1>
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground">
+              {lang === "zh" ? "上次更新" : "Last updated"}: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-1">
+            <RefreshCw className="h-3.5 w-3.5" />
+            {lang === "zh" ? "刷新" : "Refresh"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Error banner */}
+      {hasError && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+          <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-red-400">
+              {lang === "zh" ? "部分数据加载失败" : "Failed to load some data"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {lang === "zh" ? "请检查网络连接后重试" : "Check your connection and retry"}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRefresh} className="shrink-0 border-red-500/30 text-red-400 hover:bg-red-500/10 gap-1">
+            <RefreshCw className="h-3.5 w-3.5" />
+            {lang === "zh" ? "重试" : "Retry"}
+          </Button>
+        </div>
+      )}
 
       {/* Subscription expiry warning */}
       {expiringSub && (

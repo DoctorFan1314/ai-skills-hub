@@ -4,9 +4,11 @@ import { useI18n } from "@/contexts/i18n-context";
 import { useCurrency } from "@/contexts/currency-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { Cpu, Activity, Clock, Coins, ArrowLeft, Server } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Cpu, Activity, Clock, Coins, ArrowLeft, Server, Play, UserPlus } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 
 interface ModelInfo {
@@ -65,6 +67,8 @@ const LABELS = {
     offline: "离线",
     unknown: "未知",
     status: "状态",
+    ctaPlayground: "在 Playground 中测试",
+    ctaRegister: "注册使用此模型",
   },
   en: {
     title: "Model Details",
@@ -87,6 +91,8 @@ const LABELS = {
     offline: "Offline",
     unknown: "Unknown",
     status: "Status",
+    ctaPlayground: "Test in Playground",
+    ctaRegister: "Sign Up to Use This Model",
   },
 };
 
@@ -97,6 +103,8 @@ export default function ModelDetailPage() {
   const params = useParams();
   const modelName = decodeURIComponent(params.model as string);
 
+  const { user } = useAuth();
+  const router = useRouter();
   const [model, setModel] = useState<ModelInfo | null>(null);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [stats, setStats] = useState<ModelStats | null>(null);
@@ -200,6 +208,21 @@ export default function ModelDetailPage() {
             <p className="text-[10px] text-muted-foreground">1 token = {model.credit_rate} credits</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* CTAs */}
+      <div className="flex flex-wrap gap-3">
+        {user ? (
+          <Button onClick={() => router.push(`/dashboard/playground?model=${encodeURIComponent(model.name)}`)} className="gap-2">
+            <Play className="h-4 w-4" />
+            {t.ctaPlayground}
+          </Button>
+        ) : (
+          <Button onClick={() => router.push(`/register?redirect=/models/${encodeURIComponent(model.name)}`)} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            {t.ctaRegister}
+          </Button>
+        )}
       </div>
 
       {/* 7-day stats */}

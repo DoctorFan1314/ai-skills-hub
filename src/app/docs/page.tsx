@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/contexts/i18n-context";
-import { Zap, Code, Key, Activity, Server, DollarSign, AlertTriangle, Gauge, Book, Layout, ArrowRight } from "lucide-react";
+import { Zap, Code, Key, Activity, Server, DollarSign, AlertTriangle, Gauge, Book, Layout, ArrowRight, Search } from "lucide-react";
 
 interface DocCard {
   href: string;
@@ -24,6 +26,8 @@ function DocCard({ href, icon: Icon, label, desc }: { href: string; icon: typeof
 
 export default function DocsLandingPage() {
   const { lang, t } = useI18n();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const L = t.apiDocs;
 
   const cards: DocCard[] = [
@@ -53,6 +57,16 @@ export default function DocsLandingPage() {
           <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-6">
             {L.subtitle}
           </p>
+          <div className="max-w-md mx-auto relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && searchQuery.trim()) { router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`); } }}
+              placeholder={(L as Record<string, string>).navDocsSearchPlaceholder || "Search docs..."}
+              className="w-full pl-10 pr-4 py-2 bg-background rounded-lg text-sm border border-border/50 focus:border-primary focus:outline-none"
+            />
+          </div>
         </div>
       </div>
 

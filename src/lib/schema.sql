@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_used_at DATETIME,
   total_calls INTEGER DEFAULT 0,
+  expires_at TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       name, display_name, tagline, tier, monthly_price, yearly_price,
       monthly_credits, first_purchase_discount = 0.3, overage_rate_multiplier = 1.0,
       max_concurrency = 10, route_priority = 'standard', off_peak_discount = 0,
-      support_level = 'community', popular = 0,
+      support_level = 'community', popular = 0, currency = 'CNY',
     } = body;
 
     if (!name || !display_name || !tier || monthly_price == null || yearly_price == null || !monthly_credits) {
@@ -74,9 +74,9 @@ export async function POST(request: NextRequest) {
     }
 
     const result = db.prepare(
-      `INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(name, display_name, tagline || null, tier, monthly_price, yearly_price, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular ? 1 : 0);
+      `INSERT INTO subscription_plans (name, display_name, tagline, tier, monthly_price, yearly_price, currency, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(name, display_name, tagline || null, tier, monthly_price, yearly_price, currency, monthly_credits, first_purchase_discount, overage_rate_multiplier, max_concurrency, route_priority, off_peak_discount, support_level, popular ? 1 : 0);
 
     const plan = db.prepare('SELECT * FROM subscription_plans WHERE id = ?').get(result.lastInsertRowid) as DBSubscriptionPlan;
     return NextResponse.json({ plan }, { status: 201 });

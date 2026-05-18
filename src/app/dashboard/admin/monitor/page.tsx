@@ -3,6 +3,7 @@
 import { useI18n } from "@/contexts/i18n-context";
 import { useCurrency } from "@/contexts/currency-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Activity,
   AlertTriangle,
@@ -12,9 +13,22 @@ import {
   DollarSign,
   Coins,
   Server,
+  RefreshCw,
+  BarChart3,
 } from "lucide-react";
 import useSWR from "swr";
 import { dashboardSWRConfig } from "@/lib/swr-fetcher";
+import dynamic from "next/dynamic";
+import { useMemo, useState, useEffect } from "react";
+
+const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
+
+interface HourTrend {
+  hour: string;
+  calls: number;
+  failed: number;
+  avg_latency: number | null;
+}
 
 interface MonitorData {
   qps: number;
@@ -30,6 +44,7 @@ interface MonitorData {
     error_rate: number;
     avg_latency: number;
   }>;
+  hourly_trend: HourTrend[];
 }
 
 const LABELS = {
@@ -55,6 +70,13 @@ const LABELS = {
     avgLatency: "平均延迟",
     noData: "暂无监控数据",
     loading: "加载中...",
+    refresh: "刷新",
+    lastUpdated: "上次更新",
+    trend: "24h 趋势",
+    trendCalls: "调用量",
+    trendError: "错误率",
+    trendLatency: "延迟",
+    noTrend: "暂无趋势数据",
   },
   en: {
     title: "System Monitor",
@@ -78,6 +100,13 @@ const LABELS = {
     avgLatency: "Avg Latency",
     noData: "No monitoring data yet",
     loading: "Loading...",
+    refresh: "Refresh",
+    lastUpdated: "Last updated",
+    trend: "24h Trend",
+    trendCalls: "Calls",
+    trendError: "Error Rate",
+    trendLatency: "Latency",
+    noTrend: "No trend data",
   },
 };
 
@@ -109,11 +138,54 @@ export default function MonitorPage() {
   const { lang } = useI18n();
   const { formatPrice } = useCurrency();
   const t = LABELS[lang];
+  const [trendMetric, setTrendMetric] = useState<"calls" | "error" | "latency">("calls");
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  const { data, isLoading } = useSWR<MonitorData>(
+  const { data, isLoading, mutate } = useSWR<MonitorData>(
     "/api/dashboard/admin/monitor",
-    dashboardSWRConfig,
+    { ...dashboardSWRConfig, refreshInterval: 30000 },
   );
+
+  useEffect(() => {
+    if (data) {
+      setLastUpdated(new Date().toLocaleTimeString());
+    }
+  }, [data]);
+
+  const chartOption = useMemo(() => {
+    if (!data?.hourly_trend || data.hourly_trend.length === 0) return null;
+    const trend = data.hourly_trend;
+    const hours = trend.map(t => t.hour);
+    let values: number[];
+    let color: string;
+    let unit = "";
+
+    if (trendMetric === "calls") {
+      values = trend.map(t => t.calls);
+      color = "#3b82f6";
+    } else if (trendMetric === "error") {
+      values = trend.map(t => t.calls > 0 ? parseFloat(((t.failed / t.calls) * 100).toFixed(2)) : 0);
+      color = "#ef4444";
+      unit = "%";
+    } else {
+      values = trend.map(t => t.avg_latency ?? 0);
+      color = "#f59e0b";
+      unit = "ms";
+    }
+
+    return {
+      tooltip: { trigger: "axis" as const, formatter: (params: { axisValue: string; value: number }[]) => {
+        const p = params[0];
+        return `${p.axisValue}<br/>${typeof p.value === "number" ? p.value.toLocaleString() : p.value}${unit}`;
+      }},
+      grid: { left: 50, right: 15, top: 10, bottom: 25 },
+      xAxis: { type: "category" as const, data: hours, axisLabel: { fontSize: 10 } },
+      yAxis: { type: "value" as const, axisLabel: { fontSize: 10 } },
+      series: [{
+        type: "bar" as const, data: values, itemStyle: { color, borderRadius: [3, 3, 0, 0] }, barMaxWidth: 24,
+      }],
+    };
+  }, [data?.hourly_trend, trendMetric]);
 
   if (isLoading && !data) {
     return (
@@ -200,10 +272,23 @@ export default function MonitorPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <Activity className="h-6 w-6" />
-        {t.title}
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Activity className="h-6 w-6" />
+          {t.title}
+        </h1>
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground">
+              {t.lastUpdated}: {lastUpdated}
+            </span>
+          )}
+          <Button size="sm" variant="outline" onClick={() => mutate()} className="gap-1.5">
+            <RefreshCw className="h-3.5 w-3.5" />
+            {t.refresh}
+          </Button>
+        </div>
+      </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -226,6 +311,30 @@ export default function MonitorPage() {
           </Card>
         ))}
       </div>
+
+      {/* Trend chart */}
+      {chartOption && (
+        <Card className="glass-card">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />{t.trend}
+              </CardTitle>
+              <div className="flex gap-1">
+                {(["calls", "error", "latency"] as const).map(m => (
+                  <button key={m} onClick={() => setTrendMetric(m)}
+                    className={`px-2 py-1 text-xs rounded-md transition-colors ${trendMetric === m ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+                    {m === "calls" ? t.trendCalls : m === "error" ? t.trendError : t.trendLatency}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ReactECharts option={chartOption} style={{ height: 200 }} opts={{ renderer: "svg" }} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Provider health table */}
       <Card className="glass-card">

@@ -167,6 +167,7 @@ export default function UsagePage() {
   const [dailyTrend, setDailyTrend] = useState<DailyTrend[]>([]);
   const [chartMetric, setChartMetric] = useState<"cost" | "tokens" | "calls">("cost");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -184,6 +185,8 @@ export default function UsagePage() {
   const [filterKeyId, setFilterKeyId] = useState("");
   // API keys for filter dropdown
   const [apiKeys, setApiKeys] = useState<{ id: number; name: string }[]>([]);
+  const [sortKey, setSortKey] = useState<string>("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const t = LABELS[lang];
 
   useEffect(() => {
@@ -242,6 +245,7 @@ export default function UsagePage() {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const parts = [`limit=50&offset=${(page - 1) * 50}`];
     if (filterModel) parts.push(`model=${encodeURIComponent(filterModel)}`);
     if (filterStatus) parts.push(`status=${filterStatus}`);
@@ -267,6 +271,7 @@ export default function UsagePage() {
         setLoading(false);
       })
       .catch(() => {
+        setError(lang === "zh" ? "加载数据失败" : "Failed to load data");
         setLogs([]);
         setLoading(false);
       });
@@ -390,6 +395,27 @@ export default function UsagePage() {
       </div>
     );
   };
+
+  const sortedLogs = [...logs].sort((a, b) => {
+    if (sortKey === 'total') {
+      const aTotal = a.tokens_in + a.tokens_out;
+      const bTotal = b.tokens_in + b.tokens_out;
+      return sortDir === 'asc' ? aTotal - bTotal : bTotal - aTotal;
+    }
+    if (sortKey === 'created_at') {
+      const aDate = new Date(a.created_at + 'Z').getTime();
+      const bDate = new Date(b.created_at + 'Z').getTime();
+      return sortDir === 'asc' ? aDate - bDate : bDate - aDate;
+    }
+    const aVal = a[sortKey as keyof UsageLog];
+    const bVal = b[sortKey as keyof UsageLog];
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+    }
+    return 0;
+  });
 
   return (
     <div className="space-y-6">
@@ -527,33 +553,63 @@ export default function UsagePage() {
           <CardTitle className="text-lg">{t.title}</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading && logs.length === 0 ? (
+          {error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500 text-sm mb-2">{error}</p>
+              <button onClick={applyFilters} className="text-xs text-primary hover:underline">{lang === "zh" ? "重试" : "Retry"}</button>
+            </div>
+          ) : loading && logs.length === 0 ? (
             <div className="h-48 animate-pulse bg-muted rounded-lg" />
           ) : logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">{t.noLogs}</div>
           ) : (
+            <>{loading && logs.length > 0 && <div className="h-1 bg-primary/20 rounded-full overflow-hidden mb-2"><div className="h-full bg-primary animate-pulse rounded-full" style={{width: '30%'}} /></div>}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
                     <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t.channel}</th>
                     <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t.model}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensIn}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensOut}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensInCache}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokensCacheCreate}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.tokens}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('tokens_in'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.tokensIn}{sortKey === 'tokens_in' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('tokens_out'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.tokensOut}{sortKey === 'tokens_out' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('tokens_in_cache'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.tokensInCache}{sortKey === 'tokens_in_cache' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('tokens_cache_creation'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.tokensCacheCreate}{sortKey === 'tokens_cache_creation' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('total'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.tokens}{sortKey === 'total' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.multiplier}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.cost}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('cost'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.cost}{sortKey === 'cost' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.details}</th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.notes}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.latency}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('latency_ms'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.latency}{sortKey === 'latency_ms' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
                     <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t.status}</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{t.time}</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
+                      onClick={() => { setSortKey('created_at'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
+                      {t.time}{sortKey === 'created_at' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => (
+                  {sortedLogs.map((log) => (
                     <Fragment key={log.id}>
                     <tr className="border-b border-border/20 hover:bg-muted/30">
                       <td className="py-2 px-3 text-xs text-muted-foreground">{log.channel_name || t.noChannel}</td>
@@ -617,7 +673,7 @@ export default function UsagePage() {
                 </tbody>
               </table>
             </div>
-          )}
+            </>)}
           {/* Pagination */}
           {(page > 1 || total > 50) && (
             <div className="flex items-center justify-between pt-3 border-t border-border/20">

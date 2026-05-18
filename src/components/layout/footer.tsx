@@ -28,7 +28,7 @@ export function Footer() {
       { label: t.common.changelog, href: "/changelog", disabled: false },
     ]},
     { id: "community", title: t.footer.community, links: [
-      { label: t.footer.github, href: "#", disabled: true },
+      { label: t.footer.github, href: "https://github.com/DoctorFan1314/OortAPI", disabled: false },
       { label: t.footer.discord, href: "#", disabled: true },
       { label: t.footer.twitter, href: "#", disabled: true },
     ]},

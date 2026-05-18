@@ -49,6 +49,13 @@ function AdminPlansContent() {
   const [planStats, setPlanStats] = useState<PlanStat[]>([]);
   const [totalSubs, setTotalSubs] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: "", display_name: "", tagline: "",
+    monthly_price: 0, yearly_price: 0, monthly_credits: 0,
+    max_concurrency: 10, route_priority: "standard", currency: "CNY",
+  });
+  const [createSaving, setCreateSaving] = useState(false);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -119,6 +126,34 @@ function AdminPlansContent() {
     try { const res = await fetch(`/api/dashboard/admin/plans/${modelDialogPlan.id}/models?model=${encodeURIComponent(modelName)}`, { method: "DELETE", credentials: "include" }); if (res.ok) await fetchPlanModels(modelDialogPlan.id); else showToast(lang === "zh" ? "删除失败" : "Failed to remove model", "error"); } catch { showToast(lang === "zh" ? "网络错误" : "Network error", "error"); } finally { setModelLoading(false); }
   }
 
+  async function handleCreate() {
+    setCreateSaving(true);
+    try {
+      const tier = plans.length > 0 ? Math.max(...plans.map(p => p.tier)) + 1 : 1;
+      const res = await fetch("/api/dashboard/admin/plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ...createForm, tier }),
+      });
+      if (res.ok) {
+        setCreateOpen(false);
+        setCreateForm({
+          name: "", display_name: "", tagline: "",
+          monthly_price: 0, yearly_price: 0, monthly_credits: 0,
+          max_concurrency: 10, route_priority: "standard", currency: "CNY",
+        });
+        await fetchPlans();
+        showToast(lang === "zh" ? "套餐已创建" : "Plan created", "success");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || (lang === "zh" ? "创建失败" : "Create failed"), "error");
+      }
+    } catch {
+      showToast(lang === "zh" ? "网络错误" : "Network error", "error");
+    } finally { setCreateSaving(false); }
+  }
+
   const ROUTE_LABELS: Record<string, { zh: string; en: string }> = { standard: { zh: "标准", en: "Standard" }, priority: { zh: "优先", en: "Priority" }, ultra: { zh: "极速", en: "Ultra" }, exclusive: { zh: "专属", en: "Exclusive" } };
   const SUPPORT_LABELS: Record<string, { zh: string; en: string }> = { community: { zh: "社区", en: "Community" }, email: { zh: "邮件", en: "Email" }, priority: { zh: "优先", en: "Priority" }, dedicated: { zh: "专属", en: "Dedicated" } };
 
@@ -128,9 +163,12 @@ function AdminPlansContent() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div><h1 className="text-xl font-bold text-foreground">{lang === "zh" ? "套餐管理" : "Plan Management"}</h1><p className="text-sm text-muted-foreground">{lang === "zh" ? "管理订阅套餐方案" : "Manage subscription plans"}</p></div>
-        <div className="flex items-center gap-1 p-1 bg-muted rounded-full">
-          <button onClick={() => setDisplayCurrency("USD")} className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${displayCurrency === "USD" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>$ USD</button>
-          <button onClick={() => setDisplayCurrency("CNY")} className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${displayCurrency === "CNY" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>¥ CNY</button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" />{lang === "zh" ? "创建套餐" : "Create Plan"}</Button>
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-full">
+            <button onClick={() => setDisplayCurrency("USD")} className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${displayCurrency === "USD" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>$ USD</button>
+            <button onClick={() => setDisplayCurrency("CNY")} className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${displayCurrency === "CNY" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>¥ CNY</button>
+          </div>
         </div>
       </div>
 
@@ -223,6 +261,45 @@ function AdminPlansContent() {
           ))}
         </div>
       )}
+
+      {/* Create Plan Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{lang === "zh" ? "创建套餐" : "Create Plan"}</DialogTitle><DialogDescription>{lang === "zh" ? "填写新套餐信息" : "Enter new plan details"}</DialogDescription></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "名称" : "Name"}</label><Input value={createForm.name} onChange={e => setCreateForm({ ...createForm, name: e.target.value })} placeholder="spark" className="h-10" /></div>
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "显示名称" : "Display Name"}</label><Input value={createForm.display_name} onChange={e => setCreateForm({ ...createForm, display_name: e.target.value })} placeholder="Lite" className="h-10" /></div>
+            </div>
+            <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "标语" : "Tagline"}</label><Input value={createForm.tagline} onChange={e => setCreateForm({ ...createForm, tagline: e.target.value })} placeholder={lang === "zh" ? "尝鲜入门" : "Great for getting started"} className="h-10" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "月付价格" : "Monthly Price"}</label><Input type="number" step="0.01" value={createForm.monthly_price} onChange={e => setCreateForm({ ...createForm, monthly_price: +e.target.value || 0 })} className="h-10" /></div>
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "年付价格" : "Yearly Price"}</label><Input type="number" step="0.01" value={createForm.yearly_price} onChange={e => setCreateForm({ ...createForm, yearly_price: +e.target.value || 0 })} className="h-10" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "月 Credits" : "Monthly Credits"}</label><Input type="number" value={createForm.monthly_credits} onChange={e => setCreateForm({ ...createForm, monthly_credits: +e.target.value || 0 })} className="h-10" /></div>
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "最大并发" : "Max Concurrency"}</label><Input type="number" value={createForm.max_concurrency} onChange={e => setCreateForm({ ...createForm, max_concurrency: +e.target.value || 10 })} className="h-10" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "路由优先级" : "Route Priority"}</label>
+                <select className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm" value={createForm.route_priority} onChange={e => setCreateForm({ ...createForm, route_priority: e.target.value })}>
+                  {Object.entries(ROUTE_LABELS).map(([k, v]) => <option key={k} value={k}>{v[lang]}</option>)}
+                </select>
+              </div>
+              <div><label className="text-sm text-muted-foreground mb-1.5 block">{lang === "zh" ? "货币" : "Currency"}</label>
+                <select className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm" value={createForm.currency} onChange={e => setCreateForm({ ...createForm, currency: e.target.value })}>
+                  <option value="CNY">CNY (¥)</option>
+                  <option value="USD">USD ($)</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>{lang === "zh" ? "取消" : "Cancel"}</Button>
+              <Button onClick={handleCreate} disabled={createSaving || !createForm.name || !createForm.display_name}>{createSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}{lang === "zh" ? "创建" : "Create"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={!!editPlan} onOpenChange={() => setEditPlan(null)}>

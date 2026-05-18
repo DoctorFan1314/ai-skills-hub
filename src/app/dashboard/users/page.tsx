@@ -11,7 +11,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useToast } from "@/contexts/toast-context";
 import { useCurrency } from "@/contexts/currency-context";
-import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound, Eye, Power, PowerOff, DollarSign } from "lucide-react";
+import { Users, Search, Shield, Loader2, Pencil, Trash2, Wallet, KeyRound, Eye, Power, PowerOff, DollarSign, Download } from "lucide-react";
 
 interface UserItem {
   id: number;
@@ -55,6 +55,7 @@ const LABELS = {
     resetPasswordSuccess: "密码重置成功，请将新密码告知用户：", copyPassword: "复制密码", copied: "已复制",
     selected: "已选择", batchEnable: "批量启用", batchDisable: "批量禁用", batchGrant: "批量发放余额",
     grantAmount: "发放金额 ($)", grantConfirm: "确认为选中用户发放余额？",
+    exportCSV: "导出 CSV",
   },
   en: {
     title: "User Management", search: "Search email or username", all: "All", admin: "Admin", user: "User",
@@ -69,6 +70,7 @@ const LABELS = {
     resetPasswordSuccess: "Password reset successfully. Please share this new password with the user:", copyPassword: "Copy", copied: "Copied",
     selected: "Selected", batchEnable: "Batch Enable", batchDisable: "Batch Disable", batchGrant: "Batch Grant Balance",
     grantAmount: "Grant Amount ($)", grantConfirm: "Grant balance to selected users?",
+    exportCSV: "Export CSV",
   },
 };
 
@@ -378,7 +380,20 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" />{t.title}</h1>
-        <Badge variant="secondary">{total}</Badge>
+        <div className="flex items-center gap-2">
+          <button onClick={() => {
+            const params = [
+              'format=csv',
+              debouncedSearch ? `search=${encodeURIComponent(debouncedSearch)}` : '',
+              roleFilter !== 'all' ? `role=${roleFilter}` : '',
+            ].filter(Boolean).join('&');
+            window.open(`/api/dashboard/users?${params}`, '_blank');
+          }}
+            className="h-8 px-3 text-xs border border-border/50 rounded-md hover:bg-muted transition-colors flex items-center gap-1.5">
+            <Download className="h-3.5 w-3.5" />{t.exportCSV}
+          </button>
+          <Badge variant="secondary">{total}</Badge>
+        </div>
       </div>
 
       {/* Filters */}

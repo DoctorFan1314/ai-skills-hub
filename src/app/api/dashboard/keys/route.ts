@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     const keys = db.prepare(
-      'SELECT id, name, key_value, permissions, rate_limit, enabled, created_at, last_used_at, total_calls FROM api_keys WHERE user_id = ? ORDER BY created_at DESC'
+      'SELECT id, name, key_value, permissions, rate_limit, enabled, created_at, last_used_at, total_calls, expires_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC'
     ).all(auth.user.id);
 
     return NextResponse.json({ keys });
@@ -31,18 +31,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, rate_limit, permissions } = await request.json();
+    const { name, rate_limit, permissions, expires_at } = await request.json();
 
     const keyValue = generateApiKey();
     const keyHash = hashApiKey(keyValue);
     const maskedValue = keyValue.slice(0, 10) + '****';
     const safeRateLimit = Math.min(Math.max(Math.floor(rate_limit || 60), 1), 10000);
     const result = db.prepare(
-      'INSERT INTO api_keys (user_id, key_value, key_hash, name, permissions, rate_limit) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(auth.user.id, maskedValue, keyHash, name || 'Default', JSON.stringify(permissions || { models: ['*'] }), safeRateLimit);
+      'INSERT INTO api_keys (user_id, key_value, key_hash, name, permissions, rate_limit, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(auth.user.id, maskedValue, keyHash, name || 'Default', JSON.stringify(permissions || { models: ['*'] }), safeRateLimit, expires_at || null);
 
     const key = db.prepare(
-      'SELECT id, name, key_value, permissions, rate_limit, enabled, created_at FROM api_keys WHERE id = ?'
+      'SELECT id, name, key_value, permissions, rate_limit, enabled, created_at, expires_at FROM api_keys WHERE id = ?'
     ).get(result.lastInsertRowid);
 
     // Return full key only on creation (never shown again)
@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, name, enabled, rate_limit, permissions } = await request.json();
+    const { id, name, enabled, rate_limit, permissions, expires_at } = await request.json();
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
     const key = db.prepare('SELECT * FROM api_keys WHERE id = ? AND user_id = ?').get(id, auth.user.id);
@@ -72,13 +72,14 @@ export async function PATCH(request: NextRequest) {
     if (enabled !== undefined) { updates.push('enabled = ?'); values.push(enabled ? 1 : 0); }
     if (rate_limit !== undefined) { updates.push('rate_limit = ?'); values.push(Math.min(Math.max(Math.floor(rate_limit), 1), 10000)); }
     if (permissions !== undefined) { updates.push('permissions = ?'); values.push(JSON.stringify(permissions)); }
+    if (expires_at !== undefined) { updates.push('expires_at = ?'); values.push(expires_at); }
 
     if (updates.length > 0) {
       values.push(id);
       db.prepare(`UPDATE api_keys SET ${updates.join(', ')} WHERE id = ?`).run(...values);
     }
 
-    const updated = db.prepare('SELECT id, name, key_value, permissions, rate_limit, enabled, created_at, last_used_at, total_calls FROM api_keys WHERE id = ?').get(id);
+    const updated = db.prepare('SELECT id, name, key_value, permissions, rate_limit, enabled, created_at, last_used_at, total_calls, expires_at FROM api_keys WHERE id = ?').get(id);
     return NextResponse.json({ key: updated });
   } catch (error) {
     console.error('API key update error:', error);

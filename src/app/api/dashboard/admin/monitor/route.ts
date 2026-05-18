@@ -100,6 +100,24 @@ export async function GET(request: NextRequest) {
       avg_latency: Math.round(p.avg_latency || 0),
     }));
 
+    // Hourly trend for last 24h
+    const hourlyTrend = db.prepare(`
+      SELECT
+        strftime('%H:00', created_at) as hour,
+        COUNT(*) as calls,
+        SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) as failed,
+        AVG(latency_ms) as avg_latency
+      FROM usage_logs
+      WHERE created_at >= datetime('now', '-24 hours')
+      GROUP BY strftime('%H', created_at)
+      ORDER BY created_at ASC
+    `).all() as Array<{
+      hour: string;
+      calls: number;
+      failed: number;
+      avg_latency: number | null;
+    }>;
+
     return NextResponse.json({
       qps: parseFloat(qps.toFixed(2)),
       error_rate: parseFloat(errorRate.toFixed(2)),
@@ -109,6 +127,7 @@ export async function GET(request: NextRequest) {
       total_cost_24h: stats.total_cost || 0,
       total_tokens_24h: stats.total_tokens || 0,
       providers: providerStats,
+      hourly_trend: hourlyTrend,
     });
   } catch (error) {
     console.error('Admin monitor error:', error);

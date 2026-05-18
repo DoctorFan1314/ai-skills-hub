@@ -182,7 +182,7 @@ Supports full `tool_use` / `tool_result` conversion between Anthropic and OpenAI
 - **Delete account** — Users can delete their account with password verification
 - **Usage trend charts** — ECharts bar chart with cost/tokens/calls toggle, filter-linked
 - **System monitor** — Admin dashboard: QPS, error rate, P50/P95 latency, per-provider health
-- **API Playground** — Interactive testing: select model + key, streaming response
+- **API Playground** — Interactive testing: select model + key, multi-turn conversation, configurable parameters, streaming response
 - **Multi-page documentation** — Sidebar-navigated docs with Quick Start, Authentication, API Endpoints, SDK, Streaming, Pricing, Error Codes, Rate Limits, Deployment, Integration Guides, and Swagger UI
 - **Channel routing matrix** — Visual model-to-channel mapping with priority/weight
 - **Budget management** — Monthly spending limits with threshold alerts

@@ -51,6 +51,18 @@ export function Navbar() {
   // Close dropdown on route change
   useEffect(() => { setUserMenuOpen(false); setSheetOpen(false); }, [pathname]);
 
+  // Ctrl+K / Cmd+K to open search
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleUserMenuKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!userMenuOpen) return;

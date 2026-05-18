@@ -6,6 +6,43 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v3.3.4.8] — 2026-05-18
+
+### New Features
+- **Password reset** — Forgot password flow at `/forgot-password` + `/reset-password` pages
+- **Remember me** — Login page checkbox for persistent sessions
+- **API Key expiration** — Optional expiry date per key with countdown and expired state
+- **Create plan UI** — Admin can now create subscription plans from the dashboard
+- **Plan comparison table** — Token Plan page now shows a feature comparison table across all plans
+
+### UX Improvements
+- **Playground** — Multi-turn conversation history, configurable parameters (temperature/max_tokens/top_p), system prompt input, copy button on responses
+- **Usage table** — Sortable columns (click headers to sort by tokens, cost, latency, date)
+- **Model detail** — CTA buttons for unauthenticated users ("Sign Up") and logged-in users ("Test in Playground")
+- **Model market** — "Load More" pagination (20 per batch)
+- **API Key search** — Search/filter keys by name or key value, delete dialog shows key name
+- **Channel key visibility** — Eye toggle on API key password field in channel form
+- **Channel cost stats** — 24h cost displayed per channel in health data
+- **Webhook delivery status** — Last triggered timestamp and status code shown
+- **User CSV export** — Admin can export user list as CSV
+- **Redeem code search** — Search codes by value, copy button per row
+- **SDK docs** — Dynamic base URLs (no more hardcoded localhost)
+- **Docs search** — Search input on docs landing page
+- **Keyboard shortcut** — Ctrl+K now opens search (was non-functional)
+
+### Dashboard Enhancements
+- **Overview** — Error state handling with retry, manual refresh button, last-updated timestamp
+- **Monitor** — Auto-refresh every 30s, manual refresh, last-updated, hourly trend chart (ECharts)
+- **Billing** — Balance refresh button
+- **Settings** — Budget exceeded toast notification
+
+### Other
+- **GitHub link activated** — Footer GitHub link now points to the actual repo
+- **Ctrl+K shortcut** — Now functional, opens search
+- **Register page** — Shows "More sign-in options coming soon" instead of empty space
+
+---
+
 ## [v3.3.4.7] — 2026-05-18
 
 ### Major — Documentation Overhaul
