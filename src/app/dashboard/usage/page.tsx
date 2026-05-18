@@ -285,13 +285,17 @@ export default function UsagePage() {
           total_tokens_out: d.total_tokens_out || 0,
           total_credits_used: d.total_credits_used || 0,
         });
-        // Auto-detect if user is on subscription (credits) mode
+        // Auto-detect display mode: credits only if ALL logs are credits-based
         const hasCredits = data.some((log: UsageLog) => log.deduction_source === 'credits');
-        if (hasCredits) {
+        const hasBalance = data.some((log: UsageLog) => log.deduction_source === 'balance');
+        const isPureCredits = hasCredits && !hasBalance;
+        if (isPureCredits) {
           setIsCreditsUser(true);
+        } else {
+          setIsCreditsUser(false);
         }
         // Switch chart default from cost to tokens for credits users on first detection
-        if (hasCredits && chartMetric === "cost") {
+        if (isPureCredits && chartMetric === "cost") {
           setChartMetric("tokens");
         }
         setDailyTrend(d.daily_trend || []);
