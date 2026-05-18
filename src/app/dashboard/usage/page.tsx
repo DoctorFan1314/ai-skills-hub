@@ -155,9 +155,10 @@ const LABELS = {
   },
 };
 
-function formatRate(rate: number | null | undefined): string {
+function formatRate(rate: number | null | undefined, symbol: string, exchangeRate: number): string {
   if (rate == null || rate === 0) return "-";
-  return `$${rate.toFixed(4)}/1M tokens`;
+  const value = symbol === "¥" ? rate * exchangeRate : rate;
+  return `${symbol}${value.toFixed(4)}/1M tokens`;
 }
 
 export default function UsagePage() {
@@ -374,26 +375,26 @@ export default function UsagePage() {
         <p className="font-semibold text-sm">{t.costBreakdown}</p>
         <div className="text-muted-foreground space-y-0.5">
           <p>{lang === "zh" ? "模型费率" : "Model Rates"}{rateSource}:</p>
-          <p className="pl-3">{lang === "zh" ? "输入(未命中缓存)" : "Input(non-cached)"} = {formatRate(inputRate)}</p>
-          <p className="pl-3">{lang === "zh" ? "输入(命中缓存)" : "Input(cache hit)"} = {formatRate(cacheRate)}</p>
-          <p className="pl-3">{lang === "zh" ? "输出" : "Output"} = {formatRate(outputRate)}</p>
+          <p className="pl-3">{lang === "zh" ? "输入(未命中缓存)" : "Input(non-cached)"} = {formatRate(inputRate, symbol, exchangeRate)}</p>
+          <p className="pl-3">{lang === "zh" ? "输入(命中缓存)" : "Input(cache hit)"} = {formatRate(cacheRate, symbol, exchangeRate)}</p>
+          <p className="pl-3">{lang === "zh" ? "输出" : "Output"} = {formatRate(outputRate, symbol, exchangeRate)}</p>
         </div>
         <div className="space-y-1">
           {nonCachedIn > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">{t.inputCost}: {nonCachedIn.toLocaleString()} × {inputRate.toFixed(4)} / 1M</span>
+              <span className="text-muted-foreground">{t.inputCost}: {nonCachedIn.toLocaleString()} × {(symbol === "¥" ? inputRate * exchangeRate : inputRate).toFixed(4)} / 1M</span>
               <span>= {formatCostDisplay(inputCost)}</span>
             </div>
           )}
           {log.tokens_in_cache > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">{t.cacheReadCost}: {log.tokens_in_cache.toLocaleString()} × {cacheRate.toFixed(4)} / 1M</span>
+              <span className="text-muted-foreground">{t.cacheReadCost}: {log.tokens_in_cache.toLocaleString()} × {(symbol === "¥" ? cacheRate * exchangeRate : cacheRate).toFixed(4)} / 1M</span>
               <span>= {formatCostDisplay(cacheHitCost)}</span>
             </div>
           )}
           {log.tokens_out > 0 && (
             <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">{t.outputCost}: {log.tokens_out.toLocaleString()} × {outputRate.toFixed(4)} / 1M</span>
+              <span className="text-muted-foreground">{t.outputCost}: {log.tokens_out.toLocaleString()} × {(symbol === "¥" ? outputRate * exchangeRate : outputRate).toFixed(4)} / 1M</span>
               <span>= {formatCostDisplay(outputCost)}</span>
             </div>
           )}
