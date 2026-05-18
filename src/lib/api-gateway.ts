@@ -287,7 +287,8 @@ async function executeChannelRequest(
     logUsage({
       userId, apiKeyId,
       channelId: channel.id, model: req.model,
-      tokensIn, tokensOut, tokensInCache, cost,
+      tokensIn, tokensOut, tokensInCache,
+      cost: deductResult.source === 'credits' ? 0 : cost,
       creditsUsed: deductResult.source === 'credits' ? (tokensIn + tokensOut) : 0,
       deductionSource: deductResult.source,
       latencyMs, success: true, multiplier,
