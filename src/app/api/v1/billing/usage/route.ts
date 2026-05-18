@@ -34,11 +34,11 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format'); // 'csv' or default JSON
     const keyId = searchParams.get('key_id'); // API key ID filter
 
-    const conditions: string[] = ['user_id = ?'];
+    const conditions: string[] = ['u.user_id = ?'];
     const params: unknown[] = [userId];
 
     if (model) {
-      conditions.push('model LIKE ?');
+      conditions.push('u.model LIKE ?');
       params.push(`%${model}%`);
     }
     if (status === 'success') {
@@ -79,25 +79,25 @@ export async function GET(request: NextRequest) {
        WHERE ${whereClause} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`
     ).all(...params, effectiveLimit, effectiveOffset);
 
-    const total = db.prepare(`SELECT COUNT(*) as count FROM usage_logs WHERE ${whereClause}`).get(...params) as { count: number };
+    const total = db.prepare(`SELECT COUNT(*) as count FROM usage_logs u WHERE ${whereClause}`).get(...params) as { count: number };
 
     // Aggregate stats across all matching records (not just current page)
     const agg = db.prepare(
       `SELECT COALESCE(SUM(tokens_in + tokens_out), 0) as total_tokens,
               COALESCE(SUM(cost), 0) as total_cost,
               COUNT(*) as total_calls
-       FROM usage_logs WHERE ${whereClause}`
+       FROM usage_logs u WHERE ${whereClause}`
     ).get(...params) as { total_tokens: number; total_cost: number; total_calls: number };
 
     // Daily trend (only for JSON, not CSV)
     let dailyTrend: Array<{ date: string; calls: number; cost: number; tokens: number }> = [];
     if (format !== 'csv') {
       dailyTrend = db.prepare(
-        `SELECT DATE(created_at) as date,
+        `SELECT DATE(u.created_at) as date,
                 COUNT(*) as calls,
                 COALESCE(SUM(cost), 0) as cost,
-                COALESCE(SUM(tokens_in + tokens_out), 0) as tokens
-         FROM usage_logs WHERE ${whereClause}
+                COALESCE(SUM(u.tokens_in + u.tokens_out), 0) as tokens
+         FROM usage_logs u WHERE ${whereClause}
          GROUP BY DATE(created_at) ORDER BY date ASC`
       ).all(...params) as typeof dailyTrend;
     }

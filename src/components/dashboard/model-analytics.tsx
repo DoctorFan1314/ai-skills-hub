@@ -49,7 +49,7 @@ interface AnalyticsData {
   daily_trend: DailyTrend[];
   rpm: number;
   tpm: number;
-  total: { calls: number; cost: number; tokens: number };
+  total: { calls: number; cost: number; tokens: number; tokens_in_noncached: number; tokens_in_cache: number; tokens_cache_creation: number; tokens_out: number };
 }
 
 const LABELS = {
@@ -338,11 +338,25 @@ export function ModelAnalytics() {
             </CardContent>
           </Card>
           <Card className="glass-card">
-            <CardContent className="p-3 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-500" />
-              <div>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="h-4 w-4 text-green-500" />
                 <p className="text-xs text-muted-foreground">{lang === "zh" ? "总 Tokens" : "Total Tokens"}</p>
-                <p className="text-lg font-bold font-mono">{data.total.tokens.toLocaleString()}</p>
+              </div>
+              <p className="text-lg font-bold font-mono mb-1">{data.total.tokens.toLocaleString()}</p>
+              <div className="text-[10px] space-y-0.5 text-muted-foreground border-t border-border/20 pt-1.5">
+                {data.total.tokens_in_noncached > 0 && (
+                  <div className="flex justify-between"><span><span className="text-blue-400">■</span> {lang === "zh" ? "普通输入" : "Input"}</span><span className="font-mono">{data.total.tokens_in_noncached.toLocaleString()}</span></div>
+                )}
+                {data.total.tokens_in_cache > 0 && (
+                  <div className="flex justify-between"><span><span className="text-emerald-400">■</span> {lang === "zh" ? "缓存命中" : "Cache Hit"}</span><span className="font-mono">{data.total.tokens_in_cache.toLocaleString()}</span></div>
+                )}
+                {data.total.tokens_cache_creation > 0 && (
+                  <div className="flex justify-between"><span><span className="text-amber-400">■</span> 缓存创建</span><span className="font-mono">{data.total.tokens_cache_creation.toLocaleString()}</span></div>
+                )}
+                {data.total.tokens_out > 0 && (
+                  <div className="flex justify-between"><span><span className="text-orange-400">■</span> {lang === "zh" ? "输出" : "Output"}</span><span className="font-mono">{data.total.tokens_out.toLocaleString()}</span></div>
+                )}
               </div>
             </CardContent>
           </Card>

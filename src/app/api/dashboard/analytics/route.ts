@@ -90,10 +90,14 @@ export async function GET(request: NextRequest) {
       SELECT
         COUNT(*) as total_calls,
         SUM(cost) as total_cost,
-        SUM(tokens_in + tokens_out) as total_tokens
+        SUM(tokens_in + tokens_out) as total_tokens,
+        SUM(tokens_in - tokens_in_cache - tokens_cache_creation) as tokens_in_noncached,
+        SUM(tokens_in_cache) as tokens_in_cache,
+        SUM(tokens_cache_creation) as tokens_cache_creation,
+        SUM(tokens_out) as tokens_out
       FROM usage_logs
       WHERE user_id = ?
-    `).get(userId) as { total_calls: number; total_cost: number; total_tokens: number };
+    `).get(userId) as { total_calls: number; total_cost: number; total_tokens: number; tokens_in_noncached: number; tokens_in_cache: number; tokens_cache_creation: number; tokens_out: number };
 
     return NextResponse.json({
       model_by_day: modelByDay,
@@ -106,6 +110,10 @@ export async function GET(request: NextRequest) {
         calls: totalStats.total_calls || 0,
         cost: totalStats.total_cost || 0,
         tokens: totalStats.total_tokens || 0,
+        tokens_in_noncached: totalStats.tokens_in_noncached || 0,
+        tokens_in_cache: totalStats.tokens_in_cache || 0,
+        tokens_cache_creation: totalStats.tokens_cache_creation || 0,
+        tokens_out: totalStats.tokens_out || 0,
       },
     });
   } catch (error) {
