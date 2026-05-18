@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useI18n } from "@/contexts/i18n-context";
 import { useCurrency } from "@/contexts/currency-context";
 import { BillingHistory } from "@/components/dashboard/billing-history";
@@ -106,28 +107,31 @@ export default function BillingPage() {
       </Card>
 
       <div className="grid md:grid-cols-3 gap-4">
-        <Card className="glass-card">
+        <Card className="glass-card flex flex-col">
           <CardHeader>
             <CardTitle className="text-base text-green-500">{t.free}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col justify-between gap-3">
             <p className="text-sm text-muted-foreground">{t.freeDesc}</p>
+            <Link href="/token-plan"><Button variant="outline" size="sm" className="w-full">{lang === "zh" ? "查看套餐" : "View Plans"}</Button></Link>
           </CardContent>
         </Card>
-        <Card className="glass-card border-primary/50">
+        <Card className="glass-card border-primary/50 flex flex-col">
           <CardHeader>
             <CardTitle className="text-base text-primary">{t.pro}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col justify-between gap-3">
             <p className="text-sm text-muted-foreground">{t.proDesc}</p>
+            <Link href="/token-plan"><Button size="sm" className="w-full">{lang === "zh" ? "订阅套餐" : "Subscribe"}</Button></Link>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card className="glass-card flex flex-col">
           <CardHeader>
             <CardTitle className="text-base text-yellow-500">{t.enterprise}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col justify-between gap-3">
             <p className="text-sm text-muted-foreground">{t.enterpriseDesc}</p>
+            <a href="mailto:support@oortapi.com"><Button variant="outline" size="sm" className="w-full">{lang === "zh" ? "联系我们" : "Contact Us"}</Button></a>
           </CardContent>
         </Card>
       </div>

@@ -134,7 +134,7 @@ export default function SettingsPage() {
 
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle className="text-lg">{t.apiEndpoint}</CardTitle>
+          <CardTitle className="text-lg">{lang === "zh" ? "接入地址" : "Base URL"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">

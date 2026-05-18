@@ -448,27 +448,28 @@ export default function PlaygroundPage() {
 
             {/* History messages */}
             {chatHistory.map((msg, i) => (
-              <div key={i} className={cn("flex gap-3", msg.role === "assistant" ? "" : "flex-row-reverse")}>
+              <div key={i} className={cn("flex gap-3 group", msg.role === "assistant" ? "" : "flex-row-reverse")}>
                 <div className={cn("p-1.5 rounded-lg shrink-0", msg.role === "assistant" ? "bg-primary/10" : "bg-muted")}>
                   {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
                 </div>
                 <div className={cn(
-                  "rounded-lg px-4 py-2.5 max-w-[80%] text-sm leading-relaxed",
+                  "rounded-lg px-4 py-2.5 max-w-[80%] text-sm leading-relaxed relative",
                   msg.role === "assistant" ? "bg-muted/30 border border-border/30" : "bg-primary/10"
                 )}>
-                  <pre className="whitespace-pre-wrap break-words font-mono text-xs">{msg.content}</pre>
+                  <pre className="whitespace-pre-wrap break-words text-xs">{msg.content}</pre>
+                  <CopyButton text={msg.content} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted text-muted-foreground" />
                 </div>
               </div>
             ))}
 
             {/* Streaming response */}
             {response && (
-              <div className="flex gap-3">
+              <div className="flex gap-3 group">
                 <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                   <Bot className="h-4 w-4" />
                 </div>
-                <div className="rounded-lg px-4 py-2.5 max-w-[80%] bg-muted/30 border border-border/30">
-                  <pre className="whitespace-pre-wrap break-words font-mono text-xs">{response}</pre>
+                <div className="rounded-lg px-4 py-2.5 max-w-[80%] bg-muted/30 border border-border/30 relative">
+                  <pre className="whitespace-pre-wrap break-words text-xs">{response}</pre>
                 </div>
               </div>
             )}
