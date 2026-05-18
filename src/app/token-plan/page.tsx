@@ -234,15 +234,23 @@ export default function TokenPlanPage() {
                   <tr className="transition-colors hover:bg-muted/30 border-t-2 border-border/30">
                     <td className="p-3.5 text-muted-foreground whitespace-nowrap font-medium">{lang === "zh" ? "月付价格" : "Monthly Price"}</td>
                     {plans.map((p) => {
-                      const price = displayCurrency === "CNY" ? p.monthly_price * exchangeRate : p.monthly_price;
-                      return <td key={p.id} className="p-3.5 text-center whitespace-nowrap font-mono font-bold">{displayCurrency === "CNY" ? "¥" : "$"}{price.toFixed(2)}</td>;
+                      const needsConversion = displayCurrency !== p.currency;
+                      const price = needsConversion && displayCurrency === "CNY" ? p.monthly_price * exchangeRate
+                                  : needsConversion && displayCurrency === "USD" ? p.monthly_price / exchangeRate
+                                  : p.monthly_price;
+                      const sym = displayCurrency === "CNY" ? "¥" : "$";
+                      return <td key={p.id} className="p-3.5 text-center whitespace-nowrap font-mono font-bold">{sym}{price.toFixed(2)}</td>;
                     })}
                   </tr>
                   <tr className="transition-colors hover:bg-muted/30">
                     <td className="p-3.5 text-muted-foreground whitespace-nowrap font-medium">{lang === "zh" ? "年付价格" : "Yearly Price"}</td>
                     {plans.map((p) => {
-                      const price = displayCurrency === "CNY" ? p.yearly_price * exchangeRate : p.yearly_price;
-                      return <td key={p.id} className="p-3.5 text-center whitespace-nowrap font-mono font-bold text-primary">{displayCurrency === "CNY" ? "¥" : "$"}{price.toFixed(2)}</td>;
+                      const needsConversion = displayCurrency !== p.currency;
+                      const price = needsConversion && displayCurrency === "CNY" ? p.yearly_price * exchangeRate
+                                  : needsConversion && displayCurrency === "USD" ? p.yearly_price / exchangeRate
+                                  : p.yearly_price;
+                      const sym = displayCurrency === "CNY" ? "¥" : "$";
+                      return <td key={p.id} className="p-3.5 text-center whitespace-nowrap font-mono font-bold text-primary">{sym}{price.toFixed(2)}</td>;
                     })}
                   </tr>
                 </tbody>
