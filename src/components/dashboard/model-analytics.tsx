@@ -202,21 +202,22 @@ export function ModelAnalytics() {
         formatter: (params: { seriesName: string; dataIndex: number }[]) => {
           const slot = slots[params[0]?.dataIndex ?? 0];
           if (!slot) return "";
-          let html = `<div style="font-size:12px;font-weight:600;margin-bottom:4px">${slot}</div>`;
+          let html = `<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap">${slot}</div>`;
           for (const p of params) {
             const val = byModelTokens[p.seriesName]?.[slot] || 0;
             const color = (colorMap as Record<string, string>)[p.seriesName] || "#888";
-            html += `<div style="font-size:12px;font-weight:500;margin-top:3px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};margin-right:4px"></span> ${p.seriesName}: ${fmt(val)} t</div>`;
+            html += `<div style="font-size:12px;font-weight:500;margin-top:3px;white-space:nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color};margin-right:4px"></span> ${p.seriesName}: ${fmt(val)} t</div>`;
             const brk = byModelBreakdown[p.seriesName]?.[slot];
             if (brk) {
-              if (brk.inNoncached > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888">${lang === "zh" ? "输入(未缓存)" : "Input(non-cached)"}: ${fmt(brk.inNoncached)}</div>`;
-              if (brk.inCache > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888">${lang === "zh" ? "输入(缓存命中)" : "Input(cache hit)"}: ${fmt(brk.inCache)}</div>`;
-              if (brk.cacheCreate > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888">${lang === "zh" ? "缓存创建" : "Cache create"}: ${fmt(brk.cacheCreate)}</div>`;
-              if (brk.out > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888">${lang === "zh" ? "输出" : "Output"}: ${fmt(brk.out)}</div>`;
+              if (brk.inNoncached > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "输入(未缓存)" : "Input(non-cached)"}: ${fmt(brk.inNoncached)}</div>`;
+              if (brk.inCache > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "输入(缓存命中)" : "Input(cache hit)"}: ${fmt(brk.inCache)}</div>`;
+              if (brk.cacheCreate > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "缓存创建" : "Cache create"}: ${fmt(brk.cacheCreate)}</div>`;
+              if (brk.out > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "输出" : "Output"}: ${fmt(brk.out)}</div>`;
             }
           }
           return html;
         },
+        extraCssText: "max-width:600px;white-space:nowrap",
       },
       legend: { type: "scroll" as const, bottom: 0, textStyle: { fontSize: 11 } },
       grid: { left: 70, right: 20, top: 20, bottom: 60 },
