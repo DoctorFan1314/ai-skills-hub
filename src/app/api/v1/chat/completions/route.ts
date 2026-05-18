@@ -2,8 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest, estimateTokens, setRateLimitHeaders, setDeprecationHeader } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 import { reportChannelSuccess } from '@/lib/channel-manager';
+import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
+
+// In-memory prompt cache for providers that don't report cache stats (VLLM, etc.)
+// Key: `userId:model:hash`, Value: `{ tokensIn, timestamp }`
+const promptCache = new Map<string, { tokensIn: number; timestamp: number }>();
+const PROMPT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getPromptCacheKey(userId: number, model: string, messages: unknown): string {
+  const hash = createHash('md5').update(JSON.stringify(messages)).digest('hex');
+  return `${userId}:${model}:${hash}`;
+}
+
+function checkPromptCache(userId: number, model: string, messages: unknown, tokensIn: number): { cacheHit: number; cacheCreate: number } {
+  const key = getPromptCacheKey(userId, model, messages);
+  const now = Date.now();
+  // Clean expired entries (every 100 checks)
+  if (Math.random() < 0.01) {
+    for (const [k, v] of promptCache) {
+      if (now - v.timestamp > PROMPT_CACHE_TTL) promptCache.delete(k);
+    }
+  }
+  const cached = promptCache.get(key);
+  if (cached && now - cached.timestamp < PROMPT_CACHE_TTL) {
+    // Cache hit: treat as cache read (report as cache hit tokens)
+    return { cacheHit: tokensIn, cacheCreate: 0 };
+  }
+  // Cache miss: store for next time, report as cache creation
+  promptCache.set(key, { tokensIn, timestamp: now });
+  return { cacheHit: 0, cacheCreate: tokensIn };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,6 +115,13 @@ export async function POST(request: NextRequest) {
         }
         if (tokensOut === 0 && completionText) {
           tokensOut = estimateTokens(completionText);
+        }
+
+        // If upstream didn't report cache stats (VLLM, local providers), use local prompt cache
+        if (tokensInCache === 0 && tokensCacheCreation === 0 && tokensIn > 0) {
+          const localCache = checkPromptCache(streamData.userId, streamData.model, body.messages, tokensIn);
+          tokensInCache = localCache.cacheHit;
+          tokensCacheCreation = localCache.cacheCreate;
         }
 
         const latencyMs = Date.now() - streamData.startTime;
