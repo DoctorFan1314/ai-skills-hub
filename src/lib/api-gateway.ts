@@ -275,12 +275,11 @@ async function executeChannelRequest(
     const tokensIn = data.usage?.prompt_tokens || data.usage?.input_tokens || estimateTokens(JSON.stringify(req.messages || req.prompt || ''));
     const tokensOut = data.usage?.completion_tokens || data.usage?.output_tokens || estimateTokens(JSON.stringify(data.choices?.[0]?.message?.content || ''));
     const tokensInCache = data.usage?.prompt_tokens_details?.cached_tokens || data.usage?.cache_read_input_tokens || 0;
-    const tokensCacheCreation = data.usage?.cache_creation_input_tokens || 0;
     const { multiplier } = getEffectiveMultiplier(req.model);
-    const baseCost = calculateCost(req.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+    const baseCost = calculateCost(req.model, tokensIn, tokensOut, tokensInCache);
     const cost = baseCost * multiplier;
 
-    const deductResult = deductCreditsOrBalance(userId, req.model, cost, `API call: ${req.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
+    const deductResult = deductCreditsOrBalance(userId, req.model, cost, `API call: ${req.model}`, tokensIn, tokensOut, tokensInCache);
     if (!deductResult.success) {
       console.error('Failed to deduct:', deductResult.error);
     }
@@ -288,7 +287,7 @@ async function executeChannelRequest(
     logUsage({
       userId, apiKeyId,
       channelId: channel.id, model: req.model,
-      tokensIn, tokensOut, tokensInCache, tokensCacheCreation, cost,
+      tokensIn, tokensOut, tokensInCache, cost,
       creditsUsed: deductResult.source === 'credits' ? (tokensIn + tokensOut) : 0,
       deductionSource: deductResult.source,
       latencyMs, success: true, multiplier,

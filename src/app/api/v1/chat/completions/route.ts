@@ -2,38 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest, estimateTokens, setRateLimitHeaders, setDeprecationHeader } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, calculateCredits, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
 import { reportChannelSuccess } from '@/lib/channel-manager';
-import { createHash } from 'crypto';
+import { checkPromptCache } from '@/lib/prompt-cache';
 
 export const dynamic = 'force-dynamic';
-
-// In-memory prompt cache for providers that don't report cache stats (VLLM, etc.)
-// Key: `userId:model:hash`, Value: `{ tokensIn, timestamp }`
-const promptCache = new Map<string, { tokensIn: number; timestamp: number }>();
-const PROMPT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-function getPromptCacheKey(userId: number, model: string, messages: unknown): string {
-  const hash = createHash('md5').update(JSON.stringify(messages)).digest('hex');
-  return `${userId}:${model}:${hash}`;
-}
-
-function checkPromptCache(userId: number, model: string, messages: unknown, tokensIn: number): { cacheHit: number; cacheCreate: number } {
-  const key = getPromptCacheKey(userId, model, messages);
-  const now = Date.now();
-  // Clean expired entries (every 100 checks)
-  if (Math.random() < 0.01) {
-    for (const [k, v] of promptCache) {
-      if (now - v.timestamp > PROMPT_CACHE_TTL) promptCache.delete(k);
-    }
-  }
-  const cached = promptCache.get(key);
-  if (cached && now - cached.timestamp < PROMPT_CACHE_TTL) {
-    // Cache hit: treat as cache read (report as cache hit tokens)
-    return { cacheHit: tokensIn, cacheCreate: 0 };
-  }
-  // Cache miss: store for next time, report as cache creation
-  promptCache.set(key, { tokensIn, timestamp: now });
-  return { cacheHit: 0, cacheCreate: tokensIn };
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,7 +70,6 @@ export async function POST(request: NextRequest) {
       let tokensIn = 0;
       let tokensOut = 0;
       let tokensInCache = 0;
-      let tokensCacheCreation = 0;
       let completionText = '';
       let logged = false;
 
@@ -118,20 +88,18 @@ export async function POST(request: NextRequest) {
         }
 
         // If upstream didn't report cache stats (VLLM, local providers), use local prompt cache
-        if (tokensInCache === 0 && tokensCacheCreation === 0 && tokensIn > 0) {
-          const localCache = checkPromptCache(streamData.userId, streamData.model, body.messages, tokensIn);
-          tokensInCache = localCache.cacheHit;
-          tokensCacheCreation = localCache.cacheCreate;
+        if (tokensInCache === 0 && tokensIn > 0) {
+          tokensInCache = checkPromptCache(streamData.userId, streamData.model, body.messages, tokensIn).cacheHit;
         }
 
         const latencyMs = Date.now() - streamData.startTime;
         const { multiplier } = getEffectiveMultiplier(streamData.model);
-        const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+        const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, tokensInCache);
         const cost = baseCost * multiplier;
 
         let deductResult: { source: string } | undefined;
         if (cost > 0) {
-          deductResult = deductCreditsOrBalance(streamData.userId, streamData.model, cost, `API call: ${streamData.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
+          deductResult = deductCreditsOrBalance(streamData.userId, streamData.model, cost, `API call: ${streamData.model}`, tokensIn, tokensOut, tokensInCache);
         }
 
         logUsage({
@@ -142,7 +110,6 @@ export async function POST(request: NextRequest) {
           tokensIn,
           tokensOut,
           tokensInCache,
-          tokensCacheCreation,
           cost,
           creditsUsed: deductResult?.source === 'credits' ? (tokensIn + tokensOut) : 0,
           deductionSource: deductResult?.source || 'balance',
@@ -175,7 +142,6 @@ export async function POST(request: NextRequest) {
                   tokensOut = parsed.usage.completion_tokens || parsed.usage.output_tokens || tokensOut;
                   // OpenAI: prompt_tokens_details.cached_tokens; Anthropic: cache_read_input_tokens
                   tokensInCache = parsed.usage.prompt_tokens_details?.cached_tokens || parsed.usage.cache_read_input_tokens || tokensInCache;
-                  tokensCacheCreation = parsed.usage.cache_creation_input_tokens || tokensCacheCreation;
                 }
                 const delta = parsed.choices?.[0]?.delta?.content;
                 if (delta) completionText += delta;

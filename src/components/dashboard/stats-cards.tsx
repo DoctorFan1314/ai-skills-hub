@@ -139,12 +139,6 @@ export function StatsCards({ lang = "zh" }: { lang?: "zh" | "en" }) {
                 <span className="font-mono">{formatTokens(stats.month.tokens_in_cache)}</span>
               </div>
             )}
-            {stats.month.tokens_cache_creation > 0 && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground"><span className="text-amber-400">■</span> 缓存创建</span>
-                <span className="font-mono">{formatTokens(stats.month.tokens_cache_creation)}</span>
-              </div>
-            )}
             {stats.month.tokens_out > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground"><span className="text-orange-400">■</span> {t.tokensOutput}</span>

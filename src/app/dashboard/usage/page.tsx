@@ -15,7 +15,6 @@ interface UsageLog {
   tokens_in: number;
   tokens_out: number;
   tokens_in_cache: number;
-  tokens_cache_creation: number;
   cost: number;
   credits_used: number;
   deduction_source: string;
@@ -31,7 +30,6 @@ interface UsageLog {
   input_rate: number | null;
   output_rate: number | null;
   cache_rate: number | null;
-  cache_creation_rate: number | null;
 }
 
 interface DailyTrend {
@@ -55,7 +53,6 @@ const LABELS = {
     tokensIn: "输入 Tokens",
     tokensOut: "输出 Tokens",
     tokensInCache: "缓存命中",
-    tokensCacheCreate: "缓存创建",
     tokens: "总 Tokens",
     cost: "费用",
     latency: "延迟",
@@ -72,7 +69,6 @@ const LABELS = {
     inputCost: "输入费用",
     outputCost: "输出费用",
     cacheReadCost: "缓存读取费用",
-    cacheWriteCost: "缓存创建费用",
     costBreakdown: "费用明细",
     noChannel: "无渠道",
     formula: "计算公式",
@@ -107,7 +103,6 @@ const LABELS = {
     tokensIn: "Input Tokens",
     tokensOut: "Output Tokens",
     tokensInCache: "Cache Hit",
-    tokensCacheCreate: "Cache Create",
     tokens: "Total Tokens",
     cost: "Cost",
     latency: "Latency",
@@ -124,7 +119,6 @@ const LABELS = {
     inputCost: "Input Cost",
     outputCost: "Output Cost",
     cacheReadCost: "Cache Read Cost",
-    cacheWriteCost: "Cache Write Cost",
     costBreakdown: "Cost Breakdown",
     noChannel: "No channel",
     formula: "Formula",
@@ -290,9 +284,6 @@ export default function UsagePage() {
     const inputRate = log.input_rate ?? 0.001;
     const outputRate = log.output_rate ?? 0.002;
     const cacheRate = log.cache_rate ?? 0;
-    const cacheCreationRate = log.cache_creation_rate && log.cache_creation_rate > 0
-      ? log.cache_creation_rate
-      : inputRate * 1.25;
     const creditRate = log.credit_rate ?? 1.0;
     const mult = log.multiplier ?? 1.0;
     const totalTokens = log.tokens_in + log.tokens_out;
@@ -328,12 +319,11 @@ export default function UsagePage() {
     }
 
     // Non-subscription user — show dollar breakdown
-    const nonCachedIn = Math.max(0, log.tokens_in - log.tokens_in_cache - log.tokens_cache_creation);
+    const nonCachedIn = Math.max(0, log.tokens_in - log.tokens_in_cache);
     const inputCost = nonCachedIn * inputRate / 1000;
     const cacheHitCost = log.tokens_in_cache * cacheRate / 1000;
-    const cacheCreationCost = log.tokens_cache_creation * cacheCreationRate / 1000;
     const outputCost = log.tokens_out * outputRate / 1000;
-    const baseCost = inputCost + cacheHitCost + cacheCreationCost + outputCost;
+    const baseCost = inputCost + cacheHitCost + outputCost;
     const finalCost = baseCost * mult;
     const rateSource = log.input_rate != null ? "" : ` (${t.noRateData})`;
 
@@ -343,7 +333,7 @@ export default function UsagePage() {
         <div className="text-muted-foreground space-y-0.5">
           <p>{lang === "zh" ? "模型费率" : "Model Rates"}{rateSource}:</p>
           <p className="pl-3">input = {formatRate(inputRate)}, output = {formatRate(outputRate)}</p>
-          <p className="pl-3">cache_read = {formatRate(cacheRate)}, cache_create = {formatRate(cacheCreationRate)}</p>
+          <p className="pl-3">cache_read = {formatRate(cacheRate)}</p>
         </div>
         <div className="space-y-1">
           {nonCachedIn > 0 && (
@@ -356,12 +346,6 @@ export default function UsagePage() {
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">{t.cacheReadCost}: {log.tokens_in_cache.toLocaleString()} × {cacheRate.toFixed(4)} / 1000</span>
               <span>= {formatCostDisplay(cacheHitCost)}</span>
-            </div>
-          )}
-          {log.tokens_cache_creation > 0 && (
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">{t.cacheWriteCost}: {log.tokens_cache_creation.toLocaleString()} × {cacheCreationRate.toFixed(4)} / 1000</span>
-              <span>= {formatCostDisplay(cacheCreationCost)}</span>
             </div>
           )}
           {log.tokens_out > 0 && (
@@ -578,10 +562,6 @@ export default function UsagePage() {
                       {t.tokensInCache}{sortKey === 'tokens_in_cache' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
                     </th>
                     <th scope="col" className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
-                      onClick={() => { setSortKey('tokens_cache_creation'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
-                      {t.tokensCacheCreate}{sortKey === 'tokens_cache_creation' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-                    </th>
-                    <th scope="col" className="text-right py-2 px-3 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none"
                       onClick={() => { setSortKey('total'); setSortDir(d => d === 'asc' ? 'desc' : 'asc'); }}>
                       {t.tokens}{sortKey === 'total' ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
                     </th>
@@ -612,7 +592,6 @@ export default function UsagePage() {
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_in.toLocaleString()}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_out.toLocaleString()}</td>
                       <td className="py-2 px-3 text-right font-mono">{log.tokens_in_cache > 0 ? log.tokens_in_cache.toLocaleString() : "0"}</td>
-                      <td className="py-2 px-3 text-right font-mono">{log.tokens_cache_creation > 0 ? log.tokens_cache_creation.toLocaleString() : "0"}</td>
                       <td className="py-2 px-3 text-right font-mono">{(log.tokens_in + log.tokens_out).toLocaleString()}</td>
                       <td className="py-2 px-3 text-center">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-mono">
@@ -651,7 +630,7 @@ export default function UsagePage() {
                     </tr>
                     {expandedId === log.id && (
                       <tr className="border-b border-border/20 bg-muted/20">
-                        <td colSpan={14} className="px-6 py-4">
+                        <td colSpan={13} className="px-6 py-4">
                           <div className="flex justify-end mb-2">
                             <button onClick={() => setExpandedId(null)}
                               className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"

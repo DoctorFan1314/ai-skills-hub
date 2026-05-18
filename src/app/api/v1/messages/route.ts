@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processGatewayRequest, estimateTokens, setRateLimitHeaders } from '@/lib/api-gateway';
 import { deductCreditsOrBalance, calculateCost, logUsage, getEffectiveMultiplier } from '@/lib/billing-engine';
+import { checkPromptCache } from '@/lib/prompt-cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,7 +158,6 @@ export async function POST(request: NextRequest) {
       let tokensIn = 0;
       let tokensOut = 0;
       let tokensInCache = 0;
-      let tokensCacheCreation = 0;
       let completionText = '';
       let logged = false;
       const msgId = `msg_${Date.now().toString(36)}`;
@@ -169,14 +169,19 @@ export async function POST(request: NextRequest) {
         if (tokensIn === 0) tokensIn = estimateTokens(JSON.stringify(body.messages));
         if (tokensOut === 0 && completionText) tokensOut = estimateTokens(completionText);
 
+        // If upstream didn't report cache stats, use local prompt cache
+        if (tokensInCache === 0 && tokensIn > 0) {
+          tokensInCache = checkPromptCache(streamData.userId, streamData.model, body.messages, tokensIn).cacheHit;
+        }
+
         const latencyMs = Date.now() - streamData.startTime;
         const { multiplier } = getEffectiveMultiplier(streamData.model);
-        const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, false, tokensInCache, tokensCacheCreation);
+        const baseCost = calculateCost(streamData.model, tokensIn, tokensOut, tokensInCache);
         const cost = baseCost * multiplier;
 
         let deductResult: { source: string } | undefined;
         if (cost > 0) {
-          deductResult = deductCreditsOrBalance(streamData.userId, streamData.model, cost, `API call: ${streamData.model}`, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
+          deductResult = deductCreditsOrBalance(streamData.userId, streamData.model, cost, `API call: ${streamData.model}`, tokensIn, tokensOut, tokensInCache);
         }
 
         logUsage({
@@ -184,7 +189,7 @@ export async function POST(request: NextRequest) {
           apiKeyId: streamData.apiKeyId,
           channelId: streamData.channelId,
           model: streamData.model,
-          tokensIn, tokensOut, tokensInCache, tokensCacheCreation,
+          tokensIn, tokensOut, tokensInCache,
           cost,
           creditsUsed: deductResult?.source === 'credits' ? (tokensIn + tokensOut) : 0,
           deductionSource: deductResult?.source || 'balance',
@@ -231,7 +236,6 @@ export async function POST(request: NextRequest) {
               if (parsed.type === 'message_start') {
                 tokensIn = parsed.message?.usage?.input_tokens || tokensIn;
                 tokensInCache = parsed.message?.usage?.cache_read_input_tokens || tokensInCache;
-                tokensCacheCreation = parsed.message?.usage?.cache_creation_input_tokens || tokensCacheCreation;
                 controller.enqueue(encoder.encode(`event: message_start\ndata: ${JSON.stringify(parsed)}\n\n`));
                 sentMessageStart = true;
                 continue;
@@ -339,7 +343,6 @@ export async function POST(request: NextRequest) {
                   tokensIn = parsed.usage.prompt_tokens || parsed.usage.input_tokens || tokensIn;
                   tokensOut = parsed.usage.completion_tokens || parsed.usage.output_tokens || tokensOut;
                   tokensInCache = parsed.usage.prompt_tokens_details?.cached_tokens || parsed.usage.cache_read_input_tokens || tokensInCache;
-                  tokensCacheCreation = parsed.usage.cache_creation_input_tokens || tokensCacheCreation;
                 }
 
                 // Handle finish_reason

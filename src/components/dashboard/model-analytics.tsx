@@ -211,7 +211,6 @@ export function ModelAnalytics() {
             if (brk) {
               if (brk.inNoncached > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "输入(未缓存)" : "Input(non-cached)"}: ${fmt(brk.inNoncached)}</div>`;
               if (brk.inCache > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "输入(缓存命中)" : "Input(cache hit)"}: ${fmt(brk.inCache)}</div>`;
-              if (brk.cacheCreate > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "缓存创建" : "Cache create"}: ${fmt(brk.cacheCreate)}</div>`;
               if (brk.out > 0) html += `<div style="font-size:11px;padding-left:16px;color:#888;white-space:nowrap">${lang === "zh" ? "输出" : "Output"}: ${fmt(brk.out)}</div>`;
             }
           }
@@ -387,9 +386,6 @@ export function ModelAnalytics() {
                 )}
                 {data.total.tokens_in_cache > 0 && (
                   <div className="flex justify-between"><span><span className="text-emerald-400">■</span> {lang === "zh" ? "缓存命中" : "Cache Hit"}</span><span className="font-mono">{data.total.tokens_in_cache.toLocaleString()}</span></div>
-                )}
-                {data.total.tokens_cache_creation > 0 && (
-                  <div className="flex justify-between"><span><span className="text-amber-400">■</span> 缓存创建</span><span className="font-mono">{data.total.tokens_cache_creation.toLocaleString()}</span></div>
                 )}
                 {data.total.tokens_out > 0 && (
                   <div className="flex justify-between"><span><span className="text-orange-400">■</span> {lang === "zh" ? "输出" : "Output"}</span><span className="font-mono">{data.total.tokens_out.toLocaleString()}</span></div>

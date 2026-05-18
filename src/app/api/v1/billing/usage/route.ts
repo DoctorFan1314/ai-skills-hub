@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     // Aggregate stats across all matching records (not just current page)
     const agg = db.prepare(
-      `SELECT COALESCE(SUM(tokens_in + tokens_out), 0) as total_tokens,
+      `SELECT COALESCE(SUM(tokens_in + tokens_out + tokens_in_cache), 0) as total_tokens,
               COALESCE(SUM(cost), 0) as total_cost,
               COUNT(*) as total_calls
        FROM usage_logs u WHERE ${whereClause}`
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
         `SELECT DATE(u.created_at) as date,
                 COUNT(*) as calls,
                 COALESCE(SUM(cost), 0) as cost,
-                COALESCE(SUM(u.tokens_in + u.tokens_out), 0) as tokens
+                COALESCE(SUM(u.tokens_in + u.tokens_out + u.tokens_in_cache), 0) as tokens
          FROM usage_logs u WHERE ${whereClause}
          GROUP BY DATE(created_at) ORDER BY date ASC`
       ).all(...params) as typeof dailyTrend;

@@ -93,32 +93,20 @@ export function calculateCost(
   model: string,
   tokensIn: number,
   tokensOut: number,
-  cached: boolean = false,
   tokensInCache: number = 0,
-  tokensCacheCreation: number = 0,
 ): number {
-  const rate = db.prepare('SELECT input_rate, output_rate, cache_rate, cache_creation_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { input_rate: number; output_rate: number; cache_rate: number; cache_creation_rate: number } | undefined;
+  const rate = db.prepare('SELECT input_rate, output_rate, cache_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { input_rate: number; output_rate: number; cache_rate: number } | undefined;
 
   if (!rate) {
-    // Default rate if model not found
     return (tokensIn * 0.001 + tokensOut * 0.002) / 1000;
   }
 
-  // Non-cached input tokens: charged at full input_rate
-  const nonCachedIn = tokensIn - tokensInCache - tokensCacheCreation;
-  const inputCost = Math.max(0, nonCachedIn) * rate.input_rate / 1000;
-
-  // Cache hit tokens: charged at cache_rate
-  const cacheHitCost = tokensInCache * rate.cache_rate / 1000;
-
-  // Cache creation tokens: use cache_creation_rate if set, else fallback to 1.25x input_rate
-  const cacheCreateRate = rate.cache_creation_rate > 0 ? rate.cache_creation_rate : rate.input_rate * 1.25;
-  const cacheCreationCost = tokensCacheCreation * cacheCreateRate / 1000;
-
-  // Output tokens: always at output_rate
-  const outputCost = tokensOut * rate.output_rate / 1000;
-
-  return inputCost + cacheHitCost + cacheCreationCost + outputCost;
+  // Input(non-cached): charged at input_rate
+  // Input(cache hit): charged at cache_rate
+  // Output: charged at output_rate
+  return Math.max(0, tokensIn - tokensInCache) * rate.input_rate / 1000
+       + tokensInCache * rate.cache_rate / 1000
+       + tokensOut * rate.output_rate / 1000;
 }
 
 export function logUsage(data: {
@@ -184,11 +172,12 @@ export interface DeductCreditsResult {
   error?: string;
 }
 
-export function calculateCredits(model: string, tokensIn: number, tokensOut: number, tokensInCache: number = 0, tokensCacheCreation: number = 0): number {
+export function calculateCredits(model: string, tokensIn: number, tokensOut: number, tokensInCache: number = 0): number {
   const rate = db.prepare('SELECT credit_rate FROM model_rates WHERE model_name = ? AND enabled = 1').get(model) as { credit_rate: number } | undefined;
   const creditRate = rate?.credit_rate ?? 1.0;
-  const totalTokens = tokensIn + tokensOut;
-  return Math.ceil(totalTokens * creditRate);
+  // Cache hit tokens don't consume credits
+  const nonCachedTokens = tokensIn - tokensInCache + tokensOut;
+  return Math.ceil(Math.max(0, nonCachedTokens) * creditRate);
 }
 
 export function deductCreditsOrBalance(
@@ -199,7 +188,6 @@ export function deductCreditsOrBalance(
   tokensIn: number = 0,
   tokensOut: number = 0,
   tokensInCache: number = 0,
-  tokensCacheCreation: number = 0,
 ): DeductCreditsResult {
   const subInfo = getActiveSubscription(userId);
 
@@ -207,7 +195,7 @@ export function deductCreditsOrBalance(
     const { subscription, plan } = subInfo;
 
     // Calculate credits based on token count * credit_rate (1 token = 1 credit by default)
-    const creditsCost = calculateCredits(model, tokensIn, tokensOut, tokensInCache, tokensCacheCreation);
+    const creditsCost = calculateCredits(model, tokensIn, tokensOut, tokensInCache);
 
     if (subscription.credits_remaining >= creditsCost) {
       // Sufficient credits — atomic deduct with balance check (prevents TOCTOU race)
