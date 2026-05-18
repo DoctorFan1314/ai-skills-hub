@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateUserFromCookie } from '@/lib/api-gateway';
 import db from '@/lib/db';
-import { readFileSync } from 'fs';
+import { readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +24,7 @@ export async function GET(request: NextRequest) {
       const backupData = readFileSync(backupPath);
 
       // Clean up the temp file
-      const fs = require('fs');
-      fs.unlinkSync(backupPath);
+      unlinkSync(backupPath);
 
       return new Response(backupData, {
         headers: {

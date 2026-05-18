@@ -175,6 +175,9 @@ export async function DELETE(request: NextRequest) {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
+    const existing = db.prepare('SELECT id FROM model_rates WHERE id = ?').get(id);
+    if (!existing) return NextResponse.json({ error: 'Model rate not found' }, { status: 404 });
+
     db.prepare('DELETE FROM model_rates WHERE id = ?').run(id);
 
     logAdminAction(auth.user.id, 'delete_model_rate', 'model_rate', id, undefined, request.headers.get('x-forwarded-for')?.split(',')[0]?.trim());
